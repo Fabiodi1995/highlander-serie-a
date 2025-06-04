@@ -23,6 +23,139 @@ import { z } from "zod";
 
 type CreateGameData = z.infer<typeof insertGameSchema>;
 
+function MatchResultsForm({ 
+  game, 
+  onComplete, 
+  onCancel 
+}: { 
+  game: Game | null; 
+  onComplete: () => void; 
+  onCancel: () => void; 
+}) {
+  const [matchResults, setMatchResults] = useState<Record<number, { homeScore: number; awayScore: number }>>({});
+  
+  const { data: matches } = useQuery<Match[]>({
+    queryKey: ["/api/matches", game?.currentRound],
+    enabled: !!game?.currentRound,
+  });
+
+  const { data: teams } = useQuery<Team[]>({
+    queryKey: ["/api/teams"],
+  });
+
+  const updateMatchResultMutation = useMutation({
+    mutationFn: async ({ matchId, homeScore, awayScore }: { matchId: number; homeScore: number; awayScore: number }) => {
+      const res = await apiRequest("POST", `/api/matches/${matchId}/result`, { homeScore, awayScore });
+      return await res.json();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Errore",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const { toast } = useToast();
+
+  const handleScoreChange = (matchId: number, type: 'home' | 'away', value: string) => {
+    const score = parseInt(value) || 0;
+    setMatchResults(prev => ({
+      ...prev,
+      [matchId]: {
+        ...prev[matchId],
+        [type === 'home' ? 'homeScore' : 'awayScore']: score
+      }
+    }));
+  };
+
+  const handleSubmitResults = async () => {
+    if (!matches) return;
+    
+    try {
+      for (const match of matches) {
+        const result = matchResults[match.id];
+        if (result && (result.homeScore >= 0 && result.awayScore >= 0)) {
+          await updateMatchResultMutation.mutateAsync({
+            matchId: match.id,
+            homeScore: result.homeScore,
+            awayScore: result.awayScore
+          });
+        }
+      }
+      
+      toast({
+        title: "Successo",
+        description: "Risultati inseriti correttamente",
+      });
+      
+      onComplete();
+    } catch (error) {
+      console.error("Error submitting results:", error);
+    }
+  };
+
+  if (!matches) {
+    return <div className="text-center py-4">Caricamento partite...</div>;
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-4">
+        {matches.map((match) => (
+          <Card key={match.id} className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <span className="font-medium">
+                  {teams?.find(t => t.id === match.homeTeamId)?.name || `Team ${match.homeTeamId}`}
+                </span>
+                <span className="text-muted-foreground">vs</span>
+                <span className="font-medium">
+                  {teams?.find(t => t.id === match.awayTeamId)?.name || `Team ${match.awayTeamId}`}
+                </span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Input
+                  type="number"
+                  min="0"
+                  max="20"
+                  placeholder="0"
+                  className="w-16 text-center"
+                  value={matchResults[match.id]?.homeScore || ''}
+                  onChange={(e) => handleScoreChange(match.id, 'home', e.target.value)}
+                />
+                <span>-</span>
+                <Input
+                  type="number"
+                  min="0"
+                  max="20"
+                  placeholder="0"
+                  className="w-16 text-center"
+                  value={matchResults[match.id]?.awayScore || ''}
+                  onChange={(e) => handleScoreChange(match.id, 'away', e.target.value)}
+                />
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+      
+      <div className="flex justify-end space-x-2 pt-4">
+        <Button variant="outline" onClick={onCancel}>
+          Annulla
+        </Button>
+        <Button 
+          onClick={handleSubmitResults}
+          disabled={updateMatchResultMutation.isPending}
+        >
+          {updateMatchResultMutation.isPending ? "Salvando..." : "Salva Risultati e Calcola"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function TicketAssignmentForm({ 
   gameId, 
   users, 
@@ -290,6 +423,27 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {/* Match Results Dialog */}
+      <Dialog open={showMatchResults} onOpenChange={setShowMatchResults}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Risultati Serie A - Giornata {selectedGameForCalculation?.currentRound}</DialogTitle>
+            <DialogDescription>
+              Inserisci i risultati delle partite per calcolare la giornata del gioco "{selectedGameForCalculation?.name}"
+            </DialogDescription>
+          </DialogHeader>
+          <MatchResultsForm 
+            game={selectedGameForCalculation} 
+            onComplete={() => {
+              if (selectedGameForCalculation) {
+                calculateTurnMutation.mutate(selectedGameForCalculation.id);
+              }
+            }}
+            onCancel={() => setShowMatchResults(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
       {/* Navigation Header */}
       <nav className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -535,7 +689,7 @@ export default function AdminDashboard() {
                             {game.status === "active" && (
                               <Button
                                 size="sm"
-                                onClick={() => handleCalculateTurn(game.id)}
+                                onClick={() => handleCalculateTurn(game)}
                                 disabled={calculateTurnMutation.isPending}
                               >
                                 <Calculator className="h-4 w-4 mr-1" />
