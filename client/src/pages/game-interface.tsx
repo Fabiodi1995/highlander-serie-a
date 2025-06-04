@@ -84,8 +84,8 @@ export default function GameInterface() {
 
     if (teamSelections.length !== activeTickets.length) {
       toast({
-        title: "Error",
-        description: "Please select a team for all active tickets",
+        title: "Errore",
+        description: "Seleziona una squadra per tutti i ticket attivi",
         variant: "destructive",
       });
       return;
