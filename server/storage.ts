@@ -51,11 +51,11 @@ export interface IStorage {
   getTeamSelectionsByRound(gameId: number, round: number): Promise<TeamSelection[]>;
   hasTeamBeenSelected(ticketId: number, teamId: number): Promise<boolean>;
   
-  sessionStore: session.SessionStore;
+  sessionStore: session.Store;
 }
 
 export class DatabaseStorage implements IStorage {
-  sessionStore: session.SessionStore;
+  sessionStore: session.Store;
 
   constructor() {
     this.sessionStore = new PostgresSessionStore({ 
@@ -174,13 +174,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTicketsByUser(userId: number, gameId?: number): Promise<Ticket[]> {
-    const query = db.select().from(tickets).where(eq(tickets.userId, userId));
-    
     if (gameId) {
-      return await query.where(and(eq(tickets.userId, userId), eq(tickets.gameId, gameId)));
+      return await db.select().from(tickets).where(and(eq(tickets.userId, userId), eq(tickets.gameId, gameId)));
     }
     
-    return await query;
+    return await db.select().from(tickets).where(eq(tickets.userId, userId));
   }
 
   async eliminateTicket(ticketId: number, round: number): Promise<void> {
