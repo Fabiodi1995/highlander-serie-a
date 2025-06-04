@@ -200,9 +200,17 @@ export default function GameInterface() {
               <Button
                 size="lg"
                 onClick={handleSubmitSelections}
-                disabled={submitSelectionsMutation.isPending || Object.keys(selections).length !== activeTickets.length}
+                disabled={
+                  submitSelectionsMutation.isPending || 
+                  Object.keys(selections).length !== activeTickets.length ||
+                  isDeadlinePassed
+                }
               >
-                {submitSelectionsMutation.isPending ? "Submitting..." : "Submit All Selections"}
+                {submitSelectionsMutation.isPending 
+                  ? "Submitting..." 
+                  : isDeadlinePassed 
+                  ? "Selection Period Closed" 
+                  : "Submit All Selections"}
               </Button>
             </div>
           </div>
