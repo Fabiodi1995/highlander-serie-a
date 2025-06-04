@@ -393,6 +393,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all team selections for user's tickets grouped by game
+  app.get("/api/user/team-selections", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const userTickets = await storage.getTicketsByUser(req.user!.id);
+      const gamesData = [];
+      
+      // Group tickets by game
+      const ticketsByGame = userTickets.reduce((acc, ticket) => {
+        if (!acc[ticket.gameId]) {
+          acc[ticket.gameId] = [];
+        }
+        acc[ticket.gameId].push(ticket);
+        return acc;
+      }, {} as Record<number, any[]>);
+      
+      for (const [gameId, tickets] of Object.entries(ticketsByGame)) {
+        const game = await storage.getGame(parseInt(gameId));
+        const gameSelections = [];
+        
+        for (const ticket of tickets) {
+          const selections = await storage.getTeamSelectionsByTicket(ticket.id);
+          gameSelections.push({
+            ticket,
+            selections
+          });
+        }
+        
+        gamesData.push({
+          game,
+          ticketSelections: gameSelections
+        });
+      }
+      
+      res.json(gamesData);
+    } catch (error) {
+      console.error("Error fetching user team selections:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
   // Matches API
   app.get("/api/matches/:round", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
