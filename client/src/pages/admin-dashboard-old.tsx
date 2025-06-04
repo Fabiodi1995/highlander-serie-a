@@ -162,39 +162,40 @@ function TicketAssignmentForm({
   onAssign, 
   isPending, 
   onClose 
-}: { 
-  gameId: number | null; 
-  users: UserType[]; 
-  onAssign: (data: { gameId: number; userId: number; count: number }) => void; 
-  isPending: boolean; 
+}: {
+  gameId: number | null;
+  users: UserType[];
+  onAssign: (data: { gameId: number; userId: number; count: number }) => void;
+  isPending: boolean;
   onClose: () => void;
 }) {
-  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
-  const [ticketCount, setTicketCount] = useState<number>(1);
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
+  const [ticketCount, setTicketCount] = useState<string>("1");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (gameId && selectedUserId) {
-      onAssign({ gameId, userId: selectedUserId, count: ticketCount });
-      setSelectedUserId(null);
-      setTicketCount(1);
-      onClose();
-    }
+    if (!gameId || !selectedUserId || !ticketCount) return;
+
+    onAssign({
+      gameId,
+      userId: parseInt(selectedUserId),
+      count: parseInt(ticketCount)
+    });
   };
+
+  // Filter out admin users for player assignment
+  const playerUsers = users.filter(user => !user.isAdmin);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <Label htmlFor="user-select">Seleziona Giocatore</Label>
-        <Select 
-          value={selectedUserId?.toString() || ""} 
-          onValueChange={(value) => setSelectedUserId(parseInt(value))}
-        >
+      <div className="space-y-2">
+        <Label htmlFor="user">Select Player</Label>
+        <Select value={selectedUserId} onValueChange={setSelectedUserId}>
           <SelectTrigger>
-            <SelectValue placeholder="Scegli un giocatore" />
+            <SelectValue placeholder="Choose a player..." />
           </SelectTrigger>
           <SelectContent>
-            {users.filter(u => !u.isAdmin).map((user) => (
+            {playerUsers.map((user) => (
               <SelectItem key={user.id} value={user.id.toString()}>
                 {user.username}
               </SelectItem>
@@ -202,25 +203,29 @@ function TicketAssignmentForm({
           </SelectContent>
         </Select>
       </div>
-      
-      <div>
-        <Label htmlFor="ticket-count">Numero Ticket</Label>
+
+      <div className="space-y-2">
+        <Label htmlFor="count">Number of Tickets</Label>
         <Input
-          id="ticket-count"
+          id="count"
           type="number"
           min="1"
           max="10"
           value={ticketCount}
-          onChange={(e) => setTicketCount(parseInt(e.target.value) || 1)}
+          onChange={(e) => setTicketCount(e.target.value)}
+          placeholder="Enter number of tickets"
         />
       </div>
-      
+
       <div className="flex justify-end space-x-2">
         <Button type="button" variant="outline" onClick={onClose}>
-          Annulla
+          Cancel
         </Button>
-        <Button type="submit" disabled={!selectedUserId || isPending}>
-          {isPending ? "Assegnando..." : "Assegna Ticket"}
+        <Button 
+          type="submit" 
+          disabled={isPending || !selectedUserId || !ticketCount}
+        >
+          {isPending ? "Assigning..." : "Assign Tickets"}
         </Button>
       </div>
     </form>
@@ -229,10 +234,10 @@ function TicketAssignmentForm({
 
 export default function AdminDashboard() {
   const { user, logoutMutation } = useAuth();
+  const { toast } = useToast();
   const [createGameOpen, setCreateGameOpen] = useState(false);
   const [ticketDialogOpen, setTicketDialogOpen] = useState(false);
   const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
-  const { toast } = useToast();
 
   const { data: games, isLoading: gamesLoading } = useQuery<Game[]>({
     queryKey: ["/api/games"],
@@ -254,9 +259,6 @@ export default function AdminDashboard() {
     queryKey: ["/api/admin/all-tickets"],
   });
 
-  const [selectedGameForCalculation, setSelectedGameForCalculation] = useState<Game | null>(null);
-  const [showMatchResults, setShowMatchResults] = useState(false);
-
   const createGameForm = useForm<CreateGameData>({
     resolver: zodResolver(insertGameSchema),
     defaultValues: {
@@ -276,13 +278,13 @@ export default function AdminDashboard() {
       setCreateGameOpen(false);
       createGameForm.reset();
       toast({
-        title: "Successo",
-        description: "Gioco creato con successo",
+        title: "Success",
+        description: "Game created successfully",
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Errore",
+        title: "Error",
         description: error.message,
         variant: "destructive",
       });
@@ -297,18 +299,21 @@ export default function AdminDashboard() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/games"] });
       toast({
-        title: "Successo",
-        description: "Registrazioni chiuse, gioco iniziato",
+        title: "Success",
+        description: "Registration closed, game started",
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Errore",
+        title: "Error",
         description: error.message,
         variant: "destructive",
       });
     },
   });
+
+  const [selectedGameForCalculation, setSelectedGameForCalculation] = useState<Game | null>(null);
+  const [showMatchResults, setShowMatchResults] = useState(false);
 
   const calculateTurnMutation = useMutation({
     mutationFn: async (gameId: number) => {
@@ -340,14 +345,15 @@ export default function AdminDashboard() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/games"] });
+      setTicketDialogOpen(false);
       toast({
-        title: "Successo",
-        description: "Ticket assegnati con successo",
+        title: "Success",
+        description: "Tickets assigned successfully",
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Errore",
+        title: "Error",
         description: error.message,
         variant: "destructive",
       });
@@ -362,13 +368,13 @@ export default function AdminDashboard() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/games"] });
       toast({
-        title: "Successo",
-        description: "Gioco eliminato con successo",
+        title: "Success",
+        description: "Game deleted successfully",
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Errore",
+        title: "Error",
         description: error.message,
         variant: "destructive",
       });
@@ -398,7 +404,7 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteGame = (gameId: number) => {
-    if (confirm("Sei sicuro di voler eliminare questo gioco? Questa azione non può essere annullata e rimuoverà tutti i ticket e le selezioni associate.")) {
+    if (confirm("Are you sure you want to delete this game? This action cannot be undone and will remove all associated tickets and selections.")) {
       deleteGameMutation.mutate(gameId);
     }
   };
@@ -450,14 +456,14 @@ export default function AdminDashboard() {
                 <DialogTrigger asChild>
                   <Button>
                     <Plus className="h-4 w-4 mr-2" />
-                    Crea Gioco
+                    Create Game
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[425px]">
                   <DialogHeader>
-                    <DialogTitle>Crea Nuovo Gioco</DialogTitle>
+                    <DialogTitle>Create New Game</DialogTitle>
                     <DialogDescription>
-                      Imposta un nuovo gioco Highlander per i giocatori.
+                      Set up a new Highlander game for players to join.
                     </DialogDescription>
                   </DialogHeader>
                   <Form {...createGameForm}>
@@ -467,9 +473,9 @@ export default function AdminDashboard() {
                         name="name"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Nome Gioco</FormLabel>
+                            <FormLabel>Game Name</FormLabel>
                             <FormControl>
-                              <Input placeholder="Inserisci nome gioco" {...field} />
+                              <Input placeholder="Enter game name" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -481,11 +487,11 @@ export default function AdminDashboard() {
                         name="startRound"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Giornata Iniziale (Serie A)</FormLabel>
+                            <FormLabel>Start Round (Serie A Giornata)</FormLabel>
                             <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value?.toString()}>
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue placeholder="Seleziona giornata iniziale" />
+                                  <SelectValue placeholder="Select starting round" />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
@@ -506,9 +512,14 @@ export default function AdminDashboard() {
                         name="description"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Descrizione (opzionale)</FormLabel>
+                            <FormLabel>Description (Optional)</FormLabel>
                             <FormControl>
-                              <Textarea placeholder="Aggiungi una descrizione..." {...field} />
+                              <Textarea 
+                                placeholder="Optional game description..." 
+                                className="resize-none"
+                                {...field} 
+                                value={field.value || ""}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -517,10 +528,10 @@ export default function AdminDashboard() {
                       
                       <div className="flex justify-end space-x-2">
                         <Button type="button" variant="outline" onClick={() => setCreateGameOpen(false)}>
-                          Annulla
+                          Cancel
                         </Button>
                         <Button type="submit" disabled={createGameMutation.isPending}>
-                          {createGameMutation.isPending ? "Creando..." : "Crea Gioco"}
+                          {createGameMutation.isPending ? "Creating..." : "Create Game"}
                         </Button>
                       </div>
                     </form>
@@ -529,13 +540,16 @@ export default function AdminDashboard() {
               </Dialog>
               
               <div className="flex items-center space-x-2">
-                <User className="h-4 w-4" />
-                <span className="text-sm font-medium">{user?.username}</span>
+                <User className="h-4 w-4 text-gray-500" />
+                <span className="text-gray-700">{user?.username}</span>
               </div>
-              
-              <Button variant="outline" size="sm" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLogout}
+                disabled={logoutMutation.isPending}
+              >
+                <LogOut className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -553,7 +567,7 @@ export default function AdminDashboard() {
                 </div>
                 <div className="ml-4">
                   <div className="text-2xl font-bold text-gray-900">{totalGames}</div>
-                  <div className="text-sm text-gray-600">Giochi Totali</div>
+                  <div className="text-sm text-gray-600">Total Games</div>
                 </div>
               </div>
             </CardContent>
@@ -567,7 +581,7 @@ export default function AdminDashboard() {
                 </div>
                 <div className="ml-4">
                   <div className="text-2xl font-bold text-gray-900">{activeGames}</div>
-                  <div className="text-sm text-gray-600">Giochi Attivi</div>
+                  <div className="text-sm text-gray-600">Active Games</div>
                 </div>
               </div>
             </CardContent>
@@ -581,7 +595,7 @@ export default function AdminDashboard() {
                 </div>
                 <div className="ml-4">
                   <div className="text-2xl font-bold text-gray-900">{registrationGames}</div>
-                  <div className="text-sm text-gray-600">In Registrazione</div>
+                  <div className="text-sm text-gray-600">Registration Open</div>
                 </div>
               </div>
             </CardContent>
@@ -595,7 +609,7 @@ export default function AdminDashboard() {
                 </div>
                 <div className="ml-4">
                   <div className="text-2xl font-bold text-gray-900">{users?.filter(u => !u.isAdmin).length || 0}</div>
-                  <div className="text-sm text-gray-600">Giocatori Registrati</div>
+                  <div className="text-sm text-gray-600">Registered Players</div>
                 </div>
               </div>
             </CardContent>
@@ -872,9 +886,9 @@ export default function AdminDashboard() {
         <Dialog open={ticketDialogOpen} onOpenChange={setTicketDialogOpen}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Assegna Ticket</DialogTitle>
+              <DialogTitle>Assign Tickets</DialogTitle>
               <DialogDescription>
-                Assegna ticket ai giocatori per questo gioco. I giocatori devono essere registrati per ricevere ticket.
+                Assign tickets to players for this game. Players must be registered to receive tickets.
               </DialogDescription>
             </DialogHeader>
             <TicketAssignmentForm 
@@ -894,11 +908,11 @@ export default function AdminDashboard() {
 function GameStatusBadge({ status }: { status: string }) {
   switch (status) {
     case "active":
-      return <Badge className="bg-green-600 text-white">Attivo</Badge>;
+      return <Badge className="bg-secondary text-white">Active</Badge>;
     case "completed":
-      return <Badge variant="secondary">Completato</Badge>;
+      return <Badge variant="secondary">Completed</Badge>;
     case "registration":
-      return <Badge className="bg-yellow-600 text-white">Registrazione Aperta</Badge>;
+      return <Badge className="bg-warning text-white">Registration Open</Badge>;
     default:
       return <Badge variant="outline">{status}</Badge>;
   }
