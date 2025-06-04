@@ -30,7 +30,19 @@ export default function GameInterface() {
     queryKey: ["/api/teams"],
   });
 
+  const { data: matches } = useQuery<any[]>({
+    queryKey: [`/api/matches/${game?.currentRound}`],
+    enabled: !!game?.currentRound,
+  });
+
   const activeTickets = tickets?.filter(t => t.isActive) || [];
+
+  // Calculate deadline (15 minutes before first match)
+  const deadline = matches && Array.isArray(matches) && matches.length > 0 
+    ? new Date(Math.min(...matches.map((m: any) => new Date(m.matchDate).getTime())) - 15 * 60 * 1000)
+    : null;
+  
+  const isDeadlinePassed = deadline ? new Date() > deadline : false;
 
   const submitSelectionsMutation = useMutation({
     mutationFn: async (teamSelections: Array<{ ticketId: number; teamId: number; round: number; gameId: number }>) => {
@@ -122,17 +134,41 @@ export default function GameInterface() {
           <CardHeader>
             <div className="flex justify-between items-center">
               <CardTitle>Giornata {game.currentRound} - Team Selection</CardTitle>
-              <Badge className="bg-warning text-white">
-                <Clock className="h-3 w-3 mr-1" />
-                Selection Open
-              </Badge>
+              {isDeadlinePassed ? (
+                <Badge variant="destructive">
+                  <Clock className="h-3 w-3 mr-1" />
+                  Selection Closed
+                </Badge>
+              ) : (
+                <Badge className="bg-warning text-white">
+                  <Clock className="h-3 w-3 mr-1" />
+                  Selection Open
+                </Badge>
+              )}
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-600">
-              Select a team for each of your active tickets. Remember: you cannot choose a team 
-              you've already selected with that ticket in previous rounds.
-            </p>
+            {deadline && !isDeadlinePassed && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                <div className="flex items-center">
+                  <Clock className="h-4 w-4 text-yellow-600 mr-2" />
+                  <span className="text-sm text-yellow-800">
+                    Selection deadline: {deadline.toLocaleString()} 
+                    (15 minutes before first match)
+                  </span>
+                </div>
+              </div>
+            )}
+            {isDeadlinePassed ? (
+              <p className="text-red-600">
+                The selection deadline has passed. Team selections close 15 minutes before the first match of each round.
+              </p>
+            ) : (
+              <p className="text-gray-600">
+                Select a team for each of your active tickets. Remember: you cannot choose a team 
+                you've already selected with that ticket in previous rounds.
+              </p>
+            )}
           </CardContent>
         </Card>
 

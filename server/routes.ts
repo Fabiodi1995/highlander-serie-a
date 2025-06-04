@@ -83,6 +83,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     try {
       const gameId = parseInt(req.params.id);
+      const game = await storage.getGame(gameId);
+      
+      if (!game) {
+        return res.status(404).json({ message: "Game not found" });
+      }
+      
+      // Verify admin owns this game
+      if (game.createdBy !== req.user!.id) {
+        return res.status(403).json({ message: "Access denied - not your game" });
+      }
+      
+      if (game.status !== "registration") {
+        return res.status(400).json({ message: "Registration is not open for this game" });
+      }
+      
       await storage.updateGameStatus(gameId, "active");
       res.json({ message: "Registration closed, game started" });
     } catch (error) {
@@ -100,6 +115,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!game) {
         return res.status(404).json({ message: "Game not found" });
+      }
+
+      // Verify admin owns this game
+      if (game.createdBy !== req.user!.id) {
+        return res.status(403).json({ message: "Access denied - not your game" });
       }
 
       if (game.status !== "active") {
@@ -212,6 +232,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const gameId = parseInt(req.params.id);
       const { userId, count = 1 } = req.body;
       
+      const game = await storage.getGame(gameId);
+      if (!game) {
+        return res.status(404).json({ message: "Game not found" });
+      }
+      
+      // Verify admin owns this game
+      if (game.createdBy !== req.user!.id) {
+        return res.status(403).json({ message: "Access denied - not your game" });
+      }
+      
+      if (game.status !== "registration") {
+        return res.status(400).json({ message: "Cannot assign tickets - registration is closed" });
+      }
+      
+      // Validate user exists and is not admin
+      const targetUser = await storage.getUser(userId);
+      if (!targetUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      if (targetUser.isAdmin) {
+        return res.status(400).json({ message: "Cannot assign tickets to admin users" });
+      }
+      
+      // Validate ticket count
+      if (count < 1 || count > 10) {
+        return res.status(400).json({ message: "Ticket count must be between 1 and 10" });
+      }
+      
       const tickets = [];
       for (let i = 0; i < count; i++) {
         const ticket = await storage.createTicket(gameId, userId);
@@ -251,6 +300,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     try {
       const selections = z.array(insertTeamSelectionSchema).parse(req.body);
+      
+      // Validate deadline for team selections (15 minutes before first match)
+      if (selections.length > 0) {
+        const gameId = selections[0].gameId;
+        const round = selections[0].round;
+        
+        const game = await storage.getGame(gameId);
+        if (!game || game.status !== "active") {
+          return res.status(400).json({ message: "Game is not active" });
+        }
+        
+        const matches = await storage.getMatchesByRound(round);
+        if (matches.length > 0) {
+          const firstMatchTime = new Date(Math.min(...matches.map(m => new Date(m.matchDate).getTime())));
+          const deadlineTime = new Date(firstMatchTime.getTime() - 15 * 60 * 1000); // 15 minutes before
+          const currentTime = new Date();
+          
+          if (currentTime > deadlineTime) {
+            return res.status(400).json({ 
+              message: "Selection deadline has passed. Selections close 15 minutes before the first match.",
+              deadline: deadlineTime.toISOString()
+            });
+          }
+        }
+      }
       
       const results = [];
       for (const selection of selections) {
