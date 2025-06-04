@@ -13,10 +13,13 @@ import type { Game, Ticket, Team, TeamSelection } from "@shared/schema";
 
 export default function GameInterface() {
   const { id } = useParams<{ id: string }>();
-  const gameId = parseInt(id!);
+  const gameId = id ? parseInt(id) : null;
   const { user } = useAuth();
   const { toast } = useToast();
   const [selections, setSelections] = useState<Record<number, number>>({});
+
+  console.log("GameInterface - id from params:", id);
+  console.log("GameInterface - parsed gameId:", gameId);
 
   const { data: game } = useQuery<Game>({
     queryKey: [`/api/games/${gameId}`],
