@@ -204,7 +204,7 @@ function TicketSelectionCard({
   onSelectionChange: (teamId: string) => void;
 }) {
   const { data: previousSelections } = useQuery<TeamSelection[]>({
-    queryKey: ["/api/tickets", ticket.id, "selections"],
+    queryKey: [`/api/tickets/${ticket.id}/selections`],
   });
 
   const usedTeamIds = new Set(previousSelections?.map(s => s.teamId) || []);
