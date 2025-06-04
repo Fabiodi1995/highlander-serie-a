@@ -10,14 +10,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { User, LogOut, Plus, Gamepad2, Play, Users, TicketIcon, Calculator, Settings, Trash2 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { User, LogOut, Plus, Gamepad2, Play, Users, TicketIcon, Calculator, Settings, Trash2, Trophy, Target } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertGameSchema } from "@shared/schema";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import type { Game, User as UserType } from "@shared/schema";
+import type { Game, User as UserType, Team, TeamSelection, Ticket, Match } from "@shared/schema";
 import { z } from "zod";
 
 type CreateGameData = z.infer<typeof insertGameSchema>;
@@ -113,6 +114,18 @@ export default function AdminDashboard() {
     queryKey: ["/api/users"],
   });
 
+  const { data: teams } = useQuery<Team[]>({
+    queryKey: ["/api/teams"],
+  });
+
+  const { data: allTeamSelections } = useQuery({
+    queryKey: ["/api/admin/all-team-selections"],
+  });
+
+  const { data: allTickets } = useQuery<Ticket[]>({
+    queryKey: ["/api/admin/all-tickets"],
+  });
+
   const createGameForm = useForm<CreateGameData>({
     resolver: zodResolver(insertGameSchema),
     defaultValues: {
@@ -166,6 +179,9 @@ export default function AdminDashboard() {
     },
   });
 
+  const [selectedGameForCalculation, setSelectedGameForCalculation] = useState<Game | null>(null);
+  const [showMatchResults, setShowMatchResults] = useState(false);
+
   const calculateTurnMutation = useMutation({
     mutationFn: async (gameId: number) => {
       const res = await apiRequest("POST", `/api/games/${gameId}/calculate-turn`);
@@ -173,14 +189,16 @@ export default function AdminDashboard() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/games"] });
+      setShowMatchResults(false);
+      setSelectedGameForCalculation(null);
       toast({
-        title: "Success",
-        description: "Turn calculated successfully",
+        title: "Successo",
+        description: "Giornata calcolata con successo",
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Error",
+        title: "Errore",
         description: error.message,
         variant: "destructive",
       });
@@ -242,8 +260,9 @@ export default function AdminDashboard() {
     closeRegistrationMutation.mutate(gameId);
   };
 
-  const handleCalculateTurn = (gameId: number) => {
-    calculateTurnMutation.mutate(gameId);
+  const handleCalculateTurn = (game: Game) => {
+    setSelectedGameForCalculation(game);
+    setShowMatchResults(true);
   };
 
   const handleAssignTickets = (gameId: number) => {

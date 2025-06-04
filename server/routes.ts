@@ -435,6 +435,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin-only endpoints for comprehensive data access
+  app.get("/api/admin/all-team-selections", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user!.isAdmin) return res.sendStatus(403);
+    
+    try {
+      const games = await storage.getGamesByCreator(req.user!.id);
+      const allData = [];
+      
+      for (const game of games) {
+        const gameTickets = await storage.getTicketsByGame(game.id);
+        const gameData = { game, tickets: [] as any[] };
+        
+        for (const ticket of gameTickets) {
+          const user = await storage.getUser(ticket.userId);
+          const selections = await storage.getTeamSelectionsByTicket(ticket.id);
+          gameData.tickets.push({ ticket, user, selections });
+        }
+        
+        allData.push(gameData);
+      }
+      
+      res.json(allData);
+    } catch (error) {
+      console.error("Error fetching all team selections:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.get("/api/admin/all-tickets", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user!.isAdmin) return res.sendStatus(403);
+    
+    try {
+      const games = await storage.getGamesByCreator(req.user!.id);
+      const allTickets = [];
+      
+      for (const game of games) {
+        const tickets = await storage.getTicketsByGame(game.id);
+        for (const ticket of tickets) {
+          const user = await storage.getUser(ticket.userId);
+          allTickets.push({ ...ticket, game, user });
+        }
+      }
+      
+      res.json(allTickets);
+    } catch (error) {
+      console.error("Error fetching all tickets:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
   // Matches API
   app.get("/api/matches/:round", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
