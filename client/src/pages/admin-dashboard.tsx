@@ -10,14 +10,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { User, LogOut, Plus, Gamepad2, Play, Users, TicketIcon, Calculator } from "lucide-react";
+import { User, LogOut, Plus, Gamepad2, Play, Users, TicketIcon, Calculator, Settings } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertGameSchema } from "@shared/schema";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import type { Game } from "@shared/schema";
+import type { Game, User as UserType } from "@shared/schema";
 import { z } from "zod";
 
 type CreateGameData = z.infer<typeof insertGameSchema>;
@@ -26,9 +26,15 @@ export default function AdminDashboard() {
   const { user, logoutMutation } = useAuth();
   const { toast } = useToast();
   const [createGameOpen, setCreateGameOpen] = useState(false);
+  const [ticketDialogOpen, setTicketDialogOpen] = useState(false);
+  const [selectedGameId, setSelectedGameId] = useState<number | null>(null);
 
   const { data: games, isLoading: gamesLoading } = useQuery<Game[]>({
     queryKey: ["/api/games"],
+  });
+
+  const { data: users } = useQuery<UserType[]>({
+    queryKey: ["/api/users"],
   });
 
   const createGameForm = useForm<CreateGameData>({
@@ -94,6 +100,28 @@ export default function AdminDashboard() {
       toast({
         title: "Success",
         description: "Turn calculated successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const assignTicketMutation = useMutation({
+    mutationFn: async ({ gameId, userId, count }: { gameId: number; userId: number; count: number }) => {
+      const res = await apiRequest("POST", `/api/games/${gameId}/tickets`, { userId, count });
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/games"] });
+      setTicketDialogOpen(false);
+      toast({
+        title: "Success",
+        description: "Tickets assigned successfully",
       });
     },
     onError: (error: Error) => {

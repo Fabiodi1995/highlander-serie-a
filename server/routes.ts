@@ -13,6 +13,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await storage.seedTeams();
   await storage.seedMatches();
 
+  // Users API (admin only)
+  app.get("/api/users", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user!.isAdmin) return res.sendStatus(403);
+    
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
   // Games API
   app.get("/api/games", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
