@@ -119,7 +119,7 @@ export default function GameInterface() {
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2 text-sm">
                 <Clock className="h-4 w-4 text-accent" />
-                <span className="text-gray-600">Round {game.currentRound} Selection</span>
+                <span className="text-gray-600">Selezione Giornata {game.currentRound}</span>
               </div>
               <span className="text-gray-700">{user?.username}</span>
             </div>
@@ -132,17 +132,17 @@ export default function GameInterface() {
         <Card className="mb-6">
           <CardHeader>
             <div className="flex justify-between items-center">
-              <CardTitle>Giornata {game.currentRound} - Team Selection</CardTitle>
+              <CardTitle>Giornata {game.currentRound} - Selezione Squadre</CardTitle>
               <Badge className="bg-warning text-white">
                 <Clock className="h-3 w-3 mr-1" />
-                Selection Open
+                Selezioni Aperte
               </Badge>
             </div>
           </CardHeader>
           <CardContent>
             <p className="text-gray-600">
-              Select a team for each of your active tickets. Remember: you cannot choose a team 
-              you've already selected with that ticket in previous rounds.
+              Seleziona una squadra per ognuno dei tuoi ticket attivi. Ricorda: non puoi scegliere una squadra 
+              che hai già selezionato con quel ticket nelle giornate precedenti.
             </p>
           </CardContent>
         </Card>
@@ -152,9 +152,9 @@ export default function GameInterface() {
           <Card className="text-center p-8">
             <CardContent>
               <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Active Tickets</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Nessun Ticket Attivo</h3>
               <p className="text-gray-500">
-                You don't have any active tickets in this game.
+                Non hai ticket attivi in questo gioco.
               </p>
             </CardContent>
           </Card>
@@ -167,6 +167,7 @@ export default function GameInterface() {
                 teams={teams || []}
                 selectedTeamId={selections[ticket.id]}
                 onSelectionChange={(teamId) => handleSelectionChange(ticket.id, teamId)}
+                currentRound={game.currentRound}
               />
             ))}
 
@@ -196,27 +197,33 @@ function TicketSelectionCard({
   ticket, 
   teams, 
   selectedTeamId, 
-  onSelectionChange 
+  onSelectionChange,
+  currentRound
 }: { 
   ticket: Ticket;
   teams: Team[];
   selectedTeamId?: number;
   onSelectionChange: (teamId: string) => void;
+  currentRound: number;
 }) {
-  const { data: previousSelections } = useQuery<TeamSelection[]>({
+  const { data: allSelections } = useQuery<TeamSelection[]>({
     queryKey: [`/api/tickets/${ticket.id}/selections`],
   });
 
-  const usedTeamIds = new Set(previousSelections?.map(s => s.teamId) || []);
+  // Solo le selezioni dei round precedenti (completati), non il round corrente
+  const previousSelections = allSelections?.filter(s => s.round < currentRound) || [];
+  const usedTeamIds = new Set(previousSelections.map(s => s.teamId));
   const availableTeams = teams.filter(team => !usedTeamIds.has(team.id));
 
-  const previousTeamNames = previousSelections
-    ?.map(selection => {
-      const team = teams.find(t => t.id === selection.teamId);
-      return team?.name;
-    })
-    .filter(Boolean)
-    .join(", ") || "None";
+  const previousTeamNames = previousSelections.length > 0 
+    ? previousSelections
+        .map(selection => {
+          const team = teams.find(t => t.id === selection.teamId);
+          return team?.name;
+        })
+        .filter(Boolean)
+        .join(", ")
+    : "Nessuna";
 
   return (
     <Card>
