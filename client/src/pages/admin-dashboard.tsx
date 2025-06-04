@@ -22,6 +22,82 @@ import { z } from "zod";
 
 type CreateGameData = z.infer<typeof insertGameSchema>;
 
+function TicketAssignmentForm({ 
+  gameId, 
+  users, 
+  onAssign, 
+  isPending, 
+  onClose 
+}: {
+  gameId: number | null;
+  users: UserType[];
+  onAssign: (data: { gameId: number; userId: number; count: number }) => void;
+  isPending: boolean;
+  onClose: () => void;
+}) {
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
+  const [ticketCount, setTicketCount] = useState<string>("1");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!gameId || !selectedUserId || !ticketCount) return;
+
+    onAssign({
+      gameId,
+      userId: parseInt(selectedUserId),
+      count: parseInt(ticketCount)
+    });
+  };
+
+  // Filter out admin users for player assignment
+  const playerUsers = users.filter(user => !user.isAdmin);
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="user">Select Player</Label>
+        <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+          <SelectTrigger>
+            <SelectValue placeholder="Choose a player..." />
+          </SelectTrigger>
+          <SelectContent>
+            {playerUsers.map((user) => (
+              <SelectItem key={user.id} value={user.id.toString()}>
+                {user.username}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="count">Number of Tickets</Label>
+        <Input
+          id="count"
+          type="number"
+          min="1"
+          max="10"
+          value={ticketCount}
+          onChange={(e) => setTicketCount(e.target.value)}
+          placeholder="Enter number of tickets"
+        />
+      </div>
+
+      <div className="flex justify-end space-x-2">
+        <Button type="button" variant="outline" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button 
+          type="submit" 
+          disabled={isPending || !selectedUserId || !ticketCount}
+        >
+          {isPending ? "Assigning..." : "Assign Tickets"}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
 export default function AdminDashboard() {
   const { user, logoutMutation } = useAuth();
   const { toast } = useToast();
@@ -149,6 +225,11 @@ export default function AdminDashboard() {
     calculateTurnMutation.mutate(gameId);
   };
 
+  const handleAssignTickets = (gameId: number) => {
+    setSelectedGameId(gameId);
+    setTicketDialogOpen(true);
+  };
+
   if (gamesLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -236,6 +317,7 @@ export default function AdminDashboard() {
                                 placeholder="Optional game description..." 
                                 className="resize-none"
                                 {...field} 
+                                value={field.value || ""}
                               />
                             </FormControl>
                             <FormMessage />
@@ -325,8 +407,8 @@ export default function AdminDashboard() {
                   <TicketIcon className="h-6 w-6 text-accent" />
                 </div>
                 <div className="ml-4">
-                  <div className="text-2xl font-bold text-gray-900">0</div>
-                  <div className="text-sm text-gray-600">Active Tickets</div>
+                  <div className="text-2xl font-bold text-gray-900">{users?.filter(u => !u.isAdmin).length || 0}</div>
+                  <div className="text-sm text-gray-600">Registered Players</div>
                 </div>
               </div>
             </CardContent>
@@ -384,14 +466,24 @@ export default function AdminDashboard() {
                         <TableCell>
                           <div className="flex space-x-2">
                             {game.status === "registration" && (
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => handleCloseRegistration(game.id)}
-                                disabled={closeRegistrationMutation.isPending}
-                              >
-                                Close Registration
-                              </Button>
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleAssignTickets(game.id)}
+                                >
+                                  <TicketIcon className="h-4 w-4 mr-1" />
+                                  Assign Tickets
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleCloseRegistration(game.id)}
+                                  disabled={closeRegistrationMutation.isPending}
+                                >
+                                  Close Registration
+                                </Button>
+                              </>
                             )}
                             {game.status === "active" && (
                               <Button
@@ -416,6 +508,25 @@ export default function AdminDashboard() {
             )}
           </CardContent>
         </Card>
+
+        {/* Ticket Assignment Dialog */}
+        <Dialog open={ticketDialogOpen} onOpenChange={setTicketDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Assign Tickets</DialogTitle>
+              <DialogDescription>
+                Assign tickets to players for this game. Players must be registered to receive tickets.
+              </DialogDescription>
+            </DialogHeader>
+            <TicketAssignmentForm 
+              gameId={selectedGameId}
+              users={users || []}
+              onAssign={assignTicketMutation.mutate}
+              isPending={assignTicketMutation.isPending}
+              onClose={() => setTicketDialogOpen(false)}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
