@@ -18,8 +18,7 @@ export default function GameInterface() {
   const { toast } = useToast();
   const [selections, setSelections] = useState<Record<number, number>>({});
 
-  console.log("GameInterface - id from params:", id);
-  console.log("GameInterface - parsed gameId:", gameId);
+
 
   const { data: game } = useQuery<Game>({
     queryKey: [`/api/games/${gameId}`],

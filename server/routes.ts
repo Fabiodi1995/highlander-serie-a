@@ -345,13 +345,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(403).json({ message: "Invalid ticket" });
         }
         
-        // Check if team was already selected by this ticket
-        const alreadySelected = await storage.hasTeamBeenSelected(selection.ticketId, selection.teamId);
-        if (alreadySelected) {
-          return res.status(400).json({ message: "Team already selected by this ticket" });
-        }
+        // Check if team was already selected by this ticket in the current round
+        const existingSelections = await storage.getTeamSelectionsByTicket(selection.ticketId);
+        const currentRoundSelection = existingSelections.find(s => s.round === selection.round);
         
-        const teamSelection = await storage.createTeamSelection(selection);
+        // If there's already a selection for this round, update it instead of creating new
+        let teamSelection;
+        if (currentRoundSelection) {
+          teamSelection = await storage.updateTeamSelection(currentRoundSelection.id, selection.teamId);
+        } else {
+          // Check if team was already selected by this ticket in previous rounds
+          const alreadySelected = await storage.hasTeamBeenSelected(selection.ticketId, selection.teamId);
+          if (alreadySelected) {
+            return res.status(400).json({ message: "Team already selected by this ticket in a previous round" });
+          }
+          teamSelection = await storage.createTeamSelection(selection);
+        }
         results.push(teamSelection);
       }
       

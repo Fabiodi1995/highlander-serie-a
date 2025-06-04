@@ -49,6 +49,7 @@ export interface IStorage {
   
   // Team selections
   createTeamSelection(selection: InsertTeamSelection): Promise<TeamSelection>;
+  updateTeamSelection(selectionId: number, teamId: number): Promise<TeamSelection>;
   getTeamSelectionsByTicket(ticketId: number): Promise<TeamSelection[]>;
   getTeamSelectionsByRound(gameId: number, round: number): Promise<TeamSelection[]>;
   hasTeamBeenSelected(ticketId: number, teamId: number): Promise<boolean>;
@@ -306,6 +307,15 @@ export class DatabaseStorage implements IStorage {
         eq(teamSelections.gameId, gameId),
         eq(teamSelections.round, round)
       ));
+  }
+
+  async updateTeamSelection(selectionId: number, teamId: number): Promise<TeamSelection> {
+    const [selection] = await db
+      .update(teamSelections)
+      .set({ teamId })
+      .where(eq(teamSelections.id, selectionId))
+      .returning();
+    return selection;
   }
 
   async hasTeamBeenSelected(ticketId: number, teamId: number): Promise<boolean> {
