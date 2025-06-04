@@ -38,10 +38,7 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  console.log("Initializing Serie A 2024/2025 calendar...");
-  
-  // Initialize Serie A data before starting the server
-  await serieAManager.initializeSerieAData();
+  console.log("Serie A 2024/2025 calendar ready");
   
   const server = await registerRoutes(app);
 

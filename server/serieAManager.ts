@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx';
+import XLSX from 'xlsx';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
@@ -114,26 +114,42 @@ export class SerieAManager {
   async loadMatchesFromExcel() {
     try {
       if (!fs.existsSync(this.excelFilePath)) {
-        throw new Error('Excel file not found');
+        console.log('Excel file not found, using hardcoded fixtures');
+        return;
       }
 
       console.log('Loading matches from Excel file...');
-      const workbook = XLSX.readFile(this.excelFilePath);
-      const matchesSheet = workbook.Sheets['Calendario'];
       
-      if (!matchesSheet) {
-        throw new Error('Calendario sheet not found in Excel file');
-      }
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Excel loading timeout')), 5000);
+      });
 
-      const matchesData = XLSX.utils.sheet_to_json(matchesSheet);
-      
-      // Clear existing matches and load from Excel
-      await this.clearAndLoadMatches(matchesData);
-      
-      console.log(`Loaded ${matchesData.length} matches from Excel file`);
+      const loadPromise = new Promise(async (resolve, reject) => {
+        try {
+          const workbook = XLSX.readFile(this.excelFilePath);
+          const matchesSheet = workbook.Sheets['Calendario'];
+          
+          if (!matchesSheet) {
+            throw new Error('Calendario sheet not found in Excel file');
+          }
+
+          const matchesData = XLSX.utils.sheet_to_json(matchesSheet);
+          
+          // Clear existing matches and load from Excel
+          await this.clearAndLoadMatches(matchesData);
+          
+          console.log(`Loaded ${matchesData.length} matches from Excel file`);
+          resolve(true);
+        } catch (error) {
+          reject(error);
+        }
+      });
+
+      await Promise.race([loadPromise, timeoutPromise]);
     } catch (error) {
       console.error('Error loading from Excel:', error);
-      throw error;
+      console.log('Falling back to hardcoded fixtures');
     }
   }
 
