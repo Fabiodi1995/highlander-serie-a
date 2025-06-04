@@ -403,6 +403,43 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleExcelUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('calendar', file);
+
+    try {
+      const res = await fetch("/api/admin/excel-calendar", {
+        method: "POST",
+        body: formData,
+        credentials: 'include'
+      });
+
+      if (res.ok) {
+        toast({
+          title: "Successo",
+          description: "Calendario Excel aggiornato con successo",
+        });
+        
+        // Refresh data
+        queryClient.invalidateQueries({ queryKey: ["/api/games"] });
+      } else {
+        throw new Error("Upload failed");
+      }
+    } catch (error) {
+      toast({
+        title: "Errore",
+        description: "Errore durante l'upload del file Excel",
+        variant: "destructive",
+      });
+    }
+
+    // Reset input
+    event.target.value = '';
+  };
+
   if (gamesLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -508,7 +545,7 @@ export default function AdminDashboard() {
                           <FormItem>
                             <FormLabel>Descrizione (opzionale)</FormLabel>
                             <FormControl>
-                              <Textarea placeholder="Aggiungi una descrizione..." {...field} />
+                              <Textarea placeholder="Aggiungi una descrizione..." {...field} value={field.value || ''} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -833,6 +870,40 @@ export default function AdminDashboard() {
                   <div className="text-center p-4 bg-yellow-50 rounded-lg">
                     <div className="text-2xl font-bold text-yellow-600">{registrationGames}</div>
                     <div className="text-sm text-yellow-700">In Registrazione</div>
+                  </div>
+                </div>
+
+                {/* Serie A Calendar Management */}
+                <div className="mt-6">
+                  <h4 className="text-lg font-medium mb-4">Gestione Calendario Serie A</h4>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <p className="text-sm text-gray-600 mb-4">
+                      Scarica il file Excel del calendario Serie A 2024/2025 per modificarlo manualmente.
+                      Puoi aggiornare date, orari e risultati delle partite.
+                    </p>
+                    <div className="flex space-x-2">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => window.open('/api/admin/excel-calendar', '_blank')}
+                      >
+                        <Trophy className="h-4 w-4 mr-2" />
+                        Scarica Calendario Excel
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        onClick={() => document.getElementById('excel-upload')?.click()}
+                      >
+                        <Target className="h-4 w-4 mr-2" />
+                        Carica Calendario Modificato
+                      </Button>
+                    </div>
+                    <input
+                      id="excel-upload"
+                      type="file"
+                      accept=".xlsx,.xls"
+                      style={{ display: 'none' }}
+                      onChange={handleExcelUpload}
+                    />
                   </div>
                 </div>
                 

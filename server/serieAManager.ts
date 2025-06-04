@@ -1,8 +1,12 @@
 import * as XLSX from 'xlsx';
 import * as fs from 'fs';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
 import { storage } from './storage';
 import { serieATeams, serieAFixtures, getTeamIdByName } from './data/serie-a-schedule';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export class SerieAManager {
   private excelFilePath = path.join(__dirname, 'data', 'serie-a-calendar.xlsx');
@@ -212,10 +216,11 @@ export class SerieAManager {
       const roundMatches = matchesData.filter((match: any) => match.Giornata === round);
       
       for (const matchData of roundMatches) {
-        const homeTeamId = getTeamIdByName(matchData['Squadra Casa']);
-        const awayTeamId = getTeamIdByName(matchData['Squadra Trasferta']);
+        const match = matchData as any;
+        const homeTeamId = getTeamIdByName(match['Squadra Casa']);
+        const awayTeamId = getTeamIdByName(match['Squadra Trasferta']);
         
-        if (homeTeamId && awayTeamId && matchData['Gol Casa'] !== '' && matchData['Gol Trasferta'] !== '') {
+        if (homeTeamId && awayTeamId && match['Gol Casa'] !== '' && match['Gol Trasferta'] !== '') {
           // Update match result in database
           const existingMatches = await storage.getMatchesByRound(round);
           const matchToUpdate = existingMatches.find(m => 
@@ -225,8 +230,8 @@ export class SerieAManager {
           if (matchToUpdate) {
             await storage.updateMatchResult(
               matchToUpdate.id, 
-              parseInt(matchData['Gol Casa']), 
-              parseInt(matchData['Gol Trasferta'])
+              parseInt(match['Gol Casa']), 
+              parseInt(match['Gol Trasferta'])
             );
           }
         }

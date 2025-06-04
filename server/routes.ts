@@ -485,14 +485,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Matches API
+  // Matches API - Get matches for a specific round
   app.get("/api/matches/:round", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     try {
       const round = parseInt(req.params.round);
+      if (isNaN(round) || round < 1 || round > 38) {
+        return res.status(400).json({ message: "Invalid round number" });
+      }
+      
       const matches = await storage.getMatchesByRound(round);
-      res.json(matches);
+      
+      // If no matches found in database, try to initialize from Serie A data
+      if (!matches || matches.length === 0) {
+        const { serieAManager } = await import('./serieAManager');
+        await serieAManager.initializeSerieAData();
+        const newMatches = await storage.getMatchesByRound(round);
+        res.json(newMatches || []);
+      } else {
+        res.json(matches);
+      }
     } catch (error) {
       console.error("Error fetching matches:", error);
       res.status(500).json({ message: "Failed to fetch matches" });
@@ -511,6 +524,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating match result:", error);
       res.status(500).json({ message: "Failed to update match result" });
+    }
+  });
+
+  // Excel file management for Serie A calendar
+  app.get("/api/admin/excel-calendar", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user!.isAdmin) return res.sendStatus(403);
+    
+    try {
+      const { serieAManager } = await import('./serieAManager');
+      const filePath = serieAManager.getExcelFilePath();
+      
+      // Check if file exists, if not create it
+      const fs = await import('fs');
+      if (!fs.existsSync(filePath)) {
+        await serieAManager.initializeSerieAData();
+      }
+      
+      res.download(filePath, 'serie-a-calendar-2024-2025.xlsx');
+    } catch (error) {
+      console.error("Error downloading Excel calendar:", error);
+      res.status(500).json({ message: "Failed to download calendar" });
+    }
+  });
+
+  // Upload Excel file for Serie A calendar
+  const multer = await import('multer');
+  const upload = multer.default({ dest: 'uploads/' });
+  
+  app.post("/api/admin/excel-calendar", upload.single('calendar'), async (req, res) => {
+    if (!req.isAuthenticated() || !req.user!.isAdmin) return res.sendStatus(403);
+    
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      const { serieAManager } = await import('./serieAManager');
+      const fs = await import('fs');
+      const path = await import('path');
+      
+      // Move uploaded file to replace the existing calendar
+      const targetPath = serieAManager.getExcelFilePath();
+      fs.copyFileSync(req.file.path, targetPath);
+      
+      // Clean up temporary file
+      fs.unlinkSync(req.file.path);
+      
+      // Reload matches from the new Excel file
+      await serieAManager.loadMatchesFromExcel();
+      
+      res.json({ message: "Calendar updated successfully" });
+    } catch (error) {
+      console.error("Error uploading Excel calendar:", error);
+      res.status(500).json({ message: "Failed to update calendar" });
     }
   });
 
