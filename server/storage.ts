@@ -215,14 +215,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async seedTeams(): Promise<void> {
-    const serieATeams = [
+    const serieATeams2024_25 = [
       { name: "Atalanta", code: "ATA" },
       { name: "Bologna", code: "BOL" },
       { name: "Cagliari", code: "CAG" },
+      { name: "Como", code: "COM" },
       { name: "Empoli", code: "EMP" },
       { name: "Fiorentina", code: "FIO" },
-      { name: "Frosinone", code: "FRO" },
       { name: "Genoa", code: "GEN" },
+      { name: "Hellas Verona", code: "VER" },
       { name: "Inter", code: "INT" },
       { name: "Juventus", code: "JUV" },
       { name: "Lazio", code: "LAZ" },
@@ -230,17 +231,16 @@ export class DatabaseStorage implements IStorage {
       { name: "Milan", code: "MIL" },
       { name: "Monza", code: "MON" },
       { name: "Napoli", code: "NAP" },
+      { name: "Parma", code: "PAR" },
       { name: "Roma", code: "ROM" },
-      { name: "Salernitana", code: "SAL" },
-      { name: "Sassuolo", code: "SAS" },
       { name: "Torino", code: "TOR" },
       { name: "Udinese", code: "UDI" },
-      { name: "Verona", code: "VER" }
+      { name: "Venezia", code: "VEN" }
     ];
 
     const existingTeams = await this.getAllTeams();
     if (existingTeams.length === 0) {
-      await db.insert(teams).values(serieATeams);
+      await db.insert(teams).values(serieATeams2024_25);
     }
   }
 

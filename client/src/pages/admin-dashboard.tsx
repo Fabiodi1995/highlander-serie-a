@@ -118,7 +118,7 @@ export default function AdminDashboard() {
     defaultValues: {
       name: "",
       description: "",
-      startRound: 9,
+      startRound: 1,
     },
   });
 
@@ -322,10 +322,11 @@ export default function AdminDashboard() {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="9">Giornata 9</SelectItem>
-                                <SelectItem value="10">Giornata 10</SelectItem>
-                                <SelectItem value="11">Giornata 11</SelectItem>
-                                <SelectItem value="12">Giornata 12</SelectItem>
+                                {Array.from({ length: 38 }, (_, i) => i + 1).map((round) => (
+                                  <SelectItem key={round} value={round.toString()}>
+                                    Giornata {round}
+                                  </SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
                             <FormMessage />
