@@ -128,7 +128,7 @@ export default function PlayerDashboard() {
 
 function GameCard({ game }: { game: Game }) {
   const { data: tickets } = useQuery<Ticket[]>({
-    queryKey: ["/api/games", game.id, "tickets"],
+    queryKey: [`/api/games/${game.id}/tickets`],
   });
 
   const activeTickets = tickets?.filter(t => t.isActive) || [];
