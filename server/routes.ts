@@ -1,0 +1,267 @@
+import type { Express } from "express";
+import { createServer, type Server } from "http";
+import { setupAuth } from "./auth";
+import { storage } from "./storage";
+import { insertGameSchema, insertTeamSelectionSchema } from "@shared/schema";
+import { z } from "zod";
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup authentication routes
+  setupAuth(app);
+
+  // Initialize data
+  await storage.seedTeams();
+  await storage.seedMatches();
+
+  // Games API
+  app.get("/api/games", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      if (req.user!.isAdmin) {
+        const games = await storage.getGamesByCreator(req.user!.id);
+        res.json(games);
+      } else {
+        const games = await storage.getGamesByParticipant(req.user!.id);
+        res.json(games);
+      }
+    } catch (error) {
+      console.error("Error fetching games:", error);
+      res.status(500).json({ message: "Failed to fetch games" });
+    }
+  });
+
+  app.post("/api/games", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user!.isAdmin) return res.sendStatus(403);
+    
+    try {
+      const gameData = insertGameSchema.parse(req.body);
+      const game = await storage.createGame({
+        ...gameData,
+        createdBy: req.user!.id
+      });
+      res.status(201).json(game);
+    } catch (error) {
+      console.error("Error creating game:", error);
+      res.status(400).json({ message: "Invalid game data" });
+    }
+  });
+
+  app.get("/api/games/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const gameId = parseInt(req.params.id);
+      const game = await storage.getGame(gameId);
+      
+      if (!game) {
+        return res.status(404).json({ message: "Game not found" });
+      }
+      
+      res.json(game);
+    } catch (error) {
+      console.error("Error fetching game:", error);
+      res.status(500).json({ message: "Failed to fetch game" });
+    }
+  });
+
+  app.post("/api/games/:id/close-registration", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user!.isAdmin) return res.sendStatus(403);
+    
+    try {
+      const gameId = parseInt(req.params.id);
+      await storage.updateGameStatus(gameId, "active");
+      res.json({ message: "Registration closed, game started" });
+    } catch (error) {
+      console.error("Error closing registration:", error);
+      res.status(500).json({ message: "Failed to close registration" });
+    }
+  });
+
+  app.post("/api/games/:id/calculate-turn", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user!.isAdmin) return res.sendStatus(403);
+    
+    try {
+      const gameId = parseInt(req.params.id);
+      const game = await storage.getGame(gameId);
+      
+      if (!game) {
+        return res.status(404).json({ message: "Game not found" });
+      }
+
+      // Get all team selections for current round
+      const selections = await storage.getTeamSelectionsByRound(gameId, game.currentRound);
+      
+      // Get matches for current round
+      const matches = await storage.getMatchesByRound(game.currentRound);
+      
+      // Process eliminations based on match results
+      for (const selection of selections) {
+        const match = matches.find(m => 
+          (m.homeTeamId === selection.teamId || m.awayTeamId === selection.teamId) && 
+          m.isCompleted
+        );
+        
+        if (match && match.result) {
+          // Team lost or drew - eliminate ticket
+          const teamWon = (match.homeTeamId === selection.teamId && match.result === 'H') ||
+                         (match.awayTeamId === selection.teamId && match.result === 'A');
+          
+          if (!teamWon) {
+            await storage.eliminateTicket(selection.ticketId, game.currentRound);
+          }
+        }
+      }
+      
+      // Advance to next round
+      await storage.updateGameRound(gameId, game.currentRound + 1);
+      
+      res.json({ message: "Turn calculated successfully" });
+    } catch (error) {
+      console.error("Error calculating turn:", error);
+      res.status(500).json({ message: "Failed to calculate turn" });
+    }
+  });
+
+  // Tickets API
+  app.get("/api/games/:id/tickets", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const gameId = parseInt(req.params.id);
+      const tickets = await storage.getTicketsByUser(req.user!.id, gameId);
+      res.json(tickets);
+    } catch (error) {
+      console.error("Error fetching tickets:", error);
+      res.status(500).json({ message: "Failed to fetch tickets" });
+    }
+  });
+
+  app.post("/api/games/:id/tickets", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user!.isAdmin) return res.sendStatus(403);
+    
+    try {
+      const gameId = parseInt(req.params.id);
+      const { userId, count = 1 } = req.body;
+      
+      const tickets = [];
+      for (let i = 0; i < count; i++) {
+        const ticket = await storage.createTicket(gameId, userId);
+        tickets.push(ticket);
+      }
+      
+      // Add user as participant if not already
+      try {
+        await storage.addGameParticipant(gameId, userId);
+      } catch (error) {
+        // User might already be a participant, ignore error
+      }
+      
+      res.status(201).json(tickets);
+    } catch (error) {
+      console.error("Error creating tickets:", error);
+      res.status(500).json({ message: "Failed to create tickets" });
+    }
+  });
+
+  // Teams API
+  app.get("/api/teams", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const teams = await storage.getAllTeams();
+      res.json(teams);
+    } catch (error) {
+      console.error("Error fetching teams:", error);
+      res.status(500).json({ message: "Failed to fetch teams" });
+    }
+  });
+
+  // Team selections API
+  app.post("/api/team-selections", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const selections = z.array(insertTeamSelectionSchema).parse(req.body);
+      
+      const results = [];
+      for (const selection of selections) {
+        // Verify ticket belongs to user
+        const tickets = await storage.getTicketsByUser(req.user!.id, selection.gameId);
+        const ticket = tickets.find(t => t.id === selection.ticketId);
+        
+        if (!ticket || !ticket.isActive) {
+          return res.status(403).json({ message: "Invalid ticket" });
+        }
+        
+        // Check if team was already selected by this ticket
+        const alreadySelected = await storage.hasTeamBeenSelected(selection.ticketId, selection.teamId);
+        if (alreadySelected) {
+          return res.status(400).json({ message: "Team already selected by this ticket" });
+        }
+        
+        const teamSelection = await storage.createTeamSelection(selection);
+        results.push(teamSelection);
+      }
+      
+      res.status(201).json(results);
+    } catch (error) {
+      console.error("Error creating team selections:", error);
+      res.status(400).json({ message: "Invalid selection data" });
+    }
+  });
+
+  app.get("/api/tickets/:id/selections", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const ticketId = parseInt(req.params.id);
+      
+      // Verify ticket belongs to user
+      const tickets = await storage.getTicketsByUser(req.user!.id);
+      const ticket = tickets.find(t => t.id === ticketId);
+      
+      if (!ticket) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const selections = await storage.getTeamSelectionsByTicket(ticketId);
+      res.json(selections);
+    } catch (error) {
+      console.error("Error fetching selections:", error);
+      res.status(500).json({ message: "Failed to fetch selections" });
+    }
+  });
+
+  // Matches API
+  app.get("/api/matches/:round", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const round = parseInt(req.params.round);
+      const matches = await storage.getMatchesByRound(round);
+      res.json(matches);
+    } catch (error) {
+      console.error("Error fetching matches:", error);
+      res.status(500).json({ message: "Failed to fetch matches" });
+    }
+  });
+
+  app.post("/api/matches/:id/result", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user!.isAdmin) return res.sendStatus(403);
+    
+    try {
+      const matchId = parseInt(req.params.id);
+      const { homeScore, awayScore } = req.body;
+      
+      await storage.updateMatchResult(matchId, homeScore, awayScore);
+      res.json({ message: "Match result updated" });
+    } catch (error) {
+      console.error("Error updating match result:", error);
+      res.status(500).json({ message: "Failed to update match result" });
+    }
+  });
+
+  const httpServer = createServer(app);
+  return httpServer;
+}
