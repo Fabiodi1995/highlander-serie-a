@@ -325,28 +325,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const selections = z.array(insertTeamSelectionSchema).parse(req.body);
       
-      // Validate deadline for team selections (15 minutes before first match)
+      // Validate game status for team selections
       if (selections.length > 0) {
         const gameId = selections[0].gameId;
-        const round = selections[0].round;
         
         const game = await storage.getGame(gameId);
         if (!game || game.status !== "active") {
           return res.status(400).json({ message: "Game is not active" });
-        }
-        
-        const matches = await storage.getMatchesByRound(round);
-        if (matches.length > 0) {
-          const firstMatchTime = new Date(Math.min(...matches.map(m => new Date(m.matchDate).getTime())));
-          const deadlineTime = new Date(firstMatchTime.getTime() - 15 * 60 * 1000); // 15 minutes before
-          const currentTime = new Date();
-          
-          if (currentTime > deadlineTime) {
-            return res.status(400).json({ 
-              message: "Selection deadline has passed. Selections close 15 minutes before the first match.",
-              deadline: deadlineTime.toISOString()
-            });
-          }
         }
       }
       
