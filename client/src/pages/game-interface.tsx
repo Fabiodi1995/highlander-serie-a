@@ -44,14 +44,14 @@ export default function GameInterface() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}/tickets`] });
       toast({
-        title: "Success",
-        description: "Team selections submitted successfully",
+        title: "Successo",
+        description: "Selezioni squadre inviate con successo",
       });
       setSelections({});
     },
     onError: (error: Error) => {
       toast({
-        title: "Error",
+        title: "Errore",
         description: error.message,
         variant: "destructive",
       });
@@ -68,8 +68,8 @@ export default function GameInterface() {
   const handleSubmitSelections = () => {
     if (!game || !gameId || isNaN(gameId)) {
       toast({
-        title: "Error",
-        description: "Invalid game data",
+        title: "Errore",
+        description: "Dati di gioco non validi",
         variant: "destructive",
       });
       return;
@@ -182,8 +182,8 @@ export default function GameInterface() {
                 }
               >
                 {submitSelectionsMutation.isPending 
-                  ? "Submitting..." 
-                  : "Submit All Selections"}
+                  ? "Invio in corso..." 
+                  : "Conferma Tutte le Selezioni"}
               </Button>
             </div>
           </div>
@@ -232,23 +232,23 @@ function TicketSelectionCard({
           <div>
             <CardTitle className="text-lg">Ticket #{ticket.id.toString().padStart(3, '0')}</CardTitle>
             <p className="text-sm text-gray-500">
-              Previous selections: <span className="font-medium">{previousTeamNames}</span>
+              Selezioni precedenti: <span className="font-medium">{previousTeamNames}</span>
             </p>
           </div>
-          <Badge className="bg-secondary text-white">Active</Badge>
+          <Badge className="bg-secondary text-white">Attivo</Badge>
         </div>
       </CardHeader>
       <CardContent>
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Select Team
+            Seleziona Squadra
           </label>
           <Select 
             value={selectedTeamId?.toString() || ""} 
             onValueChange={onSelectionChange}
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Choose a team..." />
+              <SelectValue placeholder="Scegli una squadra..." />
             </SelectTrigger>
             <SelectContent>
               {availableTeams.map((team) => (
@@ -264,7 +264,7 @@ function TicketSelectionCard({
           <div className="flex items-center">
             <Info className="h-4 w-4 text-blue-500 mr-2" />
             <span className="text-sm text-blue-700">
-              Selected team must win for this ticket to survive the round
+              La squadra selezionata deve vincere perché questo ticket sopravviva alla giornata
             </span>
           </div>
         </div>
