@@ -51,11 +51,11 @@ export interface IStorage {
   getTeamSelectionsByRound(gameId: number, round: number): Promise<TeamSelection[]>;
   hasTeamBeenSelected(ticketId: number, teamId: number): Promise<boolean>;
   
-  sessionStore: session.Store;
+  sessionStore: any;
 }
 
 export class DatabaseStorage implements IStorage {
-  sessionStore: session.Store;
+  sessionStore: any;
 
   constructor() {
     this.sessionStore = new PostgresSessionStore({ 
