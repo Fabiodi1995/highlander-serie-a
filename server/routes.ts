@@ -78,6 +78,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/games/:id", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user!.isAdmin) return res.sendStatus(403);
+    
+    try {
+      const gameId = parseInt(req.params.id);
+      const game = await storage.getGame(gameId);
+      
+      if (!game) {
+        return res.status(404).json({ message: "Game not found" });
+      }
+      
+      // Verify admin owns this game
+      if (game.createdBy !== req.user!.id) {
+        return res.status(403).json({ message: "Access denied - not your game" });
+      }
+      
+      await storage.deleteGame(gameId);
+      res.json({ message: "Game deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting game:", error);
+      res.status(500).json({ message: "Failed to delete game" });
+    }
+  });
+
   app.post("/api/games/:id/close-registration", async (req, res) => {
     if (!req.isAuthenticated() || !req.user!.isAdmin) return res.sendStatus(403);
     

@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { User, LogOut, Plus, Gamepad2, Play, Users, TicketIcon, Calculator, Settings } from "lucide-react";
+import { User, LogOut, Plus, Gamepad2, Play, Users, TicketIcon, Calculator, Settings, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertGameSchema } from "@shared/schema";
@@ -209,6 +209,27 @@ export default function AdminDashboard() {
     },
   });
 
+  const deleteGameMutation = useMutation({
+    mutationFn: async (gameId: number) => {
+      const res = await apiRequest("DELETE", `/api/games/${gameId}`);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/games"] });
+      toast({
+        title: "Success",
+        description: "Game deleted successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleLogout = () => {
     logoutMutation.mutate();
   };
@@ -228,6 +249,12 @@ export default function AdminDashboard() {
   const handleAssignTickets = (gameId: number) => {
     setSelectedGameId(gameId);
     setTicketDialogOpen(true);
+  };
+
+  const handleDeleteGame = (gameId: number) => {
+    if (confirm("Are you sure you want to delete this game? This action cannot be undone and will remove all associated tickets and selections.")) {
+      deleteGameMutation.mutate(gameId);
+    }
   };
 
   if (gamesLoading) {
@@ -495,8 +522,14 @@ export default function AdminDashboard() {
                                 Calculate Turn
                               </Button>
                             )}
-                            <Button size="sm" variant="outline">
-                              View
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleDeleteGame(game.id)}
+                              disabled={deleteGameMutation.isPending}
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Delete
                             </Button>
                           </div>
                         </TableCell>

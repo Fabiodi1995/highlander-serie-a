@@ -26,6 +26,7 @@ export interface IStorage {
   getGame(id: number): Promise<Game | undefined>;
   updateGameStatus(gameId: number, status: string): Promise<void>;
   updateGameRound(gameId: number, round: number): Promise<void>;
+  deleteGame(gameId: number): Promise<void>;
   
   // Game participants
   addGameParticipant(gameId: number, userId: number): Promise<GameParticipant>;
@@ -145,6 +146,14 @@ export class DatabaseStorage implements IStorage {
       .where(eq(games.id, gameId));
   }
 
+  async deleteGame(gameId: number): Promise<void> {
+    // Delete in correct order due to foreign key constraints
+    await db.delete(teamSelections).where(eq(teamSelections.gameId, gameId));
+    await db.delete(tickets).where(eq(tickets.gameId, gameId));
+    await db.delete(gameParticipants).where(eq(gameParticipants.gameId, gameId));
+    await db.delete(games).where(eq(games.id, gameId));
+  }
+
   // Game participants
   async addGameParticipant(gameId: number, userId: number): Promise<GameParticipant> {
     const [participant] = await db
@@ -165,7 +174,11 @@ export class DatabaseStorage implements IStorage {
   async createTicket(gameId: number, userId: number): Promise<Ticket> {
     const [ticket] = await db
       .insert(tickets)
-      .values({ gameId, userId })
+      .values({ 
+        gameId, 
+        userId, 
+        isActive: true 
+      })
       .returning();
     return ticket;
   }
