@@ -19,11 +19,13 @@ export default function GameInterface() {
   const [selections, setSelections] = useState<Record<number, number>>({});
 
   const { data: game } = useQuery<Game>({
-    queryKey: ["/api/games", gameId],
+    queryKey: [`/api/games/${gameId}`],
+    enabled: !!gameId && !isNaN(gameId),
   });
 
   const { data: tickets } = useQuery<Ticket[]>({
     queryKey: [`/api/games/${gameId}/tickets`],
+    enabled: !!gameId && !isNaN(gameId),
   });
 
   const { data: teams } = useQuery<Team[]>({
@@ -62,13 +64,20 @@ export default function GameInterface() {
   };
 
   const handleSubmitSelections = () => {
-    if (!game) return;
+    if (!game || !gameId || isNaN(gameId)) {
+      toast({
+        title: "Error",
+        description: "Invalid game data",
+        variant: "destructive",
+      });
+      return;
+    }
 
     const teamSelections = Object.entries(selections).map(([ticketId, teamId]) => ({
       ticketId: parseInt(ticketId),
       teamId,
       round: game.currentRound,
-      gameId: game.id,
+      gameId: gameId,
     }));
 
     if (teamSelections.length !== activeTickets.length) {
