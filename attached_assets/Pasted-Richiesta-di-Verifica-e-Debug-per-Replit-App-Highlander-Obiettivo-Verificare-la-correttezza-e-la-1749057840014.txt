@@ -1,0 +1,24 @@
+Richiesta di Verifica e Debug per Replit: App "Highlander"
+Obiettivo: Verificare la correttezza e la funzionalità del codice generato precedentemente per l'app "Highlander", risolvendo eventuali errori per garantire il rispetto delle specifiche iniziali (prompt originale completo).
+
+Istruzioni per Replit:
+
+Analisi del Codice: Esaminare attentamente l'intero codebase dell'app "Highlander" (frontend, backend, database e API) precedentemente generato, confrontandolo con le specifiche dettagliate fornite nel prompt iniziale completo (quello che superava i 6000 caratteri).
+Identificazione Errori:
+Individuare e segnalare qualsiasi errore di sintassi, logica o configurazione presente nel codice.
+Identificare eventuali inconsistenze o deviazioni dalle funzionalità e dai requisiti descritti nel prompt iniziale (es. regole di gioco, gestione admin, UI/UX).
+Verificare la corretta implementazione delle API e la loro integrazione tra frontend e backend.
+Assicurarsi che la struttura del database sia coerente con le esigenze dell'applicazione.
+Risoluzione e Debugging:
+Correggere tutti gli errori identificati in modo che l'applicazione sia perfettamente funzionante e priva di bug.
+Implementare le modifiche necessarie per garantire che ogni singola funzionalità descritta nel prompt iniziale sia correttamente operativa. Ciò include, ma non si limita a:
+Corretta gestione dell'autenticazione.
+Logica di gioco impeccabile (eliminazione ticket, restrizioni scelte, determinazione vincitore/pareggio).
+Funzionalità admin (creazione giochi, assegnazione ticket, calcolo turno).
+Visualizzazione delle dashboard e delle interfacce utente/admin.
+Comunicazione fluida tra frontend, backend e database.
+Prioritizzare le correzioni che impattano la logica di gioco critica e la sicurezza.
+Report Dettagliato: Fornire un report esaustivo delle modifiche apportate, spiegando gli errori riscontrati e come sono stati risolti, evidenziando le sezioni di codice interessate.
+Risultato Atteso:
+
+Un'applicazione "Highlander" completamente funzionante su Replit, che rispecchi in toto e senza errori tutte le specifiche delineate nel prompt iniziale (quello più lungo), pronta per essere testata e utilizzata.

@@ -23,7 +23,7 @@ export default function GameInterface() {
   });
 
   const { data: tickets } = useQuery<Ticket[]>({
-    queryKey: ["/api/games", gameId, "tickets"],
+    queryKey: [`/api/games/${gameId}/tickets`],
   });
 
   const { data: teams } = useQuery<Team[]>({
@@ -38,7 +38,7 @@ export default function GameInterface() {
       return await res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/games", gameId, "tickets"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}/tickets`] });
       toast({
         title: "Success",
         description: "Team selections submitted successfully",

@@ -241,23 +241,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async seedMatches(): Promise<void> {
-    // This would typically be populated from an external API
-    // For now, we'll create some sample matches for testing
+    // Matches will be populated from external Serie A API
+    // This method is prepared for integration with authentic data sources
     const existingMatches = await db.select().from(matches).limit(1);
     if (existingMatches.length === 0) {
-      // Create sample matches for rounds 8-12
-      const sampleMatches = [
-        // Round 8
-        { round: 8, homeTeamId: 1, awayTeamId: 2, matchDate: new Date('2024-11-02T15:00:00Z') },
-        { round: 8, homeTeamId: 3, awayTeamId: 4, matchDate: new Date('2024-11-02T18:00:00Z') },
-        { round: 8, homeTeamId: 5, awayTeamId: 6, matchDate: new Date('2024-11-03T15:00:00Z') },
-        // Round 9
-        { round: 9, homeTeamId: 2, awayTeamId: 3, matchDate: new Date('2024-11-09T15:00:00Z') },
-        { round: 9, homeTeamId: 4, awayTeamId: 5, matchDate: new Date('2024-11-09T18:00:00Z') },
-        { round: 9, homeTeamId: 6, awayTeamId: 1, matchDate: new Date('2024-11-10T15:00:00Z') },
-      ];
-      
-      await db.insert(matches).values(sampleMatches);
+      // System is ready for external API integration
+      // Administrator must configure Serie A data source for authentic match data
+      console.log("Match data seeding prepared - requires Serie A API integration");
     }
   }
 

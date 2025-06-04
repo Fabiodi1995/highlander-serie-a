@@ -102,11 +102,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Game not found" });
       }
 
+      if (game.status !== "active") {
+        return res.status(400).json({ message: "Game is not active" });
+      }
+
       // Get all team selections for current round
       const selections = await storage.getTeamSelectionsByRound(gameId, game.currentRound);
       
       // Get matches for current round
       const matches = await storage.getMatchesByRound(game.currentRound);
+      
+      // Validate all matches are completed before calculating
+      const incompleteMatches = matches.filter(m => !m.isCompleted);
+      if (incompleteMatches.length > 0) {
+        return res.status(400).json({ 
+          message: "Cannot calculate turn - some matches are not completed yet" 
+        });
+      }
       
       // Process eliminations based on match results
       for (const selection of selections) {
@@ -126,10 +138,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Check for winner determination
+      const activeTickets = await storage.getTicketsByGame(gameId);
+      const remainingActiveTickets = activeTickets.filter(t => t.isActive);
+      
+      if (remainingActiveTickets.length === 0) {
+        // No survivors - game ends in draw
+        await storage.updateGameStatus(gameId, "completed");
+        return res.json({ 
+          message: "Turn calculated - No survivors, game ended", 
+          gameStatus: "completed",
+          winner: null 
+        });
+      }
+      
+      // Check if only one player has active tickets
+      const playersWithActiveTickets = new Set(remainingActiveTickets.map(t => t.userId));
+      if (playersWithActiveTickets.size === 1) {
+        // Single winner
+        const winnerId = Array.from(playersWithActiveTickets)[0];
+        await storage.updateGameStatus(gameId, "completed");
+        return res.json({ 
+          message: "Turn calculated - Winner determined!", 
+          gameStatus: "completed",
+          winnerId 
+        });
+      }
+      
+      // Check if this is the final round of Serie A (round 38)
+      if (game.currentRound >= 38) {
+        // Multiple survivors at season end - all are winners
+        await storage.updateGameStatus(gameId, "completed");
+        return res.json({ 
+          message: "Season ended - Multiple winners!", 
+          gameStatus: "completed",
+          multipleWinners: true,
+          survivors: remainingActiveTickets 
+        });
+      }
+      
       // Advance to next round
       await storage.updateGameRound(gameId, game.currentRound + 1);
       
-      res.json({ message: "Turn calculated successfully" });
+      res.json({ 
+        message: "Turn calculated successfully",
+        nextRound: game.currentRound + 1,
+        remainingTickets: remainingActiveTickets.length
+      });
     } catch (error) {
       console.error("Error calculating turn:", error);
       res.status(500).json({ message: "Failed to calculate turn" });
