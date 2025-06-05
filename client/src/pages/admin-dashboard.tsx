@@ -80,73 +80,41 @@ function MatchResultsForm({
     });
   };
 
-  const handleSaveResults = async () => {
-    if (!matches) return;
-    
-    try {
-      // Only save matches that have been modified or have values
-      const matchesToSave = matches.filter(match => {
-        const result = matchResults[match.id];
-        return result && (result.homeScore !== undefined || result.awayScore !== undefined);
-      });
-      
-      if (matchesToSave.length === 0) {
-        toast({
-          title: "Attenzione",
-          description: "Nessuna modifica da salvare",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      const promises = matchesToSave.map(match => {
-        const result = matchResults[match.id];
-        return updateMatchResultMutation.mutateAsync({
-          matchId: match.id,
-          homeScore: result.homeScore ?? 0,
-          awayScore: result.awayScore ?? 0
-        });
-      });
-      
-      await Promise.all(promises);
-      
-      toast({
-        title: "Successo",
-        description: `Risultati salvati per ${matchesToSave.length} partite`,
-      });
-      
-      // Refresh matches to check completion status
-      queryClient.invalidateQueries({ queryKey: ["/api/matches", game?.currentRound] });
-      
-    } catch (error) {
-      console.error("Error saving results:", error);
-      toast({
-        title: "Errore",
-        description: "Errore nel salvataggio dei risultati",
-        variant: "destructive",
-      });
-    }
-  };
-
   const handleSaveAllResults = async () => {
     if (!matches) return;
     
     try {
-      // Save all matches with default scores of 0 if not specified
+      // Only save matches that have been modified or are not completed yet
       const promises = matches.map(match => {
-        const result = matchResults[match.id] || { homeScore: 0, awayScore: 0 };
-        return updateMatchResultMutation.mutateAsync({
-          matchId: match.id,
-          homeScore: result.homeScore ?? 0,
-          awayScore: result.awayScore ?? 0
-        });
+        const result = matchResults[match.id];
+        
+        // If match has modifications in the form, use those values
+        if (result && (result.homeScore !== undefined || result.awayScore !== undefined)) {
+          return updateMatchResultMutation.mutateAsync({
+            matchId: match.id,
+            homeScore: result.homeScore ?? 0,
+            awayScore: result.awayScore ?? 0
+          });
+        }
+        
+        // If match is not completed yet, save with default 0-0
+        if (!match.isCompleted) {
+          return updateMatchResultMutation.mutateAsync({
+            matchId: match.id,
+            homeScore: 0,
+            awayScore: 0
+          });
+        }
+        
+        // If match is already completed and no modifications, skip (return resolved promise)
+        return Promise.resolve();
       });
       
       await Promise.all(promises);
       
       toast({
         title: "Successo",
-        description: `Risultati salvati per tutte le ${matches.length} partite`,
+        description: "Risultati salvati correttamente",
       });
       
       // Refresh matches to check completion status
@@ -186,7 +154,7 @@ function MatchResultsForm({
             <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
             <span className="text-blue-700 font-medium">
               {matches.filter(m => m.isCompleted).length} di {matches.length} partite salvate. 
-              Campi vuoti = 0 gol.
+              Risultati precedenti vengono mantenuti se non modificati.
             </span>
           </div>
         </div>
@@ -258,17 +226,10 @@ function MatchResultsForm({
             Annulla
           </Button>
           <Button 
-            onClick={handleSaveResults}
-            disabled={updateMatchResultMutation.isPending}
-            variant="secondary"
-          >
-            {updateMatchResultMutation.isPending ? "Salvando..." : "Salva Modifiche"}
-          </Button>
-          <Button 
             onClick={handleSaveAllResults}
             disabled={updateMatchResultMutation.isPending}
           >
-            {updateMatchResultMutation.isPending ? "Salvando..." : "Salva Tutte (0 se vuoto)"}
+            {updateMatchResultMutation.isPending ? "Salvando..." : "Salva Risultati"}
           </Button>
           <Button 
             onClick={onComplete}
