@@ -530,26 +530,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return;
         }
         
-        const serieAMatches = [
-          { home: "Inter", away: "Milan" },
-          { home: "Juventus", away: "Napoli" },
-          { home: "Roma", away: "Lazio" },
-          { home: "Atalanta", away: "Fiorentina" },
-          { home: "Bologna", away: "Torino" },
-          { home: "Genoa", away: "Cagliari" },
-          { home: "Empoli", away: "Lecce" },
-          { home: "Venezia", away: "Parma" },
-          { home: "Udinese", away: "Monza" },
-          { home: "Hellas Verona", away: "Como" }
-        ];
+        // Create exactly 10 Serie A matches for this round using round-robin logic
+        const serieATeams = allTeams.slice(0, 20); // Ensure exactly 20 teams
+        const roundMatches = [];
         
-        const representativeMatches = [];
-        for (let i = 0; i < serieAMatches.length && i < allTeams.length / 2; i++) {
-          const homeTeam = allTeams.find(t => t.name === serieAMatches[i].home) || allTeams[i * 2];
-          const awayTeam = allTeams.find(t => t.name === serieAMatches[i].away) || allTeams[i * 2 + 1];
+        // Generate pairings for this specific round using round-robin algorithm
+        // Each round has 10 matches (20 teams / 2)
+        for (let i = 0; i < 10; i++) {
+          const homeIndex = (round - 1 + i) % 20;
+          const awayIndex = (round - 1 + i + 10) % 20;
+          
+          const homeTeam = serieATeams[homeIndex];
+          const awayTeam = serieATeams[awayIndex];
           
           if (homeTeam && awayTeam && homeTeam.id !== awayTeam.id) {
-            representativeMatches.push({
+            roundMatches.push({
               round,
               homeTeamId: homeTeam.id,
               awayTeamId: awayTeam.id,
@@ -561,6 +556,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             });
           }
         }
+        
+        const representativeMatches = roundMatches;
         
         if (representativeMatches.length > 0) {
           await db.insert(matches).values(representativeMatches).onConflictDoNothing();
