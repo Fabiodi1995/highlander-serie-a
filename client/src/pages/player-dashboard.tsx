@@ -5,170 +5,203 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, LogOut, Calendar, Trophy, Target, BarChart3, Users } from "lucide-react";
+import { User, LogOut, Calendar, Trophy, Target } from "lucide-react";
 import { Link } from "wouter";
-import type { Game, Ticket, Team, TeamSelection } from "@shared/schema";
+import { TeamLogo } from "@/components/team-logo";
+import type { Game, Ticket, Team, TeamSelection, User as UserType } from "@shared/schema";
 
-// Team Selections Table Component
-function TeamSelectionsTable({ userTeamSelections, teams }: { 
-  userTeamSelections: any; 
+// Player History Table Component - adapted from admin dashboard
+function PlayerHistoryTable({ 
+  game, 
+  userTickets, 
+  allTeamSelections, 
+  teams 
+}: { 
+  game: Game; 
+  userTickets: Ticket[] | undefined; 
+  allTeamSelections: any[] | undefined; 
   teams: Team[] | undefined; 
 }) {
-  if (!userTeamSelections || !teams) {
-    return <div className="text-center py-8 text-gray-500">Loading team selections...</div>;
+  if (!userTickets || !allTeamSelections || !teams) {
+    return <div className="text-center py-4">Caricamento dati...</div>;
   }
 
-  const getTeamName = (teamId: number) => {
-    return teams.find(t => t.id === teamId)?.name || `Team ${teamId}`;
+  // Filter team selections for this game
+  const gameSelections = allTeamSelections.find(gameData => gameData.game.id === game.id)?.selections || [];
+  
+  // Create rounds array (startRound to currentRound)
+  const gameRounds: number[] = [];
+  for (let round = game.startRound; round <= game.currentRound; round++) {
+    gameRounds.push(round);
+  }
+  
+  // Group selections by ticket and round
+  const selectionsByTicket = gameSelections.reduce((acc: any, selection: any) => {
+    if (!acc[selection.ticketId]) {
+      acc[selection.ticketId] = {};
+    }
+    acc[selection.ticketId][selection.round] = selection;
+    return acc;
+  }, {});
+
+  // Get team helper
+  const getTeam = (teamId: number) => {
+    return teams.find(t => t.id === teamId);
+  };
+
+  // Get cell style based on ticket status and round
+  const getCellStyle = (ticket: any, round: number) => {
+    const selection = selectionsByTicket[ticket.id]?.[round];
+    
+    // If ticket was eliminated before this round - show red
+    if (ticket.eliminatedInRound && ticket.eliminatedInRound < round) {
+      return "bg-red-100 text-red-800 border border-red-200";
+    }
+    
+    // If ticket was eliminated in this round - show dark red
+    if (ticket.eliminatedInRound === round) {
+      return "bg-red-200 text-red-900 font-semibold border border-red-300";
+    }
+    
+    // Check if this round is the current one being played (not calculated yet)
+    const isCurrentRound = round === game.currentRound && game.roundStatus !== "calculated";
+    
+    // If this is the current round being played and not calculated yet
+    if (isCurrentRound && ticket.isActive) {
+      return selection 
+        ? "bg-yellow-100 text-yellow-800 border border-yellow-200" 
+        : "bg-orange-100 text-orange-800 border border-orange-200";
+    }
+    
+    // If this round is completed (has selection and either round < currentRound OR current round is calculated)
+    if (selection && (round < game.currentRound || (round === game.currentRound && game.roundStatus === "calculated"))) {
+      return "bg-green-100 text-green-800 border border-green-200";
+    }
+    
+    // If ticket has a selection for this round (fallback)
+    if (selection) {
+      return "bg-green-100 text-green-800 border border-green-200";
+    }
+    
+    // Default empty state
+    return "bg-gray-50 text-gray-500 border border-gray-200";
+  };
+
+  // Get cell content
+  const getCellContent = (ticket: any, round: number) => {
+    const selection = selectionsByTicket[ticket.id]?.[round];
+    
+    // If ticket was eliminated before this round
+    if (ticket.eliminatedInRound && ticket.eliminatedInRound < round) {
+      return "—";
+    }
+    
+    // If selection exists, show team logo
+    if (selection) {
+      const team = getTeam(selection.teamId);
+      if (team) {
+        return <TeamLogo team={team} size="sm" />;
+      }
+      return teams.find(t => t.id === selection.teamId)?.name || 'N/A';
+    }
+    
+    // If current round and no selection yet
+    if (round === game.currentRound && ticket.isActive) {
+      return "In attesa";
+    }
+    
+    return "—";
   };
 
   return (
-    <div className="space-y-6">
-      {userTeamSelections.map((gameData: any) => (
-        <div key={gameData.game?.id} className="space-y-4">
-          <div className="flex items-center gap-2">
-            <h3 className="text-lg font-semibold text-gray-900">
-              {gameData.game?.name || 'Unknown Game'}
-            </h3>
-            <Badge variant={gameData.game?.status === 'active' ? 'default' : 'secondary'}>
-              {gameData.game?.status}
-            </Badge>
-          </div>
-          
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-xl font-semibold">{game.name}</h3>
+        <div className="flex items-center space-x-4 text-sm">
+          <span className="text-gray-600">Giornata corrente: {game.currentRound}</span>
+          <span className="text-gray-500">Stato: {game.roundStatus}</span>
+          <Badge variant={game.status === 'active' ? 'default' : 'secondary'}>
+            {game.status}
+          </Badge>
+        </div>
+      </div>
+
+      {userTickets.length === 0 ? (
+        <div className="text-center py-4 text-gray-500">
+          Nessun ticket per questo gioco
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Ticket #</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Round 1</TableHead>
-                <TableHead>Round 2</TableHead>
-                <TableHead>Round 3</TableHead>
-                <TableHead>Round 4</TableHead>
-                <TableHead>Round 5</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead className="font-semibold">Ticket</TableHead>
+                {gameRounds.map((round, index) => (
+                  <TableHead key={round} className="text-center font-semibold min-w-[120px]">
+                    Round {index + 1} (G{round})
+                  </TableHead>
+                ))}
               </TableRow>
             </TableHeader>
             <TableBody>
-              {gameData.ticketSelections?.map((ticketData: any) => {
-                const selections = ticketData.selections || [];
-                const selectionsByRound = selections.reduce((acc: any, sel: TeamSelection) => {
-                  acc[sel.round] = sel;
-                  return acc;
-                }, {});
-
-                return (
-                  <TableRow key={ticketData.ticket?.id}>
-                    <TableCell className="font-medium">#{ticketData.ticket?.id}</TableCell>
-                    <TableCell>
-                      <Badge variant={ticketData.ticket?.isActive ? 'default' : 'destructive'}>
-                        {ticketData.ticket?.isActive ? 'Active' : 'Eliminated'}
-                      </Badge>
-                    </TableCell>
-                    {[1, 2, 3, 4, 5].map(round => (
-                      <TableCell key={round}>
-                        {selectionsByRound[round] ? 
-                          getTeamName(selectionsByRound[round].teamId) : 
-                          '-'
-                        }
-                      </TableCell>
-                    ))}
-                    <TableCell>
-                      {gameData.game?.status === 'active' && ticketData.ticket?.isActive && (
-                        <Link href={`/game/${gameData.game.id}?ticket=${ticketData.ticket.id}`}>
-                          <Button size="sm" variant="outline">Edit</Button>
-                        </Link>
+              {userTickets
+                .sort((a, b) => {
+                  // Calculate rounds survived for each ticket
+                  const roundsA = a.eliminatedInRound || (game.currentRound + 1);
+                  const roundsB = b.eliminatedInRound || (game.currentRound + 1);
+                  
+                  // Sort by elimination round (later eliminations first), then by ticket ID
+                  if (roundsA !== roundsB) {
+                    return roundsB - roundsA;
+                  }
+                  return a.id - b.id;
+                })
+                .map((ticket) => (
+                <TableRow key={ticket.id}>
+                  <TableCell>
+                    <div className="flex items-center space-x-2">
+                      <span className="font-medium">#{ticket.id.toString().padStart(3, '0')}</span>
+                      {!ticket.isActive && (
+                        <Badge variant="destructive" className="text-xs">
+                          Eliminato R{ticket.eliminatedInRound}
+                        </Badge>
                       )}
+                    </div>
+                  </TableCell>
+                  {gameRounds.map(round => (
+                    <TableCell 
+                      key={round} 
+                      className={`text-center text-sm ${getCellStyle(ticket, round)}`}
+                    >
+                      {getCellContent(ticket, round)}
                     </TableCell>
-                  </TableRow>
-                );
-              })}
+                  ))}
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </div>
-      ))}
-    </div>
-  );
-}
+      )}
 
-// Round Results Table Component
-function RoundResultsTable({ userTeamSelections, teams }: { 
-  userTeamSelections: any; 
-  teams: Team[] | undefined; 
-}) {
-  if (!userTeamSelections || !teams) {
-    return <div className="text-center py-8 text-gray-500">Loading round results...</div>;
-  }
-
-  const getTeamName = (teamId: number) => {
-    return teams.find(t => t.id === teamId)?.name || `Team ${teamId}`;
-  };
-
-  return (
-    <div className="space-y-6">
-      {userTeamSelections.map((gameData: any) => (
-        <div key={gameData.game?.id} className="space-y-4">
-          <div className="flex items-center gap-2">
-            <h3 className="text-lg font-semibold text-gray-900">
-              {gameData.game?.name || 'Unknown Game'}
-            </h3>
-            <Badge variant={gameData.game?.status === 'active' ? 'default' : 'secondary'}>
-              Current Round: {gameData.game?.currentRound || 1}
-            </Badge>
-          </div>
-          
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Player</TableHead>
-                <TableHead>Ticket #</TableHead>
-                <TableHead>Round 1</TableHead>
-                <TableHead>Round 2</TableHead>
-                <TableHead>Round 3</TableHead>
-                <TableHead>Round 4</TableHead>
-                <TableHead>Round 5</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {gameData.ticketSelections?.map((ticketData: any) => {
-                const selections = ticketData.selections || [];
-                const selectionsByRound = selections.reduce((acc: any, sel: TeamSelection) => {
-                  acc[sel.round] = sel;
-                  return acc;
-                }, {});
-
-                return (
-                  <TableRow key={ticketData.ticket?.id}>
-                    <TableCell className="font-medium">You</TableCell>
-                    <TableCell>#{ticketData.ticket?.id}</TableCell>
-                    {[1, 2, 3, 4, 5].map(round => (
-                      <TableCell key={round}>
-                        {selectionsByRound[round] ? (
-                          <div className="flex flex-col">
-                            <span className="text-sm">
-                              {getTeamName(selectionsByRound[round].teamId)}
-                            </span>
-                            {round < (gameData.game?.currentRound || 1) && (
-                              <Badge variant="outline" className="text-xs w-fit mt-1">
-                                Result pending
-                              </Badge>
-                            )}
-                          </div>
-                        ) : '-'}
-                      </TableCell>
-                    ))}
-                    <TableCell>
-                      <Badge variant={ticketData.ticket?.isActive ? 'default' : 'destructive'}>
-                        {ticketData.ticket?.isActive ? 'In Game' : 'Eliminated'}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+      {/* Legend */}
+      <div className="flex flex-wrap gap-4 text-xs mt-4 p-3 bg-gray-50 rounded-lg">
+        <div className="flex items-center space-x-2">
+          <div className="w-4 h-4 bg-green-100 border border-green-200 rounded"></div>
+          <span>Sopravvissuto</span>
         </div>
-      ))}
+        <div className="flex items-center space-x-2">
+          <div className="w-4 h-4 bg-red-100 border border-red-200 rounded"></div>
+          <span>Eliminato</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <div className="w-4 h-4 bg-yellow-100 border border-yellow-200 rounded"></div>
+          <span>Round corrente</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <div className="w-4 h-4 bg-orange-100 border border-orange-200 rounded"></div>
+          <span>In attesa selezione</span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -272,7 +305,10 @@ export default function PlayerDashboard() {
   }
 
   const activeGames = games.filter(game => game.status === "active");
-  const completedGames = games.filter(game => game.status === "completed");
+  const userGames = games.filter(game => {
+    // Check if user has tickets in this game
+    return userTeamSelections?.some((gameData: any) => gameData.game?.id === game.id);
+  });
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -333,33 +369,37 @@ export default function PlayerDashboard() {
           )}
         </div>
 
-        {/* Game Data Tables */}
-        <Tabs defaultValue="selections" className="bg-white rounded-xl shadow-sm border">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="selections" className="flex items-center gap-2">
-              <Target className="h-4 w-4" />
-              Team Selections
-            </TabsTrigger>
-            <TabsTrigger value="results" className="flex items-center gap-2">
-              <Trophy className="h-4 w-4" />
-              Round Results
-            </TabsTrigger>
-          </TabsList>
+        {/* Player History Tables */}
+        <div className="bg-white rounded-xl shadow-sm border p-6">
+          <div className="flex items-center gap-2 mb-6">
+            <Target className="h-5 w-5" />
+            <h3 className="text-lg font-semibold">Storico Partite</h3>
+          </div>
           
-          <TabsContent value="selections" className="p-6">
-            <TeamSelectionsTable 
-              userTeamSelections={userTeamSelections} 
-              teams={teams} 
-            />
-          </TabsContent>
-          
-          <TabsContent value="results" className="p-6">
-            <RoundResultsTable 
-              userTeamSelections={userTeamSelections} 
-              teams={teams} 
-            />
-          </TabsContent>
-        </Tabs>
+          {userGames.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              Non hai ancora partecipato a nessun gioco
+            </div>
+          ) : (
+            <div className="space-y-8">
+              {userGames.map((game) => {
+                // Get user tickets for this game
+                const gameData = userTeamSelections?.find((gd: any) => gd.game?.id === game.id);
+                const userTickets = gameData?.ticketSelections?.map((ts: any) => ts.ticket) || [];
+                
+                return (
+                  <PlayerHistoryTable
+                    key={game.id}
+                    game={game}
+                    userTickets={userTickets}
+                    allTeamSelections={userTeamSelections}
+                    teams={teams}
+                  />
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
