@@ -585,15 +585,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       for (const game of games) {
         const gameTickets = await storage.getTicketsByGame(game.id);
-        const gameData = { game, tickets: [] as any[] };
+        const allSelections = [];
         
         for (const ticket of gameTickets) {
-          const user = await storage.getUser(ticket.userId);
           const selections = await storage.getTeamSelectionsByTicket(ticket.id);
-          gameData.tickets.push({ ticket, user, selections });
+          allSelections.push(...selections);
         }
         
-        allData.push(gameData);
+        allData.push({ game, selections: allSelections });
       }
       
       res.json(allData);
