@@ -643,6 +643,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         matches = await storage.getMatchesByRound(round);
       }
       
+      // Debug log to see what's being returned
+      console.log(`API returning ${matches.length} matches for round ${round}`);
+      
       res.json(matches || []);
     } catch (error) {
       console.error("Error fetching matches:", error);
