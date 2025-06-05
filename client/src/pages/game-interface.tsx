@@ -22,8 +22,13 @@ export default function GameInterface() {
 
   // Extract ticket parameter from URL
   useEffect(() => {
-    const params = new URLSearchParams(location.split('?')[1] || '');
-    const ticketParam = params.get('ticket');
+    const urlSearchParams = new URLSearchParams(window.location.search);
+    const ticketParam = urlSearchParams.get('ticket');
+    console.log('URL extraction debug:', {
+      fullUrl: window.location.href,
+      search: window.location.search,
+      ticketParam
+    });
     if (ticketParam) {
       setSpecificTicketId(parseInt(ticketParam));
     } else {
