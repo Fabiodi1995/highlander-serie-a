@@ -36,6 +36,11 @@ function MatchResultsForm({
   
   const { data: matches } = useQuery<Match[]>({
     queryKey: ["/api/matches", game?.currentRound],
+    queryFn: async () => {
+      if (!game?.currentRound) return [];
+      const res = await apiRequest("GET", `/api/matches/${game.currentRound}`);
+      return await res.json();
+    },
     enabled: !!game?.currentRound,
   });
 
