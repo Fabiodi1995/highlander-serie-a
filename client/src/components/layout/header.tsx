@@ -12,6 +12,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { NotificationCenter, type Notification } from "@/components/ui/notification-center";
 import { 
   Trophy, 
   User, 
@@ -27,9 +29,45 @@ export function Header() {
   const { user, logoutMutation } = useAuth();
   const [location] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([
+    {
+      id: "1",
+      type: "success",
+      title: "Ticket eliminato",
+      message: "Il tuo ticket #001 è stato eliminato nel Round 3",
+      timestamp: new Date(Date.now() - 3600000),
+      read: false,
+      gameId: 1,
+      round: 3
+    },
+    {
+      id: "2",
+      type: "info",
+      title: "Nuovo round iniziato",
+      message: "Round 4 è ora disponibile per le selezioni",
+      timestamp: new Date(Date.now() - 7200000),
+      read: false,
+      gameId: 1,
+      round: 4
+    }
+  ]);
 
   const handleLogout = () => {
     logoutMutation.mutate();
+  };
+
+  const handleMarkAsRead = (id: string) => {
+    setNotifications(prev => 
+      prev.map(notification => 
+        notification.id === id ? { ...notification, read: true } : notification
+      )
+    );
+  };
+
+  const handleClearAll = () => {
+    setNotifications(prev => 
+      prev.map(notification => ({ ...notification, read: true }))
+    );
   };
 
   const navigationItems = [
@@ -89,6 +127,16 @@ export function Header() {
           <div className="flex items-center space-x-4">
             {user ? (
               <>
+                {/* Notifications */}
+                <NotificationCenter
+                  notifications={notifications}
+                  onMarkAsRead={handleMarkAsRead}
+                  onClearAll={handleClearAll}
+                />
+
+                {/* Theme Toggle */}
+                <ThemeToggle />
+
                 {/* User Role Badge */}
                 <Badge variant={user.isAdmin ? "default" : "secondary"} className="hidden sm:flex">
                   {user.isAdmin ? "Admin" : "Giocatore"}

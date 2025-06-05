@@ -72,7 +72,7 @@ export const achievements = pgTable("achievements", {
   description: text("description").notNull(),
   icon: text("icon").notNull(),
   type: text("type").notNull(), // survival, participation, performance
-  criteria: jsonb("criteria").notNull(), // flexible criteria object
+  criteria: json("criteria").notNull(), // flexible criteria object
   rarity: text("rarity").notNull(), // common, rare, epic, legendary
   points: integer("points").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -84,7 +84,7 @@ export const userAchievements = pgTable("user_achievements", {
   achievementId: integer("achievement_id").notNull().references(() => achievements.id, { onDelete: "cascade" }),
   unlockedAt: timestamp("unlocked_at").defaultNow().notNull(),
   gameId: integer("game_id").references(() => games.id), // optional, for game-specific achievements
-  progress: jsonb("progress"), // track progress towards achievement
+  progress: json("progress"), // track progress towards achievement
 });
 
 export const userStats = pgTable("user_stats", {
@@ -176,6 +176,36 @@ export const teamSelectionsRelations = relations(teamSelections, ({ one }) => ({
   }),
 }));
 
+export const achievementsRelations = relations(achievements, ({ many }) => ({
+  userAchievements: many(userAchievements),
+}));
+
+export const userAchievementsRelations = relations(userAchievements, ({ one }) => ({
+  user: one(users, {
+    fields: [userAchievements.userId],
+    references: [users.id],
+  }),
+  achievement: one(achievements, {
+    fields: [userAchievements.achievementId],
+    references: [achievements.id],
+  }),
+  game: one(games, {
+    fields: [userAchievements.gameId],
+    references: [games.id],
+  }),
+}));
+
+export const userStatsRelations = relations(userStats, ({ one }) => ({
+  user: one(users, {
+    fields: [userStats.userId],
+    references: [users.id],
+  }),
+  favoriteTeamRef: one(teams, {
+    fields: [userStats.favoriteTeam],
+    references: [teams.id],
+  }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -206,3 +236,6 @@ export type Match = typeof matches.$inferSelect;
 export type TeamSelection = typeof teamSelections.$inferSelect;
 export type InsertTeamSelection = z.infer<typeof insertTeamSelectionSchema>;
 export type GameParticipant = typeof gameParticipants.$inferSelect;
+export type Achievement = typeof achievements.$inferSelect;
+export type UserAchievement = typeof userAchievements.$inferSelect;
+export type UserStats = typeof userStats.$inferSelect;
