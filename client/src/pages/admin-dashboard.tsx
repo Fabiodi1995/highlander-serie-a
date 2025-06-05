@@ -469,7 +469,19 @@ function PlayerHistoryTable({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {gameTickets.map((ticket) => (
+              {gameTickets
+                .sort((a, b) => {
+                  // Calculate rounds survived for each ticket
+                  const roundsA = a.eliminatedInRound ? a.eliminatedInRound - 1 : game.currentRound - game.startRound + 1;
+                  const roundsB = b.eliminatedInRound ? b.eliminatedInRound - 1 : game.currentRound - game.startRound + 1;
+                  
+                  // Sort by rounds survived (descending), then by ticket ID (ascending)
+                  if (roundsA !== roundsB) {
+                    return roundsB - roundsA;
+                  }
+                  return a.id - b.id;
+                })
+                .map((ticket) => (
                 <TableRow key={ticket.id}>
                   <TableCell className="font-medium">
                     {getUserName(ticket.userId)}
