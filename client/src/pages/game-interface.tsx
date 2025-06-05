@@ -24,11 +24,6 @@ export default function GameInterface() {
   useEffect(() => {
     const urlSearchParams = new URLSearchParams(window.location.search);
     const ticketParam = urlSearchParams.get('ticket');
-    console.log('URL extraction debug:', {
-      fullUrl: window.location.href,
-      search: window.location.search,
-      ticketParam
-    });
     if (ticketParam) {
       setSpecificTicketId(parseInt(ticketParam));
     } else {
@@ -58,13 +53,7 @@ export default function GameInterface() {
     ? activeTickets.filter(t => t.id === specificTicketId)
     : activeTickets;
 
-  // Debug logging
-  console.log('Debug info:', {
-    location,
-    specificTicketId,
-    activeTickets: activeTickets.map(t => t.id),
-    ticketsToShow: ticketsToShow.map(t => t.id)
-  });
+
 
   const submitSelectionsMutation = useMutation({
     mutationFn: async (teamSelections: Array<{ ticketId: number; teamId: number; round: number; gameId: number }>) => {
@@ -115,10 +104,10 @@ export default function GameInterface() {
       gameId: gameId,
     }));
 
-    if (teamSelections.length !== activeTickets.length) {
+    if (teamSelections.length !== ticketsToShow.length) {
       toast({
         title: "Errore",
-        description: "Seleziona una squadra per tutti i ticket attivi",
+        description: specificTicketId ? "Seleziona una squadra per il ticket" : "Seleziona una squadra per tutti i ticket attivi",
         variant: "destructive",
       });
       return;
