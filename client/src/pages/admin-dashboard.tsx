@@ -344,8 +344,11 @@ function PlayerHistoryTable({
   // console.log('Game Tickets:', gameTickets);
   // console.log('Game Selections:', gameSelections);
   
-  // Create rounds array (1 to current round)
-  const rounds = Array.from({ length: game.currentRound }, (_, i) => i + 1);
+  // Create rounds array (startRound to currentRound)
+  const gameRounds = [];
+  for (let round = game.startRound; round <= game.currentRound; round++) {
+    gameRounds.push(round);
+  }
   
   // Group selections by ticket and round
   const selectionsByTicket = gameSelections.reduce((acc: any, selection: any) => {
@@ -448,9 +451,9 @@ function PlayerHistoryTable({
               <TableRow>
                 <TableHead className="font-semibold">Giocatore</TableHead>
                 <TableHead className="font-semibold">Ticket</TableHead>
-                {rounds.map(round => (
+                {gameRounds.map((round, index) => (
                   <TableHead key={round} className="text-center font-semibold min-w-[120px]">
-                    Round {round}
+                    Round {index + 1} (G{round})
                   </TableHead>
                 ))}
               </TableRow>
@@ -471,7 +474,7 @@ function PlayerHistoryTable({
                       )}
                     </div>
                   </TableCell>
-                  {rounds.map(round => (
+                  {gameRounds.map(round => (
                     <TableCell 
                       key={round} 
                       className={`text-center text-sm ${getCellStyle(ticket, round)}`}
