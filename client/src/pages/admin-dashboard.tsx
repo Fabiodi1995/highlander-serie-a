@@ -463,13 +463,13 @@ export default function AdminDashboard() {
           "Round bloccato con successo",
       });
     },
-    onError: (error: Error) => {
+    onError: (error: Error, variables) => {
       if (error.message.includes("requiresConfirmation")) {
         const confirmResult = window.confirm(
           "Alcuni giocatori non hanno fatto le selezioni. Vuoi continuare? Le squadre mancanti verranno assegnate automaticamente."
         );
-        if (confirmResult && selectedGameForCalculation) {
-          lockRoundMutation.mutate({ gameId: selectedGameForCalculation.id, forceConfirm: true });
+        if (confirmResult) {
+          lockRoundMutation.mutate({ gameId: variables.gameId, forceConfirm: true });
         }
       } else {
         toast({
