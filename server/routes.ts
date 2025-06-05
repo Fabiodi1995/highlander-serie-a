@@ -249,6 +249,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all tickets for a game (for detailed view)
+  app.get("/api/games/:id/all-tickets", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const gameId = parseInt(req.params.id);
+      
+      // Verify user has access to this game (is participant or admin)
+      const game = await storage.getGame(gameId);
+      if (!game) {
+        return res.status(404).json({ message: "Game not found" });
+      }
+      
+      // Check if user is admin or participant
+      const participants = await storage.getGameParticipants(gameId);
+      const isParticipant = participants.some(p => p.userId === req.user!.id);
+      const isAdmin = req.user!.isAdmin && game.createdBy === req.user!.id;
+      
+      if (!isParticipant && !isAdmin) {
+        return res.status(403).json({ message: "Access denied - not a participant" });
+      }
+      
+      // Get all tickets for this game
+      const allTickets = await storage.getTicketsByGame(gameId);
+      
+      // Get all team selections for this game
+      const allSelections = await storage.getTeamSelectionsByRound(gameId, 0); // 0 means all rounds
+      
+      // Group selections by ticket
+      const selectionsByTicket = allSelections.reduce((acc: any, selection: any) => {
+        if (!acc[selection.ticketId]) {
+          acc[selection.ticketId] = [];
+        }
+        acc[selection.ticketId].push(selection);
+        return acc;
+      }, {});
+      
+      // Combine tickets with their selections
+      const ticketsWithSelections = allTickets.map(ticket => ({
+        ticket,
+        selections: selectionsByTicket[ticket.id] || []
+      }));
+      
+      res.json({
+        game,
+        ticketSelections: ticketsWithSelections
+      });
+    } catch (error) {
+      console.error("Error fetching all tickets:", error);
+      res.status(500).json({ message: "Failed to fetch all tickets" });
+    }
+  });
+
   app.post("/api/games/:id/tickets", async (req, res) => {
     if (!req.isAuthenticated() || !req.user!.isAdmin) return res.sendStatus(403);
     

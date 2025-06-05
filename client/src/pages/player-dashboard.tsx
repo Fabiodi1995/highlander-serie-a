@@ -218,12 +218,23 @@ function DetailedGameView({
   teams: Team[] | undefined; 
   onBack: () => void; 
 }) {
-  if (!gameData || !teams) {
-    return <div className="text-center py-4">Caricamento dati...</div>;
+  const game = gameData.game;
+  
+  // Fetch all tickets for this game (all players)
+  const { data: allGameData, isLoading } = useQuery<any>({
+    queryKey: [`/api/games/${game.id}/all-tickets`],
+    enabled: !!game.id
+  });
+
+  if (isLoading || !teams) {
+    return <div className="text-center py-4">Caricamento dati completi del gioco...</div>;
   }
 
-  const game = gameData.game;
-  const allTickets = gameData.ticketSelections?.map((ts: any) => ts.ticket) || [];
+  if (!allGameData) {
+    return <div className="text-center py-4 text-red-500">Errore nel caricamento dei dati del gioco</div>;
+  }
+
+  const allTickets = allGameData.ticketSelections?.map((ts: any) => ts.ticket) || [];
   
   // Sort tickets by rounds survived (later eliminations first, then by ticket ID)
   const sortedTickets = allTickets.sort((a: any, b: any) => {
@@ -247,7 +258,7 @@ function DetailedGameView({
   };
 
   // Get team selections grouped by ticket and round
-  const selectionsByTicket = gameData.ticketSelections?.reduce((acc: any, ts: any) => {
+  const selectionsByTicket = allGameData.ticketSelections?.reduce((acc: any, ts: any) => {
     acc[ts.ticket.id] = {};
     ts.selections?.forEach((selection: any) => {
       acc[ts.ticket.id][selection.round] = selection;

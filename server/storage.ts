@@ -322,13 +322,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTeamSelectionsByRound(gameId: number, round: number): Promise<TeamSelection[]> {
+    // If round is 0, get all rounds; otherwise filter by specific round
+    const whereConditions = round === 0 
+      ? eq(teamSelections.gameId, gameId)
+      : and(eq(teamSelections.gameId, gameId), eq(teamSelections.round, round));
+    
     return await db
       .select()
       .from(teamSelections)
-      .where(and(
-        eq(teamSelections.gameId, gameId),
-        eq(teamSelections.round, round)
-      ));
+      .where(whereConditions)
+      .orderBy(asc(teamSelections.round));
   }
 
   async updateTeamSelection(selectionId: number, teamId: number): Promise<TeamSelection> {
