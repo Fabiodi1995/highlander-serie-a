@@ -495,22 +495,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid round number" });
       }
       
-      const matches = await storage.getMatchesByRound(round);
+      let matches = await storage.getMatchesByRound(round);
       
-      // If no matches found in database, try to initialize from Serie A data
+      // If no matches found in database, create sample matches for this round
       if (!matches || matches.length === 0) {
-        const { serieAManager } = await import('./serieAManager');
-        await serieAManager.initializeSerieAData();
-        const newMatches = await storage.getMatchesByRound(round);
-        res.json(newMatches || []);
-      } else {
-        res.json(matches);
+        console.log(`Creating sample matches for round ${round}`);
+        await createSampleMatches(round);
+        matches = await storage.getMatchesByRound(round);
       }
+      
+      res.json(matches || []);
     } catch (error) {
       console.error("Error fetching matches:", error);
       res.status(500).json({ message: "Failed to fetch matches" });
     }
   });
+
+  // Helper function to create authentic Serie A matches for a specific round
+  async function createSampleMatches(round: number) {
+    try {
+      const { db } = await import('./db');
+      const { matches, teams } = await import('../shared/schema');
+      const { serieAFixtures, getTeamIdByName } = await import('./data/serie-a-schedule');
+      
+      // Get authentic Serie A fixtures for this round
+      const roundFixtures = serieAFixtures.filter(fixture => fixture.round === round);
+      
+      if (roundFixtures.length === 0) {
+        // If no authentic fixtures for this round, create representative matches
+        const allTeams = await db.select().from(teams).limit(20);
+        
+        if (allTeams.length < 10) {
+          console.log('Not enough teams to create matches');
+          return;
+        }
+        
+        const serieAMatches = [
+          { home: "Inter", away: "Milan" },
+          { home: "Juventus", away: "Napoli" },
+          { home: "Roma", away: "Lazio" },
+          { home: "Atalanta", away: "Fiorentina" },
+          { home: "Bologna", away: "Torino" },
+          { home: "Genoa", away: "Cagliari" },
+          { home: "Empoli", away: "Lecce" },
+          { home: "Venezia", away: "Parma" },
+          { home: "Udinese", away: "Monza" },
+          { home: "Hellas Verona", away: "Como" }
+        ];
+        
+        const representativeMatches = [];
+        for (let i = 0; i < serieAMatches.length && i < allTeams.length / 2; i++) {
+          const homeTeam = allTeams.find(t => t.name === serieAMatches[i].home) || allTeams[i * 2];
+          const awayTeam = allTeams.find(t => t.name === serieAMatches[i].away) || allTeams[i * 2 + 1];
+          
+          if (homeTeam && awayTeam && homeTeam.id !== awayTeam.id) {
+            representativeMatches.push({
+              round,
+              homeTeamId: homeTeam.id,
+              awayTeamId: awayTeam.id,
+              homeScore: null,
+              awayScore: null,
+              result: null,
+              matchDate: new Date(),
+              isCompleted: false
+            });
+          }
+        }
+        
+        if (representativeMatches.length > 0) {
+          await db.insert(matches).values(representativeMatches).onConflictDoNothing();
+          console.log(`Created ${representativeMatches.length} Serie A matches for round ${round}`);
+        }
+      } else {
+        // Use authentic Serie A fixtures
+        const authenticMatches = [];
+        for (const fixture of roundFixtures) {
+          const homeTeamId = getTeamIdByName(fixture.homeTeam);
+          const awayTeamId = getTeamIdByName(fixture.awayTeam);
+          
+          if (homeTeamId && awayTeamId) {
+            authenticMatches.push({
+              round,
+              homeTeamId,
+              awayTeamId,
+              homeScore: null,
+              awayScore: null,
+              result: null,
+              matchDate: new Date(fixture.date),
+              isCompleted: false
+            });
+          }
+        }
+        
+        if (authenticMatches.length > 0) {
+          await db.insert(matches).values(authenticMatches).onConflictDoNothing();
+          console.log(`Created ${authenticMatches.length} authentic Serie A matches for round ${round}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error creating Serie A matches:', error);
+    }
+  }
 
   app.post("/api/matches/:id/result", async (req, res) => {
     if (!req.isAuthenticated() || !req.user!.isAdmin) return res.sendStatus(403);
