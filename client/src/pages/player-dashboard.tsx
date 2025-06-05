@@ -218,6 +218,7 @@ function DetailedGameView({
   teams: Team[] | undefined; 
   onBack: () => void; 
 }) {
+  const { user } = useAuth();
   const game = gameData.game;
   
   // Fetch all tickets for this game (all players)
@@ -274,6 +275,14 @@ function DetailedGameView({
       return "—";
     }
     
+    // Check if this is the current round and round is not calculated yet
+    const isCurrentRoundInProgress = round === game.currentRound && game.roundStatus !== "calculated";
+    
+    // Hide other players' selections for current round in progress (show only own selections)
+    if (isCurrentRoundInProgress && ticket.userId !== user?.id && selection) {
+      return <span className="text-gray-400">🔒</span>; // Hidden selection indicator
+    }
+    
     // If selection exists, show team logo
     if (selection) {
       const team = getTeam(selection.teamId);
@@ -306,6 +315,11 @@ function DetailedGameView({
     
     // Check if this round is the current one being played
     const isCurrentRound = round === game.currentRound && game.roundStatus !== "calculated";
+    
+    // If current round in progress and other player's selection is hidden
+    if (isCurrentRound && ticket.userId !== user?.id && selection) {
+      return "bg-gray-100 text-gray-400 border border-gray-300"; // Locked/hidden style
+    }
     
     // If this is the current round being played and not calculated yet
     if (isCurrentRound && ticket.isActive) {
