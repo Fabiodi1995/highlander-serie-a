@@ -33,7 +33,6 @@ function MatchResultsForm({
   onCancel: () => void; 
 }) {
   const [matchResults, setMatchResults] = useState<Record<number, { homeScore: number; awayScore: number }>>({});
-  const [resultsAreSaved, setResultsAreSaved] = useState(false);
   
   const { data: matches } = useQuery<Match[]>({
     queryKey: ["/api/matches", game?.currentRound],
@@ -66,7 +65,7 @@ function MatchResultsForm({
   const { toast } = useToast();
 
   const handleScoreChange = (matchId: number, type: 'home' | 'away', value: string) => {
-    const score = parseInt(value);
+    const score = value === '' ? 0 : parseInt(value);
     if (isNaN(score) || score < 0) return; // Only allow valid non-negative numbers
     
     setMatchResults(prev => {
@@ -81,32 +80,46 @@ function MatchResultsForm({
     });
   };
 
-  const handleSubmitResults = async () => {
-    if (!matches) return;
-    
-    // Validate that all matches have results
-    const missingResults = matches.filter(match => {
-      const result = matchResults[match.id];
-      return !result || typeof result.homeScore !== 'number' || typeof result.awayScore !== 'number' || result.homeScore < 0 || result.awayScore < 0;
-    });
-    
-    if (missingResults.length > 0) {
-      toast({
-        title: "Errore",
-        description: `Inserisci i risultati per tutte le ${matches.length} partite della giornata`,
-        variant: "destructive",
-      });
-      return;
-    }
+  const handleSaveMatch = async (matchId: number) => {
+    const result = matchResults[matchId];
+    if (!result) return;
     
     try {
-      // Save all match results
+      await updateMatchResultMutation.mutateAsync({
+        matchId: matchId,
+        homeScore: result.homeScore || 0,
+        awayScore: result.awayScore || 0
+      });
+      
+      toast({
+        title: "Successo",
+        description: "Risultato partita salvato",
+      });
+      
+      // Refresh matches to check completion status
+      queryClient.invalidateQueries({ queryKey: ["/api/matches", game?.currentRound] });
+      
+    } catch (error) {
+      console.error("Error saving match result:", error);
+      toast({
+        title: "Errore",
+        description: "Errore nel salvataggio del risultato",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSubmitAllResults = async () => {
+    if (!matches) return;
+    
+    try {
+      // Save all matches with default scores of 0 if not specified
       const promises = matches.map(match => {
-        const result = matchResults[match.id];
+        const result = matchResults[match.id] || { homeScore: 0, awayScore: 0 };
         return updateMatchResultMutation.mutateAsync({
           matchId: match.id,
-          homeScore: result.homeScore,
-          awayScore: result.awayScore
+          homeScore: result.homeScore || 0,
+          awayScore: result.awayScore || 0
         });
       });
       
@@ -114,10 +127,11 @@ function MatchResultsForm({
       
       toast({
         title: "Successo",
-        description: `Risultati inseriti per tutte le ${matches.length} partite`,
+        description: `Risultati salvati per tutte le ${matches.length} partite`,
       });
       
-      setResultsAreSaved(true);
+      // Refresh matches to check completion status
+      queryClient.invalidateQueries({ queryKey: ["/api/matches", game?.currentRound] });
       
     } catch (error) {
       console.error("Error submitting results:", error);
@@ -129,18 +143,31 @@ function MatchResultsForm({
     }
   };
 
+  // Check if all matches are completed
+  const allMatchesCompleted = matches ? matches.every(match => match.isCompleted) : false;
+
   if (!matches) {
     return <div className="text-center py-4">Caricamento partite...</div>;
   }
 
   return (
     <div className="space-y-4">
-      {resultsAreSaved && (
+      {allMatchesCompleted ? (
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
           <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            <CheckCircle className="w-5 h-5 text-green-500" />
             <span className="text-green-700 font-medium">
-              Tutti i risultati sono stati salvati correttamente. Ora puoi confermare il calcolo del round.
+              Tutte le {matches.length} partite sono state salvate. Ora puoi confermare il calcolo del round.
+            </span>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center space-x-2">
+            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+            <span className="text-blue-700 font-medium">
+              {matches.filter(m => m.isCompleted).length} di {matches.length} partite salvate. 
+              Campi vuoti = 0 gol.
             </span>
           </div>
         </div>
@@ -158,6 +185,11 @@ function MatchResultsForm({
                 <span className="font-medium">
                   {teams?.find(t => t.id === match.awayTeamId)?.name || `Team ${match.awayTeamId}`}
                 </span>
+                {match.isCompleted && (
+                  <Badge variant="secondary" className="ml-2">
+                    Salvata: {match.homeScore}-{match.awayScore}
+                  </Badge>
+                )}
               </div>
               <div className="flex items-center space-x-2">
                 <Input
@@ -166,8 +198,9 @@ function MatchResultsForm({
                   max="20"
                   placeholder="0"
                   className="w-16 text-center"
-                  value={matchResults[match.id]?.homeScore || ''}
+                  value={matchResults[match.id]?.homeScore ?? (match.isCompleted ? match.homeScore : '')}
                   onChange={(e) => handleScoreChange(match.id, 'home', e.target.value)}
+                  disabled={match.isCompleted}
                 />
                 <span>-</span>
                 <Input
@@ -176,9 +209,18 @@ function MatchResultsForm({
                   max="20"
                   placeholder="0"
                   className="w-16 text-center"
-                  value={matchResults[match.id]?.awayScore || ''}
+                  value={matchResults[match.id]?.awayScore ?? (match.isCompleted ? match.awayScore : '')}
                   onChange={(e) => handleScoreChange(match.id, 'away', e.target.value)}
+                  disabled={match.isCompleted}
                 />
+                <Button
+                  size="sm"
+                  onClick={() => handleSaveMatch(match.id)}
+                  disabled={match.isCompleted || updateMatchResultMutation.isPending}
+                  variant={match.isCompleted ? "secondary" : "default"}
+                >
+                  {match.isCompleted ? "Salvata" : "Salva"}
+                </Button>
               </div>
             </div>
           </Card>
@@ -207,14 +249,14 @@ function MatchResultsForm({
             Annulla
           </Button>
           <Button 
-            onClick={handleSubmitResults}
-            disabled={updateMatchResultMutation.isPending || resultsAreSaved}
+            onClick={handleSubmitAllResults}
+            disabled={updateMatchResultMutation.isPending}
           >
-            {updateMatchResultMutation.isPending ? "Salvando..." : resultsAreSaved ? "Risultati Salvati" : "Salva Risultati"}
+            {updateMatchResultMutation.isPending ? "Salvando..." : "Salva Tutte (0 se vuoto)"}
           </Button>
           <Button 
             onClick={onComplete}
-            disabled={!resultsAreSaved}
+            disabled={!allMatchesCompleted}
             className="bg-green-600 hover:bg-green-700 text-white"
           >
             <CheckCircle className="w-4 h-4 mr-2" />
