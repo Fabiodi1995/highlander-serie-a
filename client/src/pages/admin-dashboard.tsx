@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, LogOut, Plus, Gamepad2, Play, Users, TicketIcon, Calculator, Settings, Trash2, Trophy, Target } from "lucide-react";
+import { User, LogOut, Plus, Gamepad2, Play, Users, TicketIcon, Calculator, Settings, Trash2, Trophy, Target, CheckCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertGameSchema } from "@shared/schema";
@@ -33,6 +33,7 @@ function MatchResultsForm({
   onCancel: () => void; 
 }) {
   const [matchResults, setMatchResults] = useState<Record<number, { homeScore: number; awayScore: number }>>({});
+  const [resultsAreSaved, setResultsAreSaved] = useState(false);
   
   const { data: matches } = useQuery<Match[]>({
     queryKey: ["/api/matches", game?.currentRound],
@@ -116,10 +117,7 @@ function MatchResultsForm({
         description: `Risultati inseriti per tutte le ${matches.length} partite`,
       });
       
-      // Wait a moment for the database to update before proceeding
-      setTimeout(() => {
-        onComplete();
-      }, 500);
+      setResultsAreSaved(true);
       
     } catch (error) {
       console.error("Error submitting results:", error);
@@ -137,6 +135,17 @@ function MatchResultsForm({
 
   return (
     <div className="space-y-4">
+      {resultsAreSaved && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+          <div className="flex items-center space-x-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            <span className="text-green-700 font-medium">
+              Tutti i risultati sono stati salvati correttamente. Ora puoi confermare il calcolo del round.
+            </span>
+          </div>
+        </div>
+      )}
+      
       <div className="grid gap-4">
         {matches.map((match) => (
           <Card key={match.id} className="p-4">
@@ -199,9 +208,17 @@ function MatchResultsForm({
           </Button>
           <Button 
             onClick={handleSubmitResults}
-            disabled={updateMatchResultMutation.isPending}
+            disabled={updateMatchResultMutation.isPending || resultsAreSaved}
           >
-            {updateMatchResultMutation.isPending ? "Salvando..." : "Salva Risultati e Calcola"}
+            {updateMatchResultMutation.isPending ? "Salvando..." : resultsAreSaved ? "Risultati Salvati" : "Salva Risultati"}
+          </Button>
+          <Button 
+            onClick={onComplete}
+            disabled={!resultsAreSaved}
+            className="bg-green-600 hover:bg-green-700 text-white"
+          >
+            <CheckCircle className="w-4 h-4 mr-2" />
+            Conferma e Calcola Round
           </Button>
         </div>
       </div>
