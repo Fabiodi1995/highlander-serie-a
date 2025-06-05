@@ -65,39 +65,69 @@ function MatchResultsForm({
   const { toast } = useToast();
 
   const handleScoreChange = (matchId: number, type: 'home' | 'away', value: string) => {
-    const score = parseInt(value) || 0;
-    setMatchResults(prev => ({
-      ...prev,
-      [matchId]: {
-        ...prev[matchId],
-        [type === 'home' ? 'homeScore' : 'awayScore']: score
-      }
-    }));
+    const score = parseInt(value);
+    if (isNaN(score) || score < 0) return; // Only allow valid non-negative numbers
+    
+    setMatchResults(prev => {
+      const current = prev[matchId] || { homeScore: 0, awayScore: 0 };
+      return {
+        ...prev,
+        [matchId]: {
+          ...current,
+          [type === 'home' ? 'homeScore' : 'awayScore']: score
+        }
+      };
+    });
   };
 
   const handleSubmitResults = async () => {
     if (!matches) return;
     
+    // Validate that all matches have results
+    const missingResults = matches.filter(match => {
+      const result = matchResults[match.id];
+      return !result || typeof result.homeScore !== 'number' || typeof result.awayScore !== 'number' || result.homeScore < 0 || result.awayScore < 0;
+    });
+    
+    if (missingResults.length > 0) {
+      toast({
+        title: "Errore",
+        description: `Inserisci i risultati per tutte le ${matches.length} partite della giornata`,
+        variant: "destructive",
+      });
+      return;
+    }
+    
     try {
-      for (const match of matches) {
+      // Save all match results
+      const promises = matches.map(match => {
         const result = matchResults[match.id];
-        if (result && (result.homeScore >= 0 && result.awayScore >= 0)) {
-          await updateMatchResultMutation.mutateAsync({
-            matchId: match.id,
-            homeScore: result.homeScore,
-            awayScore: result.awayScore
-          });
-        }
-      }
+        return updateMatchResultMutation.mutateAsync({
+          matchId: match.id,
+          homeScore: result.homeScore,
+          awayScore: result.awayScore
+        });
+      });
+      
+      await Promise.all(promises);
       
       toast({
         title: "Successo",
-        description: "Risultati inseriti correttamente",
+        description: `Risultati inseriti per tutte le ${matches.length} partite`,
       });
       
-      onComplete();
+      // Wait a moment for the database to update before proceeding
+      setTimeout(() => {
+        onComplete();
+      }, 500);
+      
     } catch (error) {
       console.error("Error submitting results:", error);
+      toast({
+        title: "Errore",
+        description: "Errore nel salvataggio dei risultati",
+        variant: "destructive",
+      });
     }
   };
 
@@ -146,16 +176,34 @@ function MatchResultsForm({
         ))}
       </div>
       
-      <div className="flex justify-end space-x-2 pt-4">
-        <Button variant="outline" onClick={onCancel}>
-          Annulla
-        </Button>
+      <div className="flex justify-between items-center pt-4">
         <Button 
-          onClick={handleSubmitResults}
-          disabled={updateMatchResultMutation.isPending}
+          variant="secondary" 
+          onClick={() => {
+            const sampleResults: Record<number, { homeScore: number; awayScore: number }> = {};
+            matches.forEach((match) => {
+              sampleResults[match.id] = {
+                homeScore: Math.floor(Math.random() * 4),
+                awayScore: Math.floor(Math.random() * 4)
+              };
+            });
+            setMatchResults(sampleResults);
+          }}
         >
-          {updateMatchResultMutation.isPending ? "Salvando..." : "Salva Risultati e Calcola"}
+          Risultati di Esempio
         </Button>
+        
+        <div className="flex space-x-2">
+          <Button variant="outline" onClick={onCancel}>
+            Annulla
+          </Button>
+          <Button 
+            onClick={handleSubmitResults}
+            disabled={updateMatchResultMutation.isPending}
+          >
+            {updateMatchResultMutation.isPending ? "Salvando..." : "Salva Risultati e Calcola"}
+          </Button>
+        </div>
       </div>
     </div>
   );
