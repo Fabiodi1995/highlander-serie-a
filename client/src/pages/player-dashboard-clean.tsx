@@ -74,7 +74,7 @@ function TeamSelectionsTable({ userTeamSelections, teams }: {
                     ))}
                     <TableCell>
                       {gameData.game?.status === 'active' && ticketData.ticket?.isActive && (
-                        <Link href={`/game/${gameData.game.id}`}>
+                        <Link href={`/game/${gameData.game.id}?ticket=${ticketData.ticket.id}`}>
                           <Button size="sm" variant="outline">Edit</Button>
                         </Link>
                       )}

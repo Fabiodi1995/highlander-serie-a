@@ -18,6 +18,11 @@ export default function GameInterface() {
   const { toast } = useToast();
   const [selections, setSelections] = useState<Record<number, number>>({});
 
+  // Get ticketId from URL parameters if present (e.g., /game/7?ticket=13)
+  const urlParams = new URLSearchParams(window.location.search);
+  const ticketIdParam = urlParams.get('ticket');
+  const specificTicketId = ticketIdParam ? parseInt(ticketIdParam) : null;
+
 
 
   const { data: game } = useQuery<Game>({
@@ -34,7 +39,11 @@ export default function GameInterface() {
     queryKey: ["/api/teams"],
   });
 
+  // Filter tickets based on URL parameter
   const activeTickets = tickets?.filter(t => t.isActive) || [];
+  const ticketsToShow = specificTicketId 
+    ? activeTickets.filter(t => t.id === specificTicketId)
+    : activeTickets;
 
   const submitSelectionsMutation = useMutation({
     mutationFn: async (teamSelections: Array<{ ticketId: number; teamId: number; round: number; gameId: number }>) => {
@@ -43,6 +52,9 @@ export default function GameInterface() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}/tickets`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/team-selections"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/all-team-selections"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/all-tickets"] });
       toast({
         title: "Successo",
         description: "Selezioni squadre inviate con successo",
@@ -147,20 +159,39 @@ export default function GameInterface() {
           </CardContent>
         </Card>
 
+        {/* Show editing mode indicator if specific ticket */}
+        {specificTicketId && (
+          <Card className="mb-4 border-blue-200 bg-blue-50">
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                <Info className="h-4 w-4 text-blue-600" />
+                <span className="text-blue-700 font-medium">
+                  Modalità Modifica - Ticket #{specificTicketId}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Tickets Selection */}
-        {activeTickets.length === 0 ? (
+        {ticketsToShow.length === 0 ? (
           <Card className="text-center p-8">
             <CardContent>
               <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Nessun Ticket Attivo</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                {specificTicketId ? "Ticket Non Trovato" : "Nessun Ticket Attivo"}
+              </h3>
               <p className="text-gray-500">
-                Non hai ticket attivi in questo gioco.
+                {specificTicketId 
+                  ? "Il ticket specificato non è disponibile o non è attivo."
+                  : "Non hai ticket attivi in questo gioco."
+                }
               </p>
             </CardContent>
           </Card>
         ) : (
           <div className="space-y-4">
-            {activeTickets.map((ticket) => (
+            {ticketsToShow.map((ticket) => (
               <TicketSelectionCard
                 key={ticket.id}
                 ticket={ticket}
@@ -178,12 +209,14 @@ export default function GameInterface() {
                 onClick={handleSubmitSelections}
                 disabled={
                   submitSelectionsMutation.isPending || 
-                  Object.keys(selections).length !== activeTickets.length
+                  Object.keys(selections).length !== ticketsToShow.length
                 }
               >
                 {submitSelectionsMutation.isPending 
                   ? "Invio in corso..." 
-                  : "Conferma Tutte le Selezioni"}
+                  : specificTicketId 
+                    ? "Conferma Selezione Ticket" 
+                    : "Conferma Tutte le Selezioni"}
               </Button>
             </div>
           </div>
