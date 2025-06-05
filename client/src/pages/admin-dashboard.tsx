@@ -375,6 +375,8 @@ function PlayerHistoryTable({
   const getCellStyle = (ticket: any, round: number) => {
     const selection = selectionsByTicket[ticket.id]?.[round];
     
+    console.log(`Ticket ${ticket.id}, Round ${round}, Selection:`, selection, 'Eliminated:', ticket.eliminatedInRound, 'Active:', ticket.isActive);
+    
     // If ticket was eliminated before this round
     if (ticket.eliminatedInRound && ticket.eliminatedInRound < round) {
       return "bg-red-100 text-red-800"; // Red for eliminated
@@ -395,9 +397,9 @@ function PlayerHistoryTable({
       return "bg-green-100 text-green-800"; // Green for survived previous rounds
     }
     
-    // If ticket survived this round but not eliminated yet
-    if (selection && (ticket.isActive || !ticket.eliminatedInRound || ticket.eliminatedInRound > round)) {
-      return "bg-green-100 text-green-800"; // Green for survived
+    // If ticket has a selection for this round
+    if (selection) {
+      return "bg-green-100 text-green-800"; // Green for has selection
     }
     
     // Default empty state
