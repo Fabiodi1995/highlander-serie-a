@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -313,6 +313,185 @@ function TicketAssignmentForm({
         </Button>
       </div>
     </form>
+  );
+}
+
+function PlayerHistoryTable({ 
+  game, 
+  allTickets, 
+  allTeamSelections, 
+  teams, 
+  users 
+}: { 
+  game: Game; 
+  allTickets: any[] | undefined; 
+  allTeamSelections: any[] | undefined; 
+  teams: Team[] | undefined; 
+  users: UserType[] | undefined; 
+}) {
+  if (!allTickets || !allTeamSelections || !teams || !users) {
+    return <div className="text-center py-4">Caricamento dati...</div>;
+  }
+
+  // Filter tickets for this game
+  const gameTickets = allTickets.filter(ticket => ticket.gameId === game.id);
+  
+  // Filter team selections for this game
+  const gameSelections = allTeamSelections.find(gameData => gameData.game.id === game.id)?.selections || [];
+  
+  // Create rounds array (1 to current round)
+  const rounds = Array.from({ length: game.currentRound }, (_, i) => i + 1);
+  
+  // Group selections by ticket and round
+  const selectionsByTicket = gameSelections.reduce((acc: any, selection: any) => {
+    if (!acc[selection.ticketId]) {
+      acc[selection.ticketId] = {};
+    }
+    acc[selection.ticketId][selection.round] = selection;
+    return acc;
+  }, {});
+
+  // Get team name helper
+  const getTeamName = (teamId: number) => {
+    return teams.find(t => t.id === teamId)?.name || 'N/A';
+  };
+
+  // Get user name helper
+  const getUserName = (userId: number) => {
+    return users.find(u => u.id === userId)?.username || 'N/A';
+  };
+
+  // Get cell style based on ticket status and round
+  const getCellStyle = (ticket: any, round: number) => {
+    const selection = selectionsByTicket[ticket.id]?.[round];
+    
+    // If ticket was eliminated before this round
+    if (ticket.eliminatedInRound && ticket.eliminatedInRound < round) {
+      return "bg-red-100 text-red-800"; // Red for eliminated
+    }
+    
+    // If ticket was eliminated in this round
+    if (ticket.eliminatedInRound === round) {
+      return "bg-red-200 text-red-900 font-semibold"; // Darker red for elimination round
+    }
+    
+    // If this is current round and ticket is still active
+    if (round === game.currentRound && ticket.isActive) {
+      return selection ? "bg-yellow-100 text-yellow-800" : "bg-orange-100 text-orange-800"; // Yellow/Orange for current round
+    }
+    
+    // If ticket survived this round
+    if (selection && ticket.isActive) {
+      return "bg-green-100 text-green-800"; // Green for survived
+    }
+    
+    // Default empty state
+    return "bg-gray-50 text-gray-500";
+  };
+
+  // Get cell content
+  const getCellContent = (ticket: any, round: number) => {
+    const selection = selectionsByTicket[ticket.id]?.[round];
+    
+    // If ticket was eliminated before this round
+    if (ticket.eliminatedInRound && ticket.eliminatedInRound < round) {
+      return "—";
+    }
+    
+    // If selection exists, show team name
+    if (selection) {
+      return getTeamName(selection.teamId);
+    }
+    
+    // If current round and no selection yet
+    if (round === game.currentRound && ticket.isActive) {
+      return "In attesa";
+    }
+    
+    return "—";
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-xl font-semibold">{game.name}</h3>
+        <div className="flex items-center space-x-4 text-sm">
+          <span className="text-gray-600">Giornata corrente: {game.currentRound}</span>
+          <Badge variant={game.status === 'active' ? 'default' : 'secondary'}>
+            {game.status}
+          </Badge>
+        </div>
+      </div>
+
+      {gameTickets.length === 0 ? (
+        <div className="text-center py-4 text-gray-500">
+          Nessun ticket per questo gioco
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="font-semibold">Giocatore</TableHead>
+                <TableHead className="font-semibold">Ticket</TableHead>
+                {rounds.map(round => (
+                  <TableHead key={round} className="text-center font-semibold min-w-[120px]">
+                    Round {round}
+                  </TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {gameTickets.map((ticket) => (
+                <TableRow key={ticket.id}>
+                  <TableCell className="font-medium">
+                    {getUserName(ticket.userId)}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center space-x-2">
+                      <span>#{ticket.id.toString().padStart(3, '0')}</span>
+                      {!ticket.isActive && (
+                        <Badge variant="destructive" className="text-xs">
+                          Eliminato R{ticket.eliminatedInRound}
+                        </Badge>
+                      )}
+                    </div>
+                  </TableCell>
+                  {rounds.map(round => (
+                    <TableCell 
+                      key={round} 
+                      className={`text-center text-sm ${getCellStyle(ticket, round)}`}
+                    >
+                      {getCellContent(ticket, round)}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+
+      {/* Legend */}
+      <div className="flex flex-wrap gap-4 text-xs mt-4 p-3 bg-gray-50 rounded-lg">
+        <div className="flex items-center space-x-2">
+          <div className="w-4 h-4 bg-green-100 border border-green-200 rounded"></div>
+          <span>Sopravvissuto</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <div className="w-4 h-4 bg-red-100 border border-red-200 rounded"></div>
+          <span>Eliminato</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <div className="w-4 h-4 bg-yellow-100 border border-yellow-200 rounded"></div>
+          <span>Round corrente</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <div className="w-4 h-4 bg-orange-100 border border-orange-200 rounded"></div>
+          <span>In attesa selezione</span>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -792,8 +971,9 @@ export default function AdminDashboard() {
 
         {/* Admin Dashboard with Tabs */}
         <Tabs defaultValue="games" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="games">Gestione Giochi</TabsTrigger>
+            <TabsTrigger value="history">Storico Giocatori</TabsTrigger>
             <TabsTrigger value="selections">Scelte Squadre</TabsTrigger>
             <TabsTrigger value="tickets">Ticket Giocatori</TabsTrigger>
             <TabsTrigger value="overview">Panoramica</TabsTrigger>
@@ -920,6 +1100,39 @@ export default function AdminDashboard() {
                         ))}
                       </TableBody>
                     </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="history" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Storico Completo Giocatori</CardTitle>
+                <p className="text-sm text-gray-600 mt-2">
+                  Visualizzazione dettagliata dello storico di ogni giocatore per ogni ticket in tutti i giochi
+                </p>
+              </CardHeader>
+              <CardContent>
+                {games && games.length > 0 ? (
+                  <div className="space-y-8">
+                    {games.map((game) => (
+                      <PlayerHistoryTable 
+                        key={game.id} 
+                        game={game} 
+                        allTickets={allTickets} 
+                        allTeamSelections={allTeamSelections} 
+                        teams={teams}
+                        users={users}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Trophy className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Nessun Gioco</h3>
+                    <p className="text-gray-500">Crea un gioco per visualizzare lo storico dei giocatori.</p>
                   </div>
                 )}
               </CardContent>
