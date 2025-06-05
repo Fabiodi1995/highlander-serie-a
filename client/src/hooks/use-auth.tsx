@@ -38,6 +38,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (user: SelectUser) => {
       queryClient.setQueryData(["/api/user"], user);
+      // Clear all cached data to prevent showing previous user's data
+      queryClient.invalidateQueries({ queryKey: ["/api/user/team-selections"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/games"] });
     },
     onError: (error: Error) => {
       toast({
@@ -71,6 +74,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: () => {
       queryClient.setQueryData(["/api/user"], null);
+      // Clear all user-specific cached data on logout
+      queryClient.clear();
     },
     onError: (error: Error) => {
       toast({
