@@ -339,16 +339,18 @@ function PlayerHistoryTable({
   // Filter team selections for this game
   const gameSelections = allTeamSelections.find(gameData => gameData.game.id === game.id)?.selections || [];
   
-  // Debug log
-  // console.log('Game:', game.name, 'Current Round:', game.currentRound);
-  // console.log('Game Tickets:', gameTickets);
-  // console.log('Game Selections:', gameSelections);
-  
   // Create rounds array (startRound to currentRound)
-  const gameRounds = [];
+  const gameRounds: number[] = [];
   for (let round = game.startRound; round <= game.currentRound; round++) {
     gameRounds.push(round);
   }
+  
+  // Debug log
+  console.log('=== TABELLA STORICO DEBUG ===');
+  console.log('Game:', game.name, 'Current Round:', game.currentRound, 'Start Round:', game.startRound);
+  console.log('Game Tickets:', gameTickets.length, gameTickets);
+  console.log('Game Selections:', gameSelections.length, gameSelections);
+  console.log('Game Rounds Array:', gameRounds);
   
   // Group selections by ticket and round
   const selectionsByTicket = gameSelections.reduce((acc: any, selection: any) => {
