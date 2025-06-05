@@ -1,5 +1,5 @@
 import { 
-  users, games, teams, tickets, matches, teamSelections, gameParticipants,
+  users, games, teams, tickets, matches, teamSelections, gameParticipants, userStats,
   type User, type InsertUser, type Game, type InsertGame, type Team, 
   type Ticket, type Match, type TeamSelection, type InsertTeamSelection,
   type GameParticipant
@@ -129,9 +129,9 @@ export class DatabaseStorage implements IStorage {
     return {
       ...stats,
       gamesPlayed,
-      gamesWon: stats?.gamesWon || 0,
-      level: stats?.level || 1,
-      xp: stats?.xp || 0
+      gamesWon: stats?.totalWins || 0,
+      level: stats?.currentLevel || 1,
+      xp: stats?.experiencePoints || 0
     };
   }
 

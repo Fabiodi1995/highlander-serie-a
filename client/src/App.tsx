@@ -12,7 +12,7 @@ import AuthPage from "@/pages/auth-page";
 import PlayerDashboard from "@/pages/player-dashboard";
 import AdminDashboard from "@/pages/admin-dashboard";
 import GameInterface from "@/pages/game-interface";
-import ProfilePage from "@/pages/profile-page";
+import ProfilePage from "@/pages/profile-page-simple";
 
 function Router() {
   return (

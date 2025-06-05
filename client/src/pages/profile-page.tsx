@@ -67,7 +67,7 @@ export default function ProfilePage() {
       phoneNumber: user?.phoneNumber || "",
       city: user?.city || "",
       country: user?.country || "Italia",
-      dateOfBirth: user?.dateOfBirth ? user.dateOfBirth.toISOString().split('T')[0] : undefined,
+      dateOfBirth: user?.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split('T')[0] : undefined,
     },
   });
 
