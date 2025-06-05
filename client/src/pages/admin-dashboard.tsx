@@ -472,10 +472,10 @@ function PlayerHistoryTable({
               {gameTickets
                 .sort((a, b) => {
                   // Calculate rounds survived for each ticket
-                  const roundsA = a.eliminatedInRound ? a.eliminatedInRound - 1 : game.currentRound - game.startRound + 1;
-                  const roundsB = b.eliminatedInRound ? b.eliminatedInRound - 1 : game.currentRound - game.startRound + 1;
+                  const roundsA = a.eliminatedInRound || (game.currentRound + 1);
+                  const roundsB = b.eliminatedInRound || (game.currentRound + 1);
                   
-                  // Sort by rounds survived (descending), then by ticket ID (ascending)
+                  // Sort by elimination round (later eliminations first), then by ticket ID
                   if (roundsA !== roundsB) {
                     return roundsB - roundsA;
                   }
