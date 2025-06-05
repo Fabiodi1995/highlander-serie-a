@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Clock, Info, Target } from "lucide-react";
-import { Link, useParams } from "wouter";
+import { Link, useParams, useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Game, Ticket, Team, TeamSelection } from "@shared/schema";
@@ -14,14 +14,22 @@ import type { Game, Ticket, Team, TeamSelection } from "@shared/schema";
 export default function GameInterface() {
   const { id } = useParams<{ id: string }>();
   const gameId = id ? parseInt(id) : null;
+  const [location] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
   const [selections, setSelections] = useState<Record<number, number>>({});
+  const [specificTicketId, setSpecificTicketId] = useState<number | null>(null);
 
-  // Get ticketId from URL parameters if present (e.g., /game/7?ticket=13)
-  const urlParams = new URLSearchParams(window.location.search);
-  const ticketIdParam = urlParams.get('ticket');
-  const specificTicketId = ticketIdParam ? parseInt(ticketIdParam) : null;
+  // Extract ticket parameter from URL
+  useEffect(() => {
+    const params = new URLSearchParams(location.split('?')[1] || '');
+    const ticketParam = params.get('ticket');
+    if (ticketParam) {
+      setSpecificTicketId(parseInt(ticketParam));
+    } else {
+      setSpecificTicketId(null);
+    }
+  }, [location]);
 
 
 
