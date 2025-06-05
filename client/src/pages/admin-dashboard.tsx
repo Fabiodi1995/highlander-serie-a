@@ -382,14 +382,22 @@ function PlayerHistoryTable({
       return "bg-red-200 text-red-900 font-semibold border border-red-300";
     }
     
-    // If this is current round and ticket is still active
-    if (round === game.currentRound && ticket.isActive) {
+    // Check if this round is the current one being played (not calculated yet)
+    const isCurrentRound = round === game.currentRound && game.roundStatus !== "calculated";
+    
+    // If this is the current round being played and not calculated yet
+    if (isCurrentRound && ticket.isActive) {
       return selection 
         ? "bg-yellow-100 text-yellow-800 border border-yellow-200" 
         : "bg-orange-100 text-orange-800 border border-orange-200";
     }
     
-    // If ticket has a selection for this round (survived)
+    // If this round is completed (has selection and either round < currentRound OR current round is calculated)
+    if (selection && (round < game.currentRound || (round === game.currentRound && game.roundStatus === "calculated"))) {
+      return "bg-green-100 text-green-800 border border-green-200";
+    }
+    
+    // If ticket has a selection for this round (fallback)
     if (selection) {
       return "bg-green-100 text-green-800 border border-green-200";
     }
