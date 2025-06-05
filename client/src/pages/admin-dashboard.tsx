@@ -339,6 +339,11 @@ function PlayerHistoryTable({
   // Filter team selections for this game
   const gameSelections = allTeamSelections.find(gameData => gameData.game.id === game.id)?.selections || [];
   
+  // Debug log
+  console.log('Game:', game.name, 'Current Round:', game.currentRound);
+  console.log('Game Tickets:', gameTickets);
+  console.log('Game Selections:', gameSelections);
+  
   // Create rounds array (1 to current round)
   const rounds = Array.from({ length: game.currentRound }, (_, i) => i + 1);
   
