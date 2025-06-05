@@ -380,8 +380,13 @@ function PlayerHistoryTable({
       return selection ? "bg-yellow-100 text-yellow-800" : "bg-orange-100 text-orange-800"; // Yellow/Orange for current round
     }
     
-    // If ticket survived this round
-    if (selection && ticket.isActive) {
+    // If this is a previous round and ticket has a selection (survived that round)
+    if (round < game.currentRound && selection) {
+      return "bg-green-100 text-green-800"; // Green for survived previous rounds
+    }
+    
+    // If ticket survived this round but not eliminated yet
+    if (selection && (ticket.isActive || !ticket.eliminatedInRound || ticket.eliminatedInRound > round)) {
       return "bg-green-100 text-green-800"; // Green for survived
     }
     
