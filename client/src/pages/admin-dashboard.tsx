@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, LogOut, Plus, Gamepad2, Play, Users, TicketIcon, Calculator, Settings, Trash2, Trophy, Target, CheckCircle } from "lucide-react";
+import { User, LogOut, Plus, Gamepad2, Play, Users, TicketIcon, Calculator, Settings, Trash2, Trophy, Target, CheckCircle, Shield } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertGameSchema } from "@shared/schema";
@@ -870,14 +870,40 @@ export default function AdminDashboard() {
                                   </>
                                 )}
                                 {game.status === "active" && (
-                                  <Button
-                                    size="sm"
-                                    onClick={() => handleCalculateTurn(game)}
-                                    disabled={calculateTurnMutation.isPending}
-                                  >
-                                    <Calculator className="h-4 w-4 mr-1" />
-                                    Calcola Giornata
-                                  </Button>
+                                  <>
+                                    {game.roundStatus === "selection_open" && (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => lockRoundMutation.mutate({ gameId: game.id })}
+                                        disabled={lockRoundMutation.isPending}
+                                      >
+                                        <Shield className="h-4 w-4 mr-1" />
+                                        Blocca Round
+                                      </Button>
+                                    )}
+                                    {game.roundStatus === "selection_locked" && (
+                                      <Button
+                                        size="sm"
+                                        onClick={() => handleCalculateTurn(game)}
+                                        disabled={calculateTurnMutation.isPending}
+                                      >
+                                        <Calculator className="h-4 w-4 mr-1" />
+                                        Calcola Giornata
+                                      </Button>
+                                    )}
+                                    {game.roundStatus === "calculated" && (
+                                      <Button
+                                        size="sm"
+                                        variant="default"
+                                        onClick={() => startNewRoundMutation.mutate(game.id)}
+                                        disabled={startNewRoundMutation.isPending}
+                                      >
+                                        <Play className="h-4 w-4 mr-1" />
+                                        Inizia Nuovo Round
+                                      </Button>
+                                    )}
+                                  </>
                                 )}
                                 <Button 
                                   size="sm" 
