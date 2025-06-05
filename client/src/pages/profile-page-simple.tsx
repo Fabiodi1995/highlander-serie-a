@@ -200,11 +200,12 @@ export default function ProfilePage() {
               <CardHeader>
                 <CardTitle>Informazioni Personali</CardTitle>
                 <CardDescription>
-                  I tuoi dati personali registrati
+                  {isEditing ? "Modifica i tuoi dati personali" : "I tuoi dati personali registrati"}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                {!isEditing ? (
+                  <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Nome</label>
@@ -266,6 +267,139 @@ export default function ProfilePage() {
                     </div>
                   </div>
                 </div>
+                ) : (
+                  <Form {...updateProfileForm}>
+                    <form onSubmit={updateProfileForm.handleSubmit(onUpdateProfile)} className="space-y-6">
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <FormField
+                          control={updateProfileForm.control}
+                          name="firstName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Nome *</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="Il tuo nome" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={updateProfileForm.control}
+                          name="lastName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Cognome *</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="Il tuo cognome" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={updateProfileForm.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Email *</FormLabel>
+                              <FormControl>
+                                <Input {...field} type="email" placeholder="la-tua-email@esempio.com" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={updateProfileForm.control}
+                          name="phoneNumber"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Telefono</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="+39 123 456 7890" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={updateProfileForm.control}
+                          name="city"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Città</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="La tua città" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={updateProfileForm.control}
+                          name="country"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Paese</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="Il tuo paese" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={updateProfileForm.control}
+                          name="dateOfBirth"
+                          render={({ field }) => (
+                            <FormItem className="md:col-span-2">
+                              <FormLabel>Data di nascita</FormLabel>
+                              <FormControl>
+                                <Input {...field} type="date" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="flex justify-end gap-3 pt-4">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setIsEditing(false)}
+                        >
+                          <X className="h-4 w-4 mr-2" />
+                          Annulla
+                        </Button>
+                        <Button 
+                          type="submit" 
+                          disabled={updateProfileMutation.isPending}
+                          className="bg-blue-600 hover:bg-blue-700"
+                        >
+                          {updateProfileMutation.isPending ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                              Salvataggio...
+                            </>
+                          ) : (
+                            <>
+                              <Save className="h-4 w-4 mr-2" />
+                              Salva Modifiche
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </form>
+                  </Form>
+                )}
               </CardContent>
             </Card>
 
