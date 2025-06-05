@@ -38,7 +38,10 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  console.log("Serie A 2024/2025 calendar ready");
+  console.log("Initializing Serie A 2024/2025 complete calendar...");
+  
+  // Initialize Serie A data from complete Excel calendar
+  await serieAManager.initializeSerieAData();
   
   const server = await registerRoutes(app);
 

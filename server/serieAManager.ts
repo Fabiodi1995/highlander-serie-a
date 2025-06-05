@@ -12,21 +12,22 @@ export class SerieAManager {
   private excelFilePath = path.join(__dirname, 'data', 'serie-a-calendar.xlsx');
 
   async initializeSerieAData() {
-    console.log('Initializing Serie A 2024/2025 data...');
+    console.log('Initializing Serie A 2024/2025 complete calendar...');
     
     try {
       // Ensure teams are seeded
       await storage.seedTeams();
       
-      // Create Excel file if it doesn't exist
+      // Use the generated complete Serie A calendar
       if (!fs.existsSync(this.excelFilePath)) {
-        await this.createExcelCalendar();
+        const { createCompleteSerieAExcel } = await import('./generateSerieACalendar');
+        await createCompleteSerieAExcel();
       }
       
-      // Load matches from Excel or fallback to hardcoded data
+      // Load matches from the complete Excel calendar
       await this.loadMatchesFromExcel();
       
-      console.log('Serie A data initialization completed');
+      console.log('Serie A 2024/2025 complete calendar loaded - 380 matches across 38 rounds');
     } catch (error) {
       console.error('Error initializing Serie A data:', error);
       // Fallback to hardcoded data

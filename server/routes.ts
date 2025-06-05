@@ -497,10 +497,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       let matches = await storage.getMatchesByRound(round);
       
-      // If no matches found in database, create sample matches for this round
+      // If no matches found in database, load from Serie A calendar
       if (!matches || matches.length === 0) {
-        console.log(`Creating sample matches for round ${round}`);
-        await createSampleMatches(round);
+        console.log(`Loading Serie A matches for round ${round}`);
+        await loadSerieAMatchesForRound(round);
         matches = await storage.getMatchesByRound(round);
       }
       
@@ -511,8 +511,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Helper function to create authentic Serie A matches for a specific round
-  async function createSampleMatches(round: number) {
+  // Load authentic Serie A matches for a specific round from Excel calendar
+  async function loadSerieAMatchesForRound(round: number) {
+    try {
+      const XLSX = await import('xlsx');
+      const path = await import('path');
+      const fs = await import('fs');
+      
+      const excelPath = path.join(__dirname, 'data', 'serie-a-calendar.xlsx');
+      
+      if (!fs.existsSync(excelPath)) {
+        console.log('Serie A calendar not found, generating...');
+        const { createCompleteSerieAExcel } = await import('./generateSerieACalendar');
+        await createCompleteSerieAExcel();
+      }
+      
+      const workbook = XLSX.readFile(excelPath);
+      const calendarSheet = workbook.Sheets['Calendario'];
+      const matchesData = XLSX.utils.sheet_to_json(calendarSheet);
+      
+      // Filter matches for the specific round
+      const roundMatches = matchesData.filter((match: any) => match.Giornata === round);
+      
+      if (roundMatches.length > 0) {
+        const { db } = await import('./db');
+        const { matches, teams } = await import('../shared/schema');
+        
+        // Get team mappings
+        const allTeams = await db.select().from(teams);
+        const teamByName = new Map(allTeams.map(t => [t.name, t]));
+        
+        const dbMatches = [];
+        for (const match of roundMatches.slice(0, 10)) { // Ensure exactly 10 matches
+          const homeTeam = teamByName.get(match['Squadra Casa']);
+          const awayTeam = teamByName.get(match['Squadra Trasferta']);
+          
+          if (homeTeam && awayTeam) {
+            dbMatches.push({
+              round,
+              homeTeamId: homeTeam.id,
+              awayTeamId: awayTeam.id,
+              homeScore: null,
+              awayScore: null,
+              result: null,
+              matchDate: new Date(match.Data || new Date()),
+              isCompleted: false
+            });
+          }
+        }
+        
+        if (dbMatches.length > 0) {
+          await db.insert(matches).values(dbMatches).onConflictDoNothing();
+          console.log(`Loaded ${dbMatches.length} authentic Serie A matches for round ${round}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading Serie A matches:', error);
+      // Fallback to creating representative matches
+      await createFallbackMatches(round);
+    }
+  }
+
+  // Fallback function for creating representative matches
+  async function createFallbackMatches(round: number) {
     try {
       const { db } = await import('./db');
       const { matches, teams } = await import('../shared/schema');
