@@ -417,9 +417,13 @@ function PlayerHistoryTable({
         <h3 className="text-xl font-semibold">{game.name}</h3>
         <div className="flex items-center space-x-4 text-sm">
           <span className="text-gray-600">Giornata corrente: {game.currentRound}</span>
+          <span className="text-gray-500">Stato: {game.roundStatus}</span>
           <Badge variant={game.status === 'active' ? 'default' : 'secondary'}>
             {game.status}
           </Badge>
+          <span className="text-xs text-gray-400">
+            Aggiornato: {new Date().toLocaleTimeString()}
+          </span>
         </div>
       </div>
 
@@ -504,6 +508,8 @@ export default function AdminDashboard() {
 
   const { data: games, isLoading: gamesLoading } = useQuery<Game[]>({
     queryKey: ["/api/games"],
+    refetchInterval: 3000, // Aggiorna ogni 3 secondi
+    refetchIntervalInBackground: true,
   });
 
   const { data: users } = useQuery<UserType[]>({
@@ -1119,7 +1125,7 @@ export default function AdminDashboard() {
                   <div className="space-y-8">
                     {games.map((game) => (
                       <PlayerHistoryTable 
-                        key={game.id} 
+                        key={`${game.id}-${game.currentRound}-${game.roundStatus}`} 
                         game={game} 
                         allTickets={allTickets} 
                         allTeamSelections={allTeamSelections} 
