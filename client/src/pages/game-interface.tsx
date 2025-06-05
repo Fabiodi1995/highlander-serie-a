@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Clock, Info, Target } from "lucide-react";
+import { ArrowLeft, Clock, Info, Target, Shield } from "lucide-react";
 import { Link, useParams, useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -161,17 +161,30 @@ export default function GameInterface() {
           <CardHeader>
             <div className="flex justify-between items-center">
               <CardTitle>Giornata {game.currentRound} - Selezione Squadre</CardTitle>
-              <Badge className="bg-warning text-white">
-                <Clock className="h-3 w-3 mr-1" />
-                Selezioni Aperte
-              </Badge>
+              {game.roundStatus === "selection_open" ? (
+                <Badge className="bg-green-600 text-white">
+                  <Clock className="h-3 w-3 mr-1" />
+                  Selezioni Aperte
+                </Badge>
+              ) : (
+                <Badge className="bg-red-600 text-white">
+                  <Shield className="h-3 w-3 mr-1" />
+                  Selezioni Bloccate
+                </Badge>
+              )}
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-600">
-              Seleziona una squadra per ognuno dei tuoi ticket attivi. Ricorda: non puoi scegliere una squadra 
-              che hai già selezionato con quel ticket nelle giornate precedenti.
-            </p>
+            {game.roundStatus === "selection_open" ? (
+              <p className="text-gray-600">
+                Seleziona una squadra per ognuno dei tuoi ticket attivi. Ricorda: non puoi scegliere una squadra 
+                che hai già selezionato con quel ticket nelle giornate precedenti.
+              </p>
+            ) : (
+              <p className="text-red-600 font-medium">
+                Le selezioni per questa giornata sono state bloccate dall'amministratore. Non è più possibile modificare le scelte.
+              </p>
+            )}
           </CardContent>
         </Card>
 
@@ -215,26 +228,40 @@ export default function GameInterface() {
                 selectedTeamId={selections[ticket.id]}
                 onSelectionChange={(teamId) => handleSelectionChange(ticket.id, teamId)}
                 currentRound={game.currentRound}
+                disabled={game.roundStatus !== "selection_open"}
               />
             ))}
 
             {/* Submit Button */}
-            <div className="flex justify-center pt-6">
-              <Button
-                size="lg"
-                onClick={handleSubmitSelections}
-                disabled={
-                  submitSelectionsMutation.isPending || 
-                  Object.keys(selections).length !== ticketsToShow.length
-                }
-              >
-                {submitSelectionsMutation.isPending 
-                  ? "Invio in corso..." 
-                  : specificTicketId 
-                    ? "Conferma Selezione Ticket" 
-                    : "Conferma Tutte le Selezioni"}
-              </Button>
-            </div>
+            {game.roundStatus === "selection_open" && (
+              <div className="flex justify-center pt-6">
+                <Button
+                  size="lg"
+                  onClick={handleSubmitSelections}
+                  disabled={
+                    submitSelectionsMutation.isPending || 
+                    Object.keys(selections).length !== ticketsToShow.length
+                  }
+                >
+                  {submitSelectionsMutation.isPending 
+                    ? "Invio in corso..." 
+                    : specificTicketId 
+                      ? "Conferma Selezione Ticket" 
+                      : "Conferma Tutte le Selezioni"}
+                </Button>
+              </div>
+            )}
+            
+            {game.roundStatus !== "selection_open" && (
+              <div className="flex justify-center pt-6">
+                <div className="text-center">
+                  <p className="text-gray-500 mb-2">Le selezioni sono bloccate per questa giornata</p>
+                  <Button size="lg" disabled variant="outline">
+                    Selezioni Non Disponibili
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -247,13 +274,15 @@ function TicketSelectionCard({
   teams, 
   selectedTeamId, 
   onSelectionChange,
-  currentRound
+  currentRound,
+  disabled = false
 }: { 
   ticket: Ticket;
   teams: Team[];
   selectedTeamId?: number;
   onSelectionChange: (teamId: string) => void;
   currentRound: number;
+  disabled?: boolean;
 }) {
   const { data: allSelections } = useQuery<TeamSelection[]>({
     queryKey: [`/api/tickets/${ticket.id}/selections`],
@@ -294,10 +323,11 @@ function TicketSelectionCard({
           </label>
           <Select 
             value={selectedTeamId?.toString() || ""} 
-            onValueChange={onSelectionChange}
+            onValueChange={disabled ? undefined : onSelectionChange}
+            disabled={disabled}
           >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Scegli una squadra..." />
+            <SelectTrigger className={`w-full ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
+              <SelectValue placeholder={disabled ? "Selezioni bloccate" : "Scegli una squadra..."} />
             </SelectTrigger>
             <SelectContent>
               {availableTeams.map((team) => (
