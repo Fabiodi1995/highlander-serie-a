@@ -345,12 +345,9 @@ function PlayerHistoryTable({
     gameRounds.push(round);
   }
   
-  // Debug log
-  console.log('=== TABELLA STORICO DEBUG ===');
-  console.log('Game:', game.name, 'Current Round:', game.currentRound, 'Start Round:', game.startRound);
-  console.log('Game Tickets:', gameTickets.length, gameTickets);
-  console.log('Game Selections:', gameSelections.length, gameSelections);
-  console.log('Game Rounds Array:', gameRounds);
+  // Debug log - remove in production
+  // console.log('=== TABELLA STORICO DEBUG ===');
+  // console.log('Game:', game.name, 'Current Round:', game.currentRound, 'Start Round:', game.startRound);
   
   // Group selections by ticket and round
   const selectionsByTicket = gameSelections.reduce((acc: any, selection: any) => {
@@ -375,35 +372,30 @@ function PlayerHistoryTable({
   const getCellStyle = (ticket: any, round: number) => {
     const selection = selectionsByTicket[ticket.id]?.[round];
     
-    console.log(`Ticket ${ticket.id}, Round ${round}, Selection:`, selection, 'Eliminated:', ticket.eliminatedInRound, 'Active:', ticket.isActive);
-    
-    // If ticket was eliminated before this round
+    // If ticket was eliminated before this round - show red
     if (ticket.eliminatedInRound && ticket.eliminatedInRound < round) {
-      return "bg-red-100 text-red-800"; // Red for eliminated
+      return "bg-red-100 text-red-800 border border-red-200";
     }
     
-    // If ticket was eliminated in this round
+    // If ticket was eliminated in this round - show dark red
     if (ticket.eliminatedInRound === round) {
-      return "bg-red-200 text-red-900 font-semibold"; // Darker red for elimination round
+      return "bg-red-200 text-red-900 font-semibold border border-red-300";
     }
     
     // If this is current round and ticket is still active
     if (round === game.currentRound && ticket.isActive) {
-      return selection ? "bg-yellow-100 text-yellow-800" : "bg-orange-100 text-orange-800"; // Yellow/Orange for current round
+      return selection 
+        ? "bg-yellow-100 text-yellow-800 border border-yellow-200" 
+        : "bg-orange-100 text-orange-800 border border-orange-200";
     }
     
-    // If this is a previous round and ticket has a selection (survived that round)
-    if (round < game.currentRound && selection) {
-      return "bg-green-100 text-green-800"; // Green for survived previous rounds
-    }
-    
-    // If ticket has a selection for this round
+    // If ticket has a selection for this round (survived)
     if (selection) {
-      return "bg-green-100 text-green-800"; // Green for has selection
+      return "bg-green-100 text-green-800 border border-green-200";
     }
     
     // Default empty state
-    return "bg-gray-50 text-gray-500";
+    return "bg-gray-50 text-gray-500 border border-gray-200";
   };
 
   // Get cell content

@@ -1,0 +1,28 @@
+Console.js:61 === TABELLA STORICO DEBUG ===
+Console.js:61 Game: affiliati Current Round: 5 Start Round: 4
+ Game Tickets: 3 (3) [{…}, {…}, {…}]
+ Game Selections: 6 (6) [{…}, {…}, {…}, {…}, {…}, {…}]
+ Game Rounds Array: (2) [4, 5]
+ Ticket 20, Round 4, Selection: {id: 15, ticketId: 20, teamId: 21, round: 4, gameId: 8, …} Eliminated: null Active: true
+ Ticket 20, Round 5, Selection: {id: 18, ticketId: 20, teamId: 22, round: 5, gameId: 8, …} Eliminated: null Active: true
+ Ticket 21, Round 4, Selection: {id: 16, ticketId: 21, teamId: 21, round: 4, gameId: 8, …} Eliminated: null Active: true
+ Ticket 21, Round 5, Selection: {id: 19, ticketId: 21, teamId: 22, round: 5, gameId: 8, …} Eliminated: null Active: true
+ Ticket 22, Round 4, Selection: {id: 17, ticketId: 22, teamId: 21, round: 4, gameId: 8, …} Eliminated: null Active: true
+ Ticket 22, Round 5, Selection: {id: 20, ticketId: 22, teamId: 22, round: 5, gameId: 8, …} Eliminated: null Active: true
+ === TABELLA STORICO DEBUG ===
+ Game: testok Current Round: 3 Start Round: 1
+ Game Tickets: 4 (4) [{…}, {…}, {…}, {…}]
+ Game Selections: 8 (8) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+Console.js:61 Game Rounds Array: (3) [1, 2, 3]
+Console.js:61 Ticket 13, Round 1, Selection: {id: 7, ticketId: 13, teamId: 22, round: 1, gameId: 7, …} Eliminated: 3 Active: false
+Console.js:61 Ticket 13, Round 2, Selection: {id: 11, ticketId: 13, teamId: 30, round: 2, gameId: 7, …} Eliminated: 3 Active: false
+Console.js:61 Ticket 13, Round 3, Selection: {id: 13, ticketId: 13, teamId: 21, round: 3, gameId: 7, …} Eliminated: 3 Active: false
+Console.js:61 Ticket 14, Round 1, Selection: {id: 8, ticketId: 14, teamId: 30, round: 1, gameId: 7, …} Eliminated: 1 Active: false
+Console.js:61 Ticket 14, Round 2, Selection: undefined Eliminated: 1 Active: false
+Console.js:61 Ticket 14, Round 3, Selection: undefined Eliminated: 1 Active: false
+Console.js:61 Ticket 15, Round 1, Selection: {id: 9, ticketId: 15, teamId: 24, round: 1, gameId: 7, …} Eliminated: 3 Active: false
+Console.js:61 Ticket 15, Round 2, Selection: {id: 12, ticketId: 15, teamId: 22, round: 2, gameId: 7, …} Eliminated: 3 Active: false
+Console.js:61 Ticket 15, Round 3, Selection: {id: 14, ticketId: 15, teamId: 21, round: 3, gameId: 7, …} Eliminated: 3 Active: false
+Console.js:61 Ticket 16, Round 1, Selection: {id: 10, ticketId: 16, teamId: 30, round: 1, gameId: 7, …} Eliminated: 1 Active: false
+Console.js:61 Ticket 16, Round 2, Selection: undefined Eliminated: 1 Active: false
+Console.js:61 Ticket 16, Round 3, Selection: undefined Eliminated: 1 Active: false
