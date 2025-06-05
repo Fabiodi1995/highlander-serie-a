@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, varchar, json } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -66,11 +66,47 @@ export const teamSelections = pgTable("team_selections", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const achievements = pgTable("achievements", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  icon: text("icon").notNull(),
+  type: text("type").notNull(), // survival, participation, performance
+  criteria: jsonb("criteria").notNull(), // flexible criteria object
+  rarity: text("rarity").notNull(), // common, rare, epic, legendary
+  points: integer("points").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const userAchievements = pgTable("user_achievements", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  achievementId: integer("achievement_id").notNull().references(() => achievements.id, { onDelete: "cascade" }),
+  unlockedAt: timestamp("unlocked_at").defaultNow().notNull(),
+  gameId: integer("game_id").references(() => games.id), // optional, for game-specific achievements
+  progress: jsonb("progress"), // track progress towards achievement
+});
+
+export const userStats = pgTable("user_stats", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  totalGamesPlayed: integer("total_games_played").notNull().default(0),
+  totalRoundsSurvived: integer("total_rounds_survived").notNull().default(0),
+  longestSurvivalStreak: integer("longest_survival_streak").notNull().default(0),
+  totalWins: integer("total_wins").notNull().default(0),
+  experiencePoints: integer("experience_points").notNull().default(0),
+  currentLevel: integer("current_level").notNull().default(1),
+  favoriteTeam: integer("favorite_team").references(() => teams.id),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Relations
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ one, many }) => ({
   createdGames: many(games),
   gameParticipants: many(gameParticipants),
   tickets: many(tickets),
+  achievements: many(userAchievements),
+  stats: one(userStats),
 }));
 
 export const gamesRelations = relations(games, ({ one, many }) => ({
