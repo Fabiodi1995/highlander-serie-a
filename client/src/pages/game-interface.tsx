@@ -53,6 +53,14 @@ export default function GameInterface() {
     ? activeTickets.filter(t => t.id === specificTicketId)
     : activeTickets;
 
+  // Debug logging
+  console.log('Debug info:', {
+    location,
+    specificTicketId,
+    activeTickets: activeTickets.map(t => t.id),
+    ticketsToShow: ticketsToShow.map(t => t.id)
+  });
+
   const submitSelectionsMutation = useMutation({
     mutationFn: async (teamSelections: Array<{ ticketId: number; teamId: number; round: number; gameId: number }>) => {
       const res = await apiRequest("POST", "/api/team-selections", teamSelections);
