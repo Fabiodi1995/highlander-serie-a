@@ -6,8 +6,16 @@ import { z } from "zod";
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
+  email: text("email").notNull().unique(),
   password: text("password").notNull(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  dateOfBirth: timestamp("date_of_birth"),
+  phoneNumber: text("phone_number"),
+  city: text("city"),
+  country: text("country").default("Italia"),
   isAdmin: boolean("is_admin").default(false).notNull(),
+  emailVerified: boolean("email_verified").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -209,7 +217,24 @@ export const userStatsRelations = relations(userStats, ({ one }) => ({
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
+  email: true,
   password: true,
+  firstName: true,
+  lastName: true,
+  dateOfBirth: true,
+  phoneNumber: true,
+  city: true,
+  country: true,
+}).extend({
+  email: z.string().email("Email non valida"),
+  firstName: z.string().min(2, "Nome deve avere almeno 2 caratteri"),
+  lastName: z.string().min(2, "Cognome deve avere almeno 2 caratteri"),
+  username: z.string().min(3, "Username deve avere almeno 3 caratteri"),
+  password: z.string().min(6, "Password deve avere almeno 6 caratteri"),
+  phoneNumber: z.string().optional(),
+  city: z.string().optional(),
+  country: z.string().optional(),
+  dateOfBirth: z.string().optional().transform((val) => val ? new Date(val) : undefined),
 });
 
 export const insertGameSchema = createInsertSchema(games).pick({

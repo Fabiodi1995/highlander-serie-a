@@ -12,7 +12,11 @@ import { insertUserSchema } from "@shared/schema";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { z } from "zod";
 
-const loginSchema = insertUserSchema;
+const loginSchema = z.object({
+  username: z.string().min(1, "Username richiesto"),
+  password: z.string().min(1, "Password richiesta"),
+});
+
 const registerSchema = insertUserSchema;
 
 type LoginData = z.infer<typeof loginSchema>;
@@ -34,7 +38,14 @@ export default function AuthPage() {
     resolver: zodResolver(registerSchema),
     defaultValues: {
       username: "",
+      email: "",
       password: "",
+      firstName: "",
+      lastName: "",
+      dateOfBirth: undefined,
+      phoneNumber: "",
+      city: "",
+      country: "Italia",
     },
   });
 
@@ -122,14 +133,59 @@ export default function AuthPage() {
                 <TabsContent value="register">
                   <Form {...registerForm}>
                     <form onSubmit={registerForm.handleSubmit(onRegister)} className="space-y-4">
+                      {/* Dati personali */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={registerForm.control}
+                          name="firstName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Nome *</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Il tuo nome" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={registerForm.control}
+                          name="lastName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Cognome *</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Il tuo cognome" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <FormField
+                        control={registerForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email *</FormLabel>
+                            <FormControl>
+                              <Input type="email" placeholder="la-tua-email@esempio.it" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
                       <FormField
                         control={registerForm.control}
                         name="username"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Username</FormLabel>
+                            <FormLabel>Username *</FormLabel>
                             <FormControl>
-                              <Input placeholder="Choose a username" {...field} />
+                              <Input placeholder="Scegli un username" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -141,21 +197,93 @@ export default function AuthPage() {
                         name="password"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Password</FormLabel>
+                            <FormLabel>Password *</FormLabel>
                             <FormControl>
-                              <Input type="password" placeholder="Choose a password" {...field} />
+                              <Input type="password" placeholder="Almeno 6 caratteri" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
+
+                      {/* Dati opzionali */}
+                      <div className="pt-4 border-t">
+                        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                          Informazioni aggiuntive (opzionali)
+                        </h4>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <FormField
+                            control={registerForm.control}
+                            name="dateOfBirth"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Data di nascita</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    type="date" 
+                                    {...field} 
+                                    value={field.value ? field.value.toISOString().split('T')[0] : ''} 
+                                    onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={registerForm.control}
+                            name="phoneNumber"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Telefono</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="+39 123 456 7890" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 mt-4">
+                          <FormField
+                            control={registerForm.control}
+                            name="city"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Città</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Roma, Milano, ..." {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={registerForm.control}
+                            name="country"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Paese</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Italia" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
                       
                       <Button 
                         type="submit" 
-                        className="w-full" 
+                        className="w-full mt-6" 
                         disabled={registerMutation.isPending}
                       >
-                        {registerMutation.isPending ? "Creating account..." : "Register"}
+                        {registerMutation.isPending ? "Creazione account..." : "Registrati"}
                       </Button>
                     </form>
                   </Form>
