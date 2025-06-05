@@ -337,10 +337,14 @@ export default function AdminDashboard() {
 
   const { data: allTeamSelections } = useQuery<any[]>({
     queryKey: ["/api/admin/all-team-selections"],
+    refetchInterval: 3000, // Aggiorna ogni 3 secondi
+    refetchIntervalInBackground: true,
   });
 
   const { data: allTickets } = useQuery<any[]>({
     queryKey: ["/api/admin/all-tickets"],
+    refetchInterval: 3000, // Aggiorna ogni 3 secondi
+    refetchIntervalInBackground: true,
   });
 
   const [selectedGameForCalculation, setSelectedGameForCalculation] = useState<Game | null>(null);
