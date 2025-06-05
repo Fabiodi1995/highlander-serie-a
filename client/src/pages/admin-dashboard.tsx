@@ -1131,7 +1131,7 @@ export default function AdminDashboard() {
                 </p>
               </CardHeader>
               <CardContent>
-                {games && games.length > 0 ? (
+                {games && games.length > 0 && allTickets && allTeamSelections && teams && users ? (
                   <div className="space-y-8">
                     {games.map((game) => (
                       <PlayerHistoryTable 
