@@ -1,7 +1,17 @@
+import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { z } from "zod";
 import { 
   User, 
   Mail, 
@@ -9,11 +19,68 @@ import {
   Phone, 
   Calendar, 
   Shield,
-  Clock
+  Clock,
+  Edit,
+  Save,
+  X
 } from "lucide-react";
+
+const updateProfileSchema = z.object({
+  firstName: z.string().min(2, "Nome deve avere almeno 2 caratteri"),
+  lastName: z.string().min(2, "Cognome deve avere almeno 2 caratteri"),
+  email: z.string().email("Email non valida"),
+  phoneNumber: z.string().optional(),
+  city: z.string().optional(),
+  country: z.string().optional(),
+  dateOfBirth: z.string().optional(),
+});
+
+type UpdateProfileData = z.infer<typeof updateProfileSchema>;
 
 export default function ProfilePage() {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [isEditing, setIsEditing] = useState(false);
+
+  const updateProfileForm = useForm<UpdateProfileData>({
+    resolver: zodResolver(updateProfileSchema),
+    defaultValues: {
+      firstName: user?.firstName || "",
+      lastName: user?.lastName || "",
+      email: user?.email || "",
+      phoneNumber: user?.phoneNumber || "",
+      city: user?.city || "",
+      country: user?.country || "Italia",
+      dateOfBirth: user?.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split('T')[0] : "",
+    },
+  });
+
+  const updateProfileMutation = useMutation({
+    mutationFn: async (data: UpdateProfileData) => {
+      const res = await apiRequest("PATCH", "/api/user/profile", data);
+      return await res.json();
+    },
+    onSuccess: (updatedUser) => {
+      queryClient.setQueryData(["/api/user"], updatedUser);
+      toast({
+        title: "Profilo aggiornato",
+        description: "I tuoi dati sono stati salvati con successo",
+      });
+      setIsEditing(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Errore",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onUpdateProfile = (data: UpdateProfileData) => {
+    updateProfileMutation.mutate(data);
+  };
 
   if (!user) {
     return (
@@ -41,12 +108,37 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 py-8">
       <div className="container mx-auto px-4 max-w-4xl">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Il Mio Profilo
-          </h1>
-          <p className="text-gray-600 dark:text-gray-300">
-            Visualizza i tuoi dati personali e informazioni account
-          </p>
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                Il Mio Profilo
+              </h1>
+              <p className="text-gray-600 dark:text-gray-300">
+                Visualizza e modifica i tuoi dati personali
+              </p>
+            </div>
+            <div className="flex gap-2">
+              {!isEditing ? (
+                <Button
+                  onClick={() => setIsEditing(true)}
+                  variant="outline"
+                  className="bg-white/80 dark:bg-gray-800/80"
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Modifica Profilo
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => setIsEditing(false)}
+                  variant="outline"
+                  className="bg-white/80 dark:bg-gray-800/80"
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Annulla
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
