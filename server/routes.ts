@@ -221,12 +221,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Advance to next round
-      await storage.updateGameRound(gameId, game.currentRound + 1);
+      // Mark round as calculated
+      await storage.updateGameRoundStatus(gameId, "calculated");
       
       res.json({ 
         message: "Turn calculated successfully",
-        nextRound: game.currentRound + 1,
+        currentRound: game.currentRound,
         remainingTickets: remainingActiveTickets.length
       });
     } catch (error) {
@@ -333,6 +333,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (!game || game.status !== "active") {
           return res.status(400).json({ message: "Game is not active" });
         }
+        
+        if (game.roundStatus !== "selection_open") {
+          return res.status(400).json({ message: "Selections are locked for this round" });
+        }
       }
       
       const results = [];
@@ -436,6 +440,135 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user team selections:", error);
       res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  // Round control endpoints
+  app.post("/api/games/:id/lock-round", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user!.isAdmin) return res.sendStatus(403);
+    
+    try {
+      const gameId = parseInt(req.params.id);
+      const game = await storage.getGame(gameId);
+      
+      if (!game) {
+        return res.status(404).json({ message: "Game not found" });
+      }
+      
+      if (game.createdBy !== req.user!.id) {
+        return res.status(403).json({ message: "Access denied - not your game" });
+      }
+      
+      if (game.roundStatus !== "selection_open") {
+        return res.status(400).json({ message: "Round is not in selection phase" });
+      }
+      
+      // Check for missing selections
+      const activeTickets = await storage.getTicketsByGame(gameId);
+      const activeTicketIds = activeTickets.filter(t => t.isActive).map(t => t.id);
+      const existingSelections = await storage.getTeamSelectionsByRound(gameId, game.currentRound);
+      const ticketsWithSelections = new Set(existingSelections.map(s => s.ticketId));
+      
+      const missingSelections = activeTicketIds.filter(id => !ticketsWithSelections.has(id));
+      
+      if (missingSelections.length > 0 && !req.body.forceConfirm) {
+        return res.status(400).json({ 
+          message: "Some tickets have not made selections",
+          missingSelections,
+          requiresConfirmation: true
+        });
+      }
+      
+      // Auto-assign first available team for tickets without selections
+      if (missingSelections.length > 0) {
+        const teams = await storage.getAllTeams();
+        const sortedTeams = teams.sort((a, b) => a.name.localeCompare(b.name));
+        
+        for (const ticketId of missingSelections) {
+          const existingTicketSelections = await storage.getTeamSelectionsByTicket(ticketId);
+          const usedTeamIds = new Set(existingTicketSelections.map(s => s.teamId));
+          const availableTeam = sortedTeams.find(team => !usedTeamIds.has(team.id));
+          
+          if (availableTeam) {
+            await storage.createTeamSelection({
+              ticketId,
+              teamId: availableTeam.id,
+              round: game.currentRound,
+              gameId: gameId
+            });
+          }
+        }
+      }
+      
+      await storage.updateGameRoundStatus(gameId, "selection_locked");
+      
+      res.json({ 
+        message: "Round locked successfully",
+        autoAssigned: missingSelections.length
+      });
+    } catch (error) {
+      console.error("Error locking round:", error);
+      res.status(500).json({ message: "Failed to lock round" });
+    }
+  });
+
+  app.post("/api/games/:id/start-new-round", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user!.isAdmin) return res.sendStatus(403);
+    
+    try {
+      const gameId = parseInt(req.params.id);
+      const game = await storage.getGame(gameId);
+      
+      if (!game) {
+        return res.status(404).json({ message: "Game not found" });
+      }
+      
+      if (game.createdBy !== req.user!.id) {
+        return res.status(403).json({ message: "Access denied - not your game" });
+      }
+      
+      if (game.roundStatus !== "calculated") {
+        return res.status(400).json({ message: "Previous round must be calculated first" });
+      }
+      
+      // Check round limits
+      const newRound = game.currentRound + 1;
+      const serieARound = game.startRound + newRound - 1;
+      
+      if (newRound > 20) {
+        return res.status(400).json({ message: "Maximum 20 rounds reached" });
+      }
+      
+      if (serieARound > 38) {
+        return res.status(400).json({ message: "Serie A season ended (38 rounds maximum)" });
+      }
+      
+      // Check if game should end due to Serie A season completion
+      if (serieARound === 38) {
+        const activeTickets = await storage.getTicketsByGame(gameId);
+        const remainingTickets = activeTickets.filter(t => t.isActive);
+        
+        if (remainingTickets.length > 1) {
+          await storage.updateGameStatus(gameId, "completed");
+          return res.json({ 
+            message: "Game completed - Serie A season ended with multiple winners",
+            multipleWinners: true,
+            survivors: remainingTickets.length
+          });
+        }
+      }
+      
+      await storage.updateGameRound(gameId, newRound);
+      await storage.updateGameRoundStatus(gameId, "selection_open");
+      
+      res.json({ 
+        message: "New round started successfully",
+        newRound,
+        serieARound
+      });
+    } catch (error) {
+      console.error("Error starting new round:", error);
+      res.status(500).json({ message: "Failed to start new round" });
     }
   });
 

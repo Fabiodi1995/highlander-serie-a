@@ -447,6 +447,64 @@ export default function AdminDashboard() {
     },
   });
 
+  const lockRoundMutation = useMutation({
+    mutationFn: async ({ gameId, forceConfirm }: { gameId: number; forceConfirm?: boolean }) => {
+      const res = await apiRequest("POST", `/api/games/${gameId}/lock-round`, { forceConfirm });
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/games"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/all-team-selections"] });
+      
+      toast({
+        title: "Round Bloccato",
+        description: data.autoAssigned > 0 ? 
+          `Round bloccato. ${data.autoAssigned} selezioni assegnate automaticamente.` :
+          "Round bloccato con successo",
+      });
+    },
+    onError: (error: Error) => {
+      if (error.message.includes("requiresConfirmation")) {
+        const confirmResult = window.confirm(
+          "Alcuni giocatori non hanno fatto le selezioni. Vuoi continuare? Le squadre mancanti verranno assegnate automaticamente."
+        );
+        if (confirmResult && selectedGameForCalculation) {
+          lockRoundMutation.mutate({ gameId: selectedGameForCalculation.id, forceConfirm: true });
+        }
+      } else {
+        toast({
+          title: "Errore",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    },
+  });
+
+  const startNewRoundMutation = useMutation({
+    mutationFn: async (gameId: number) => {
+      const res = await apiRequest("POST", `/api/games/${gameId}/start-new-round`);
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/games"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/all-team-selections"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/all-tickets"] });
+      
+      toast({
+        title: "Nuovo Round Iniziato",
+        description: data.message,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Errore",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const deleteGameMutation = useMutation({
     mutationFn: async (gameId: number) => {
       const res = await apiRequest("DELETE", `/api/games/${gameId}`);
