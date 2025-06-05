@@ -9,6 +9,7 @@ import { ArrowLeft, Clock, Info, Target, Shield } from "lucide-react";
 import { Link, useParams, useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { TeamLogo } from "@/components/team-logo";
 import type { Game, Ticket, Team, TeamSelection } from "@shared/schema";
 
 export default function GameInterface() {
@@ -332,7 +333,10 @@ function TicketSelectionCard({
             <SelectContent>
               {availableTeams.map((team) => (
                 <SelectItem key={team.id} value={team.id.toString()}>
-                  {team.name}
+                  <div className="flex items-center gap-2">
+                    <TeamLogo team={team} size="sm" />
+                    <span>{team.name}</span>
+                  </div>
                 </SelectItem>
               ))}
             </SelectContent>

@@ -18,6 +18,7 @@ import { insertGameSchema } from "@shared/schema";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { TeamLogo } from "@/components/team-logo";
 import type { Game, User as UserType, Team, TeamSelection, Ticket, Match } from "@shared/schema";
 import { z } from "zod";
 
@@ -369,6 +370,11 @@ function PlayerHistoryTable({
     return teams.find(t => t.id === teamId)?.name || 'N/A';
   };
 
+  // Get team helper
+  const getTeam = (teamId: number) => {
+    return teams.find(t => t.id === teamId);
+  };
+
   // Get user name helper
   const getUserName = (userId: number) => {
     return users.find(u => u.id === userId)?.username || 'N/A';
@@ -421,8 +427,12 @@ function PlayerHistoryTable({
       return "—";
     }
     
-    // If selection exists, show team name
+    // If selection exists, show team logo
     if (selection) {
+      const team = getTeam(selection.teamId);
+      if (team) {
+        return <TeamLogo team={team} size="sm" />;
+      }
       return getTeamName(selection.teamId);
     }
     
