@@ -12,12 +12,14 @@ import AuthPage from "@/pages/auth-page";
 import PlayerDashboard from "@/pages/player-dashboard";
 import AdminDashboard from "@/pages/admin-dashboard";
 import GameInterface from "@/pages/game-interface";
+import ProfilePage from "@/pages/profile-page";
 
 function Router() {
   return (
     <Switch>
       <Route path="/auth" component={AuthPage} />
       <ProtectedRoute path="/" component={HomePage} />
+      <ProtectedRoute path="/profile" component={ProfilePage} />
       <ProtectedRoute path="/game/:id" component={GameInterface} />
       <Route component={NotFound} />
     </Switch>

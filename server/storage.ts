@@ -18,7 +18,10 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: number, user: Partial<InsertUser>): Promise<User>;
   getAllUsers(): Promise<User[]>;
+  getUserStats(userId: number): Promise<any>;
+  getUserGames(userId: number): Promise<any[]>;
   
   // Game management
   createGame(game: InsertGame & { createdBy: number }): Promise<Game>;
@@ -100,6 +103,60 @@ export class DatabaseStorage implements IStorage {
 
   async getAllUsers(): Promise<User[]> {
     return await db.select().from(users).orderBy(asc(users.username));
+  }
+
+  async updateUser(id: number, userData: Partial<InsertUser>): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set(userData)
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
+  async getUserStats(userId: number): Promise<any> {
+    // Get user stats from userStats table
+    const [stats] = await db.select().from(userStats).where(eq(userStats.userId, userId));
+    
+    // Calculate games played and won from game participants
+    const gamesPlayedQuery = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(gameParticipants)
+      .where(eq(gameParticipants.userId, userId));
+    
+    const gamesPlayed = gamesPlayedQuery[0]?.count || 0;
+    
+    return {
+      ...stats,
+      gamesPlayed,
+      gamesWon: stats?.gamesWon || 0,
+      level: stats?.level || 1,
+      xp: stats?.xp || 0
+    };
+  }
+
+  async getUserGames(userId: number): Promise<any[]> {
+    // Get games where user is a participant
+    const userGames = await db
+      .select({
+        id: games.id,
+        name: games.name,
+        description: games.description,
+        status: games.status,
+        currentRound: games.currentRound,
+        createdAt: games.createdAt,
+        participantCount: sql<number>`(
+          SELECT COUNT(*) 
+          FROM ${gameParticipants} 
+          WHERE ${gameParticipants.gameId} = ${games.id}
+        )`
+      })
+      .from(games)
+      .innerJoin(gameParticipants, eq(games.id, gameParticipants.gameId))
+      .where(eq(gameParticipants.userId, userId))
+      .orderBy(desc(games.createdAt));
+    
+    return userGames;
   }
 
   // Game management
