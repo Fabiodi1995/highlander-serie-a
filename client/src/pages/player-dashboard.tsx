@@ -288,7 +288,7 @@ export default function PlayerDashboard() {
     queryKey: ["/api/teams"],
   });
 
-  const { data: userTeamSelections } = useQuery({
+  const { data: userTeamSelections } = useQuery<any[]>({
     queryKey: ["/api/user/team-selections"],
   });
 
@@ -307,7 +307,7 @@ export default function PlayerDashboard() {
   const activeGames = games.filter(game => game.status === "active");
   const userGames = games.filter(game => {
     // Check if user has tickets in this game
-    return userTeamSelections?.some((gameData: any) => gameData.game?.id === game.id);
+    return Array.isArray(userTeamSelections) && userTeamSelections.some((gameData: any) => gameData.game?.id === game.id);
   });
 
   return (
@@ -383,8 +383,9 @@ export default function PlayerDashboard() {
           ) : (
             <div className="space-y-8">
               {userGames.map((game) => {
-                // Get user tickets for this game
-                const gameData = userTeamSelections?.find((gd: any) => gd.game?.id === game.id);
+                // Get user tickets for this game from userTeamSelections
+                const gameData = Array.isArray(userTeamSelections) ? 
+                  userTeamSelections.find((gd: any) => gd.game?.id === game.id) : null;
                 const userTickets = gameData?.ticketSelections?.map((ts: any) => ts.ticket) || [];
                 
                 return (
@@ -392,7 +393,7 @@ export default function PlayerDashboard() {
                     key={game.id}
                     game={game}
                     userTickets={userTickets}
-                    allTeamSelections={userTeamSelections}
+                    allTeamSelections={Array.isArray(userTeamSelections) ? userTeamSelections : []}
                     teams={teams}
                   />
                 );
