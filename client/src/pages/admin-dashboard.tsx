@@ -608,6 +608,8 @@ export default function AdminDashboard() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/games"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/all-team-selections"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/all-tickets"] });
       setShowMatchResults(false);
       setSelectedGameForCalculation(null);
       toast({
@@ -653,6 +655,7 @@ export default function AdminDashboard() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/games"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/all-team-selections"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/all-tickets"] });
       
       toast({
         title: "Round Bloccato",
