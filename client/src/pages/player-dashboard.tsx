@@ -400,7 +400,7 @@ function DetailedGameView({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="font-semibold">Pos</TableHead>
+              <TableHead className="font-semibold">Giocatore</TableHead>
               <TableHead className="font-semibold">Ticket</TableHead>
               <TableHead className="font-semibold">Stato</TableHead>
               {gameRounds.map((round, index) => (
@@ -418,9 +418,9 @@ function DetailedGameView({
                 <TableRow key={ticket.id}>
                   <TableCell className="font-medium">
                     <div className="flex items-center space-x-2">
-                      <span className="text-lg font-bold">#{index + 1}</span>
-                      {index === 0 && ticket.isActive && (
-                        <Badge className="bg-yellow-500 text-white text-xs">Leader</Badge>
+                      <span className="text-sm font-medium">{ticket.user?.username || 'N/A'}</span>
+                      {ticket.userId === user?.id && (
+                        <Badge className="bg-blue-500 text-white text-xs">Tu</Badge>
                       )}
                     </div>
                   </TableCell>

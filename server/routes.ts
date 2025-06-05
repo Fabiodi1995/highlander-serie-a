@@ -274,6 +274,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get all tickets for this game
       const allTickets = await storage.getTicketsByGame(gameId);
       
+      // Get all users who have tickets in this game
+      const userIds = Array.from(new Set(allTickets.map(ticket => ticket.userId)));
+      const users = await Promise.all(userIds.map(id => storage.getUser(id)));
+      const usersMap = users.reduce((acc: any, user) => {
+        if (user) acc[user.id] = user;
+        return acc;
+      }, {});
+      
       // Get all team selections for this game
       const allSelections = await storage.getTeamSelectionsByRound(gameId, 0); // 0 means all rounds
       
@@ -286,9 +294,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return acc;
       }, {});
       
-      // Combine tickets with their selections
+      // Combine tickets with their selections and user info
       const ticketsWithSelections = allTickets.map(ticket => ({
-        ticket,
+        ticket: {
+          ...ticket,
+          user: usersMap[ticket.userId]
+        },
         selections: selectionsByTicket[ticket.id] || []
       }));
       
