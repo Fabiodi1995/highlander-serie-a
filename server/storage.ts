@@ -47,6 +47,7 @@ export interface IStorage {
   getMatchesByRound(round: number): Promise<Match[]>;
   seedMatches(): Promise<void>;
   updateMatchResult(matchId: number, homeScore: number, awayScore: number): Promise<void>;
+  resetMatchResults(round: number): Promise<void>;
   
   // Team selections
   createTeamSelection(selection: InsertTeamSelection): Promise<TeamSelection>;
@@ -289,6 +290,18 @@ export class DatabaseStorage implements IStorage {
         isCompleted: true 
       })
       .where(eq(matches.id, matchId));
+  }
+
+  async resetMatchResults(round: number): Promise<void> {
+    await db
+      .update(matches)
+      .set({ 
+        homeScore: null, 
+        awayScore: null, 
+        result: null, 
+        isCompleted: false 
+      })
+      .where(eq(matches.round, round));
   }
 
   // Team selections

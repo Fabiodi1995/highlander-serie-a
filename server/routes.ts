@@ -561,6 +561,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.updateGameRound(gameId, newRound);
       await storage.updateGameRoundStatus(gameId, "selection_open");
       
+      // Reset match results for the new round to start clean
+      await storage.resetMatchResults(serieARound);
+      
       res.json({ 
         message: "New round started successfully",
         newRound,
