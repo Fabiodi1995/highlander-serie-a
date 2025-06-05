@@ -26,8 +26,9 @@ function PlayerHistoryTable({
     return <div className="text-center py-4">Caricamento dati...</div>;
   }
 
-  // Filter team selections for this game
-  const gameSelections = allTeamSelections.find(gameData => gameData.game.id === game.id)?.selections || [];
+  // Filter team selections for this game - flatten all selections from all tickets
+  const gameData = allTeamSelections.find(gameData => gameData.game.id === game.id);
+  const gameSelections = gameData?.ticketSelections?.flatMap((ts: any) => ts.selections || []) || [];
   
   // Create rounds array (startRound to currentRound)
   const gameRounds: number[] = [];
