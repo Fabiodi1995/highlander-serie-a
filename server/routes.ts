@@ -341,8 +341,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const tickets = await storage.getTicketsByUser(req.user!.id, selection.gameId);
         const ticket = tickets.find(t => t.id === selection.ticketId);
         
-        if (!ticket || !ticket.isActive) {
-          return res.status(403).json({ message: "Invalid ticket" });
+        if (!ticket) {
+          return res.status(403).json({ message: "Ticket not found or does not belong to user" });
+        }
+        
+        if (!ticket.isActive) {
+          return res.status(400).json({ message: "Ticket is not active" });
         }
         
         // Check if team was already selected by this ticket in the current round

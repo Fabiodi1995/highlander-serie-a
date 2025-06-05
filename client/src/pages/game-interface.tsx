@@ -72,9 +72,15 @@ export default function GameInterface() {
       setSelections({});
     },
     onError: (error: Error) => {
+      let errorMessage = error.message;
+      if (error.message.includes("does not belong to user")) {
+        errorMessage = "Non hai i permessi per modificare questo ticket";
+      } else if (error.message.includes("not active")) {
+        errorMessage = "Il ticket non è più attivo";
+      }
       toast({
         title: "Errore",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
     },
