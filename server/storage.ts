@@ -26,6 +26,7 @@ export interface IStorage {
   getGame(id: number): Promise<Game | undefined>;
   updateGameStatus(gameId: number, status: string): Promise<void>;
   updateGameRound(gameId: number, round: number): Promise<void>;
+  updateGameRoundStatus(gameId: number, roundStatus: string): Promise<void>;
   deleteGame(gameId: number): Promise<void>;
   
   // Game participants
@@ -119,6 +120,7 @@ export class DatabaseStorage implements IStorage {
         startRound: games.startRound,
         currentRound: games.currentRound,
         status: games.status,
+        roundStatus: games.roundStatus,
         createdBy: games.createdBy,
         createdAt: games.createdAt,
       })
@@ -144,6 +146,13 @@ export class DatabaseStorage implements IStorage {
     await db
       .update(games)
       .set({ currentRound: round })
+      .where(eq(games.id, gameId));
+  }
+
+  async updateGameRoundStatus(gameId: number, roundStatus: string): Promise<void> {
+    await db
+      .update(games)
+      .set({ roundStatus })
       .where(eq(games.id, gameId));
   }
 

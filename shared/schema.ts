@@ -24,6 +24,7 @@ export const games = pgTable("games", {
   startRound: integer("start_round").notNull(),
   currentRound: integer("current_round").notNull(),
   status: varchar("status", { length: 20 }).notNull().default("registration"), // registration, active, completed
+  roundStatus: varchar("round_status", { length: 20 }).notNull().default("selection_open"), // selection_open, selection_locked, calculated
   createdBy: integer("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
