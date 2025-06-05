@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { ThemeProvider } from "@/hooks/use-theme";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { Layout } from "@/components/layout/layout";
 import NotFound from "@/pages/not-found";
@@ -36,14 +37,16 @@ function HomePage() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Layout>
-            <Router />
-          </Layout>
-          <Toaster />
-        </TooltipProvider>
-      </AuthProvider>
+      <ThemeProvider defaultTheme="system" storageKey="highlander-ui-theme">
+        <AuthProvider>
+          <TooltipProvider>
+            <Layout>
+              <Router />
+            </Layout>
+            <Toaster />
+          </TooltipProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
