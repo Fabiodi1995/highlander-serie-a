@@ -329,7 +329,39 @@ export default function ProfilePage() {
                             <FormItem>
                               <FormLabel>Telefono</FormLabel>
                               <FormControl>
-                                <Input {...field} placeholder="+39 123 456 7890" />
+                                <Input 
+                                  {...field}
+                                  placeholder="+39 123 456 7890"
+                                  onChange={(e) => {
+                                    let value = e.target.value;
+                                    
+                                    // Remove all non-numeric characters except +
+                                    value = value.replace(/[^\d+]/g, '');
+                                    
+                                    // Auto-add +39 prefix if user starts typing numbers without +
+                                    if (value.length > 0 && !value.startsWith('+')) {
+                                      value = '+39' + value;
+                                    }
+                                    
+                                    // Ensure only one + at the beginning
+                                    if (value.indexOf('+') > 0) {
+                                      value = '+' + value.replace(/\+/g, '');
+                                    }
+                                    
+                                    // Limit total length to reasonable phone number length
+                                    if (value.length > 16) {
+                                      value = value.substring(0, 16);
+                                    }
+                                    
+                                    field.onChange(value);
+                                  }}
+                                  onKeyPress={(e) => {
+                                    // Allow only numbers, + symbol, and control keys
+                                    if (!/[\d+]/.test(e.key) && !['Backspace', 'Delete', 'Tab', 'Escape', 'Enter'].includes(e.key)) {
+                                      e.preventDefault();
+                                    }
+                                  }}
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>

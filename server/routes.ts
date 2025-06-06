@@ -954,7 +954,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         phoneNumber,
         city,
         country,
-        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
       };
       
       const updatedUser = await storage.updateUser(req.user.id, updateData);
