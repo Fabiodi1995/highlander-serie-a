@@ -937,11 +937,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
-      const updatedUser = await storage.updateUser(req.user.id, req.body);
+      const { firstName, lastName, email, phoneNumber, city, country, dateOfBirth } = req.body;
+      
+      // Check if email is being changed and if it's already in use by another user
+      if (email !== req.user.email) {
+        const existingUser = await storage.getUserByEmail(email);
+        if (existingUser && existingUser.id !== req.user.id) {
+          return res.status(400).json({ error: "Email già in uso da un altro utente" });
+        }
+      }
+      
+      const updateData = {
+        firstName,
+        lastName,
+        email,
+        phoneNumber,
+        city,
+        country,
+        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+      };
+      
+      const updatedUser = await storage.updateUser(req.user.id, updateData);
+      
+      // Update the session user
+      req.user = updatedUser;
+      
       res.json(updatedUser);
     } catch (error) {
       console.error("Error updating profile:", error);
-      res.status(500).json({ error: "Failed to update profile" });
+      res.status(500).json({ error: "Errore durante l'aggiornamento del profilo" });
     }
   });
 
