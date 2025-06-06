@@ -9,7 +9,9 @@ import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertUserSchema } from "@shared/schema";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Link } from "wouter";
 import { z } from "zod";
 
 const loginSchema = z.object({
@@ -17,7 +19,15 @@ const loginSchema = z.object({
   password: z.string().min(1, "Password richiesta"),
 });
 
-const registerSchema = insertUserSchema;
+const registerSchema = insertUserSchema.extend({
+  acceptTerms: z.boolean().refine(val => val === true, {
+    message: "Devi accettare i Termini di Servizio per procedere"
+  }),
+  acceptPrivacy: z.boolean().refine(val => val === true, {
+    message: "Devi accettare l'Informativa Privacy per procedere"
+  }),
+  acceptMarketing: z.boolean().optional()
+});
 
 type LoginData = z.infer<typeof loginSchema>;
 type RegisterData = z.infer<typeof registerSchema>;
@@ -308,6 +318,91 @@ export default function AuthPage() {
                             )}
                           />
                         </div>
+                      </div>
+
+                      {/* Legal Acceptance Section */}
+                      <div className="pt-4 border-t space-y-4">
+                        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                          Accettazione Termini Legali *
+                        </h4>
+                        
+                        <FormField
+                          control={registerForm.control}
+                          name="acceptTerms"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                              <div className="space-y-1 leading-none">
+                                <FormLabel className="text-sm">
+                                  Accetto i{" "}
+                                  <Link href="/terms-of-service">
+                                    <a className="text-blue-600 hover:underline" target="_blank">
+                                      Termini di Servizio
+                                    </a>
+                                  </Link>
+                                  {" "}*
+                                </FormLabel>
+                                <FormMessage />
+                              </div>
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={registerForm.control}
+                          name="acceptPrivacy"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                              <div className="space-y-1 leading-none">
+                                <FormLabel className="text-sm">
+                                  Accetto l'{" "}
+                                  <Link href="/privacy-policy">
+                                    <a className="text-blue-600 hover:underline" target="_blank">
+                                      Informativa Privacy
+                                    </a>
+                                  </Link>
+                                  {" "}e autorizzo il trattamento dei miei dati personali *
+                                </FormLabel>
+                                <FormMessage />
+                              </div>
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={registerForm.control}
+                          name="acceptMarketing"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                              <div className="space-y-1 leading-none">
+                                <FormLabel className="text-sm">
+                                  Acconsento a ricevere comunicazioni commerciali e di marketing
+                                  <span className="text-gray-500 ml-1">(opzionale)</span>
+                                </FormLabel>
+                                <FormDescription className="text-xs text-gray-500">
+                                  Newsletter, promozioni e aggiornamenti sul servizio
+                                </FormDescription>
+                              </div>
+                            </FormItem>
+                          )}
+                        />
                       </div>
                       
                       <Button 

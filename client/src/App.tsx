@@ -7,6 +7,8 @@ import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { Layout } from "@/components/layout/layout";
+import { CookieConsentBanner } from "@/components/ui/cookie-consent-banner";
+import { LegalFooter } from "@/components/ui/legal-footer";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import PlayerDashboard from "@/pages/player-dashboard";
@@ -52,7 +54,9 @@ function App() {
           <TooltipProvider>
             <Layout>
               <Router />
+              <LegalFooter />
             </Layout>
+            <CookieConsentBanner />
             <Toaster />
           </TooltipProvider>
         </AuthProvider>
