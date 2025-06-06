@@ -7,7 +7,8 @@ import {
   Trophy, 
   Settings,
   Users,
-  Menu
+  Menu,
+  BookOpen
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -20,7 +21,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { icon: Home, label: "Dashboard", href: "/" },
-  { icon: Trophy, label: "Giochi", href: "/games" },
+  { icon: BookOpen, label: "Regolamento", href: "/rules" },
   { icon: Users, label: "Admin", href: "/admin", adminOnly: true },
   { icon: User, label: "Profilo", href: "/profile" },
 ];
