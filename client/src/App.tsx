@@ -14,11 +14,17 @@ import AdminDashboard from "@/pages/admin-dashboard";
 import GameInterface from "@/pages/game-interface";
 import ProfilePage from "@/pages/profile-page-simple";
 import RulesPage from "@/pages/rules-page";
+import PrivacyPolicyPage from "@/pages/privacy-policy";
+import TermsOfServicePage from "@/pages/terms-of-service";
+import CookiePolicyPage from "@/pages/cookie-policy";
 
 function Router() {
   return (
     <Switch>
       <Route path="/auth" component={AuthPage} />
+      <Route path="/privacy-policy" component={PrivacyPolicyPage} />
+      <Route path="/terms-of-service" component={TermsOfServicePage} />
+      <Route path="/cookie-policy" component={CookiePolicyPage} />
       <ProtectedRoute path="/" component={HomePage} />
       <ProtectedRoute path="/profile" component={ProfilePage} />
       <ProtectedRoute path="/rules" component={RulesPage} />
