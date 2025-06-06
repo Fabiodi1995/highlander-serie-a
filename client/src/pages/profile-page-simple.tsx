@@ -100,8 +100,17 @@ export default function ProfilePage() {
     return d.toLocaleDateString('it-IT');
   };
 
-  const getInitials = (firstName: string, lastName: string) => {
-    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+  const getInitials = (firstName: string | null, lastName: string | null) => {
+    const first = firstName?.charAt(0) || '';
+    const last = lastName?.charAt(0) || '';
+    return `${first}${last}`.toUpperCase() || 'U';
+  };
+
+  const getDisplayName = (firstName: string, lastName: string, username: string) => {
+    if (firstName && lastName) {
+      return `${firstName} ${lastName}`;
+    }
+    return username;
   };
 
   return (
