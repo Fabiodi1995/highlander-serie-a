@@ -83,8 +83,9 @@ function PlayerHistoryTable({
     gameRounds.push(round);
   }
 
-  // Get team helper
+  // Get team helper with safety check
   const getTeam = (teamId: number) => {
+    if (!teams || !Array.isArray(teams)) return null;
     return teams.find(t => t.id === teamId);
   };
 
@@ -151,7 +152,12 @@ function PlayerHistoryTable({
       if (team) {
         return <TeamLogo team={team} size="sm" />;
       }
-      return teams.find(t => t.id === selection.teamId)?.name || 'N/A';
+      // Fallback to team name if logo fails
+      if (teams && Array.isArray(teams)) {
+        const fallbackTeam = teams.find(t => t.id === selection.teamId);
+        return fallbackTeam?.name || 'N/A';
+      }
+      return 'N/A';
     }
     
     // If current round and no selection yet

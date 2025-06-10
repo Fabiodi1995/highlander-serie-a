@@ -1100,16 +1100,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return acc;
         }, {});
         
-        // Apply privacy logic: hide other players' selections for open rounds
+        // Apply privacy logic: only admin users can see all selections at any time
         const isCurrentRoundOpen = game.roundStatus === "selection_open";
+        const isCurrentUserAdmin = req.user!.isAdmin;
         const processedSelections: any = {};
         
         for (const [roundStr, selection] of Object.entries(selectionsByRound)) {
           const round = parseInt(roundStr);
           const sel = selection as any;
           
-          // Privacy check: hide other players' selections for current open round
-          if (isCurrentRoundOpen && round === game.currentRound && ticket.userId !== currentUserId) {
+          // Privacy check: hide other players' selections for open rounds unless user is admin
+          if (isCurrentRoundOpen && round === game.currentRound && ticket.userId !== currentUserId && !isCurrentUserAdmin) {
             processedSelections[round] = { ...sel, teamId: null, hidden: true };
           } else {
             processedSelections[round] = sel;
