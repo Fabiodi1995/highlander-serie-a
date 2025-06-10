@@ -1331,6 +1331,26 @@ export default function AdminDashboard() {
                           return ticket.eliminatedInRound ? 
                             <span className="font-mono">Round {ticket.eliminatedInRound}</span> : 
                             <span className="text-gray-400">—</span>;
+                        case 'actions':
+                          const game = games.find(g => g.id === ticket.gameId);
+                          const canDelete = game && game.status === 'registration';
+                          return canDelete ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                if (window.confirm(`Vuoi eliminare il ticket #${ticket.id} di ${ticket.username}?`)) {
+                                  deleteTicketMutation.mutate(ticket.id);
+                                }
+                              }}
+                              disabled={deleteTicketMutation.isPending}
+                              className="text-red-600 hover:bg-red-50 border-red-200"
+                            >
+                              {deleteTicketMutation.isPending ? "..." : "Elimina"}
+                            </Button>
+                          ) : (
+                            <span className="text-gray-400 text-xs">Non eliminabile</span>
+                          );
                         default:
                           return '';
                       }

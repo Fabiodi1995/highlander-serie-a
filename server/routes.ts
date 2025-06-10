@@ -411,9 +411,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const ticketId = parseInt(req.params.id);
       
-      // Get ticket to verify game ownership
-      const tickets = await storage.getTicketsByUser(0); // Get all tickets
-      const ticket = tickets.find(t => t.id === ticketId);
+      // Get ticket to verify game ownership  
+      const allTicketsResult = await db.select().from(tickets).where(eq(tickets.id, ticketId));
+      const ticket = allTicketsResult[0];
       
       if (!ticket) {
         return res.status(404).json({ message: "Ticket not found" });
