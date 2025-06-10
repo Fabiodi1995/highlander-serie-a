@@ -1064,10 +1064,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get game history with privacy logic for all players
   app.get("/api/games/:gameId/player-history", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      console.log("Unauthorized access to player history");
-      return res.sendStatus(401);
-    }
+    if (!req.isAuthenticated()) return res.sendStatus(401);
     
     const gameId = parseInt(req.params.gameId);
     const currentUserId = req.user!.id;
@@ -1106,7 +1103,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Apply privacy logic: only admin users can see all selections at any time
         const isCurrentRoundOpen = game.roundStatus === "selection_open";
         const isCurrentUserAdmin = req.user!.isAdmin;
-        console.log(`User ${currentUserId} (admin: ${isCurrentUserAdmin}) accessing game ${gameId}, round status: ${game.roundStatus}`);
         const processedSelections: any = {};
         
         for (const [roundStr, selection] of Object.entries(selectionsByRound)) {
@@ -1115,10 +1111,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Privacy check: hide other players' selections for open rounds unless user is admin
           if (isCurrentRoundOpen && round === game.currentRound && ticket.userId !== currentUserId && !isCurrentUserAdmin) {
-            console.log(`Hiding selection for user ${ticket.userId} in round ${round} (admin: ${isCurrentUserAdmin})`);
             processedSelections[round] = { ...sel, teamId: null, hidden: true };
           } else {
-            console.log(`Showing selection for user ${ticket.userId} in round ${round} (admin: ${isCurrentUserAdmin})`);
             processedSelections[round] = sel;
           }
         }
