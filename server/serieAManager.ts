@@ -12,7 +12,7 @@ export class SerieAManager {
   private excelFilePath = path.join(__dirname, 'data', 'serie-a-calendar.xlsx');
 
   async initializeSerieAData() {
-    console.log('Initializing Serie A 2024/2025 complete calendar...');
+    console.log('Initializing Serie A 2025/2026 complete calendar...');
     
     try {
       // Ensure teams are seeded
@@ -27,7 +27,7 @@ export class SerieAManager {
       // Load matches from the complete Excel calendar
       await this.loadMatchesFromExcel();
       
-      console.log('Serie A 2024/2025 complete calendar loaded - 380 matches across 38 rounds');
+      console.log('Serie A 2025/2026 complete calendar loaded - 380 matches across 38 rounds');
     } catch (error) {
       console.error('Error initializing Serie A data:', error);
       // Fallback to hardcoded data
@@ -36,7 +36,7 @@ export class SerieAManager {
   }
 
   private async createExcelCalendar() {
-    console.log('Creating complete Serie A 2024/2025 Excel calendar...');
+    console.log('Creating complete Serie A 2025/2026 Excel calendar...');
     
     const workbook = XLSX.utils.book_new();
     const { serieATeams2024, serieACompleteFixtures } = await import('./data/serie-a-complete-calendar');
