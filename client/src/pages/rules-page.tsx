@@ -25,7 +25,7 @@ export default function RulesPage() {
             </h1>
           </div>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Il gioco di eliminazione basato sui risultati della Serie A 2024/2025
+            Il gioco di eliminazione basato sui risultati della Serie A 2025/2026
           </p>
           <Badge variant="secondary" className="mt-4 text-lg px-4 py-2">
             <Star className="h-4 w-4 mr-2" />
@@ -43,7 +43,7 @@ export default function RulesPage() {
           </CardHeader>
           <CardContent className="p-6">
             <p className="text-lg leading-relaxed text-gray-700 dark:text-gray-300">
-              <strong>Highlander</strong> è un gioco di eliminazione progressiva basato sui risultati reali del campionato di Serie A 2024/2025. 
+              <strong>Highlander</strong> è un gioco di eliminazione progressiva basato sui risultati reali del campionato di Serie A 2025/2026. 
               L'obiettivo è essere l'ultimo giocatore rimasto in vita, dimostrando le migliori capacità predittive sui risultati delle partite.
             </p>
             <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border-l-4 border-green-500">
@@ -234,25 +234,56 @@ export default function RulesPage() {
 
             <div className="space-y-4">
               <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2">Vincitore Assoluto</h4>
+                <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2">Vincitore per Eliminazione</h4>
                 <p className="text-green-700 dark:text-green-300">
-                  Il giocatore che rimane l'unico superstite alla fine del campionato vince la partita.
+                  Il giocatore che rimane l'unico superstite vince immediatamente la partita, anche se ha più ticket attivi.
+                </p>
+              </div>
+
+              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">Vincitore per Raggiungimento Round Limite</h4>
+                <p className="text-blue-700 dark:text-blue-300">
+                  Il gioco termina automaticamente al completamento del 20° round. Se più giocatori sopravvivono, 
+                  vince chi ha il maggior numero di ticket rimasti attivi.
                 </p>
               </div>
 
               <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                <h4 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2">Pareggio tra Finalisti</h4>
+                <h4 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2">Vincitore per Fine Campionato</h4>
                 <p className="text-yellow-700 dark:text-yellow-300">
-                  Se più giocatori arrivano all'ultima giornata, vince chi ha usato le squadre con la classifica finale più bassa.
-                  In caso di ulteriore pareggio, vince chi si è iscritto per primo al gioco.
+                  Se il gioco raggiunge la 38° giornata di Serie A, vince chi ha più ticket sopravvissuti. 
+                  In caso di pareggio, vince chi si è iscritto per primo al gioco.
                 </p>
               </div>
 
               <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
                 <h4 className="font-semibold text-red-800 dark:text-red-200 mb-2">Eliminazione Totale</h4>
                 <p className="text-red-700 dark:text-red-300">
-                  Se tutti i giocatori vengono eliminati prima della fine del campionato, vince l'ultimo eliminato.
+                  Se tutti i giocatori vengono eliminati prima della fine, vince l'ultimo eliminato.
                 </p>
+              </div>
+            </div>
+
+            <div className="mt-6 p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg">
+              <h4 className="font-semibold text-indigo-800 dark:text-indigo-200 mb-2">
+                Calcolo dei Round
+              </h4>
+              <p className="text-indigo-700 dark:text-indigo-300 mb-3">
+                Il round di gioco non corrisponde alla giornata di Serie A. Esempio:
+              </p>
+              <div className="grid md:grid-cols-2 gap-4 text-sm">
+                <div className="bg-white dark:bg-gray-800 p-3 rounded border-l-4 border-indigo-500">
+                  <strong>Gioco iniziato alla 10° giornata:</strong><br/>
+                  11° giornata = Round 1<br/>
+                  29° giornata = Round 19<br/>
+                  30° giornata = Round 20 (FINE)
+                </div>
+                <div className="bg-white dark:bg-gray-800 p-3 rounded border-l-4 border-indigo-500">
+                  <strong>Gioco iniziato alla 21° giornata:</strong><br/>
+                  22° giornata = Round 1<br/>
+                  37° giornata = Round 16<br/>
+                  38° giornata = Round 17 (FINE)
+                </div>
               </div>
             </div>
           </CardContent>
@@ -291,7 +322,7 @@ export default function RulesPage() {
         {/* Footer */}
         <div className="text-center mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
           <p className="text-gray-500 dark:text-gray-400">
-            Regolamento Highlander - Serie A 2024/2025 | Versione 1.0
+            Regolamento Highlander - Serie A 2025/2026 | Versione 2.0
           </p>
           <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">
             Ultimo aggiornamento: Gennaio 2025
