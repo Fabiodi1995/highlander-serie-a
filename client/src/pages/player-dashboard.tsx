@@ -133,7 +133,7 @@ function PlayerHistoryTable({
 
   // Get cell content with privacy logic
   const getCellContent = (ticket: any, round: number) => {
-    const selection = ticket.selections?.[round];
+    const selection = ticket.selections?.[round.toString()];
     
     // If ticket was eliminated before this round
     if (ticket.eliminatedInRound && ticket.eliminatedInRound < round) {
