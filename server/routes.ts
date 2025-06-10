@@ -1080,7 +1080,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const allTickets = await storage.getTicketsByGame(gameId);
       
       // Get all users who have tickets in this game
-      const userIds = [...new Set(allTickets.map(ticket => ticket.userId))];
+      const userIds = Array.from(new Set(allTickets.map(ticket => ticket.userId)));
       const users = await Promise.all(
         userIds.map(async (userId) => await storage.getUser(userId))
       );
