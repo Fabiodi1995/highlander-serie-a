@@ -512,60 +512,76 @@ function PlayerHistoryTable({
           Nessun ticket per questo gioco
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="font-semibold">Giocatore</TableHead>
-                <TableHead className="font-semibold">Ticket</TableHead>
-                {gameRounds.map((round, index) => (
-                  <TableHead key={round} className="text-center font-semibold min-w-[120px]">
-                    Round {index + 1} (G{round})
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {gameTickets
-                .sort((a, b) => {
-                  // Calculate rounds survived for each ticket
-                  const roundsA = a.eliminatedInRound || (game.currentRound + 1);
-                  const roundsB = b.eliminatedInRound || (game.currentRound + 1);
-                  
-                  // Sort by elimination round (later eliminations first), then by ticket ID
-                  if (roundsA !== roundsB) {
-                    return roundsB - roundsA;
-                  }
-                  return a.id - b.id;
-                })
-                .map((ticket) => (
-                <TableRow key={ticket.id}>
-                  <TableCell className="font-medium">
-                    {getUserName(ticket.userId)}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <span>#{ticket.id.toString().padStart(3, '0')}</span>
-                      {!ticket.isActive && (
-                        <Badge variant="destructive" className="text-xs">
-                          Eliminato R{ticket.eliminatedInRound}
-                        </Badge>
-                      )}
+        <ModernTable
+          data={gameTickets.map((ticket) => {
+            const roundsSurvived = ticket.eliminatedInRound ? ticket.eliminatedInRound - 1 : game.currentRound;
+            const rowData: any = {
+              ticketId: ticket.id,
+              player: getUserName(ticket.userId),
+              ticketName: `#${ticket.id.toString().padStart(3, '0')}`,
+              status: ticket.isActive ? 'Attivo' : 'Eliminato',
+              roundsSurvived,
+              eliminatedInRound: ticket.eliminatedInRound,
+              ...gameRounds.reduce((acc, round, index) => {
+                acc[`round_${round}`] = {
+                  round,
+                  roundDisplay: `R${index + 1} (G${round})`,
+                  cellStyle: getCellStyle(ticket, round),
+                  cellContent: getCellContent(ticket, round, currentUser?.id)
+                };
+                return acc;
+              }, {} as any)
+            };
+            return rowData;
+          })}
+          columns={[
+            { key: 'player', label: 'Giocatore', sortable: true },
+            { key: 'ticketName', label: 'Ticket', sortable: true },
+            { key: 'status', label: 'Stato', sortable: true, align: 'center' as const },
+            ...gameRounds.map((round, index) => ({
+              key: `round_${round}`,
+              label: `R${index + 1} (G${round})`,
+              sortable: false,
+              align: 'center' as const,
+              width: '120px'
+            }))
+          ]}
+          renderCell={(item, columnKey) => {
+            switch (columnKey) {
+              case 'player':
+                return <span className="font-medium">{item.player}</span>;
+              case 'ticketName':
+                return (
+                  <div className="flex items-center space-x-2">
+                    <span>{item.ticketName}</span>
+                    {!item.status || item.status === 'Eliminato' ? (
+                      <Badge variant="destructive" className="text-xs">
+                        Eliminato R{item.eliminatedInRound}
+                      </Badge>
+                    ) : null}
+                  </div>
+                );
+              case 'status':
+                return <StatusBadge status={item.status} />;
+              default:
+                if (columnKey.startsWith('round_')) {
+                  const roundData = item[columnKey];
+                  return (
+                    <div className={`text-center text-sm ${roundData.cellStyle}`}>
+                      {roundData.cellContent}
                     </div>
-                  </TableCell>
-                  {gameRounds.map(round => (
-                    <TableCell 
-                      key={round} 
-                      className={`text-center text-sm ${getCellStyle(ticket, round)}`}
-                    >
-                      {getCellContent(ticket, round, currentUser?.id)}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+                  );
+                }
+                return '';
+            }
+          }}
+          searchFields={['player', 'ticketName']}
+          searchPlaceholder="Cerca giocatore o ticket..."
+          defaultSortKey="roundsSurvived"
+          defaultSortDirection="desc"
+          tabKey={`admin-history-${game.id}`}
+          emptyMessage="Nessun ticket trovato"
+        />
       )}
 
       {/* Legend */}
@@ -1290,47 +1306,78 @@ export default function AdminDashboard() {
               <CardContent>
                 {allTeamSelections && Array.isArray(allTeamSelections) ? (
                   <div className="space-y-6">
-                    {allTeamSelections.map((gameData: any) => (
-                      <div key={gameData.game.id}>
-                        <h3 className="text-lg font-semibold mb-4">
-                          {gameData.game.name} - Giornata {gameData.game.currentRound}
-                        </h3>
-                        <div className="overflow-x-auto">
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>Giocatore</TableHead>
-                                <TableHead>Ticket</TableHead>
-                                <TableHead>Giornata</TableHead>
-                                <TableHead>Squadra Scelta</TableHead>
-                                <TableHead>Stato Ticket</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {gameData.selections && gameData.selections.map((selection: any) => {
-                                const ticket = allTickets?.find(t => t.id === selection.ticketId);
-                                const user = users?.find(u => u.id === ticket?.userId);
-                                return (
-                                  <TableRow key={`${selection.ticketId}-${selection.id}`}>
-                                    <TableCell>{user?.username || 'N/A'}</TableCell>
-                                    <TableCell>#{selection.ticketId}</TableCell>
-                                    <TableCell>{selection.round}</TableCell>
-                                    <TableCell>
-                                      {teams?.find(t => t.id === selection.teamId)?.name || `Team ${selection.teamId}`}
-                                    </TableCell>
-                                    <TableCell>
-                                      <Badge variant={ticket?.isActive ? "default" : "destructive"}>
-                                        {ticket?.isActive ? "Attivo" : "Eliminato"}
-                                      </Badge>
-                                    </TableCell>
-                                  </TableRow>
-                                );
-                              })}
-                            </TableBody>
-                          </Table>
+                    {allTeamSelections.map((gameData: any) => {
+                      // Prepare data for ModernTable with enhanced ticket status
+                      const tableData = gameData.selections ? gameData.selections.map((selection: any) => {
+                        const ticket = allTickets?.find(t => t.id === selection.ticketId);
+                        const user = users?.find(u => u.id === ticket?.userId);
+                        const game = games?.find(g => g.id === gameData.game.id);
+                        
+                        // Enhance ticket with proper status including "Superato"
+                        const enhancedTickets = game && ticket ? enhanceTicketsWithStatus([ticket], game) : [];
+                        const enhancedTicket = enhancedTickets[0] || ticket;
+                        
+                        return {
+                          selectionId: selection.id,
+                          ticketId: selection.ticketId,
+                          username: user?.username || 'N/A',
+                          ticketDisplay: `#${selection.ticketId}`,
+                          round: selection.round,
+                          teamName: teams?.find(t => t.id === selection.teamId)?.name || `Team ${selection.teamId}`,
+                          teamId: selection.teamId,
+                          status: enhancedTicket?.status || (ticket?.isActive ? "Attivo" : "Eliminato"),
+                          statusSortOrder: enhancedTicket?.status ? getStatusSortOrder(enhancedTicket.status) : 99,
+                          isActive: ticket?.isActive || false
+                        };
+                      }) : [];
+
+                      return (
+                        <div key={gameData.game.id}>
+                          <h3 className="text-lg font-semibold mb-4">
+                            {gameData.game.name} - Giornata {gameData.game.currentRound}
+                          </h3>
+                          <ModernTable
+                            data={tableData}
+                            columns={[
+                              { key: 'username', label: 'Giocatore', sortable: true },
+                              { key: 'ticketDisplay', label: 'Ticket', sortable: true },
+                              { key: 'round', label: 'Giornata', sortable: true, align: 'center' as const },
+                              { key: 'teamName', label: 'Squadra Scelta', sortable: true },
+                              { key: 'status', label: 'Stato Ticket', sortable: true, align: 'center' as const }
+                            ]}
+                            renderCell={(item, columnKey) => {
+                              switch (columnKey) {
+                                case 'username':
+                                  return <span className="font-medium">{item.username}</span>;
+                                case 'ticketDisplay':
+                                  return <span className="font-mono text-blue-600">{item.ticketDisplay}</span>;
+                                case 'round':
+                                  return <span className="font-mono">G{item.round}</span>;
+                                case 'teamName':
+                                  return (
+                                    <div className="flex items-center space-x-2">
+                                      {teams?.find(t => t.id === item.teamId) && (
+                                        <TeamLogo team={teams.find(t => t.id === item.teamId)!} size="sm" />
+                                      )}
+                                      <span>{item.teamName}</span>
+                                    </div>
+                                  );
+                                case 'status':
+                                  return <StatusBadge status={item.status} />;
+                                default:
+                                  return '';
+                              }
+                            }}
+                            searchFields={['username', 'teamName']}
+                            searchPlaceholder="Cerca giocatore o squadra..."
+                            defaultSortKey="statusSortOrder"
+                            defaultSortDirection="asc"
+                            tabKey={`admin-selections-${gameData.game.id}`}
+                            emptyMessage="Nessuna selezione trovata"
+                          />
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="text-center py-8">
