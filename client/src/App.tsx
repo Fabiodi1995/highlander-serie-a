@@ -15,7 +15,7 @@ import { AchievementsProvider } from "@/hooks/use-achievements";
 import { SocialProvider } from "@/hooks/use-social";
 import { PWAProvider } from "@/hooks/use-pwa";
 import { FeatureFlagsProvider } from "@/lib/feature-flags";
-import NotFound from "@/pages/not-found";
+import NotFound from "@/pages/not-found-enhanced";
 import AuthPage from "@/pages/auth-page";
 import PlayerDashboard from "@/pages/player-dashboard";
 import AdminDashboard from "@/pages/admin-dashboard";
@@ -68,7 +68,6 @@ function App() {
                       <TooltipProvider>
                         <Layout>
                           <Router />
-                          <LegalFooter />
                         </Layout>
                         <CookieConsentBanner />
                         <Toaster />

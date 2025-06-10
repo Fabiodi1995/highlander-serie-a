@@ -21,9 +21,9 @@ export function Footer() {
     ],
     support: [
       { href: "/help", label: "Aiuto", icon: Mail },
-      { href: "/privacy", label: "Privacy", icon: Shield },
-      { href: "/terms", label: "Termini", icon: Shield },
-      { href: "/contact", label: "Contatti", icon: Mail }
+      { href: "/privacy-policy", label: "Privacy", icon: Shield },
+      { href: "/terms-of-service", label: "Termini", icon: Shield },
+      { href: "/cookie-policy", label: "Cookie", icon: Shield }
     ]
   };
 
@@ -113,7 +113,7 @@ export function Footer() {
               <div className="text-xs text-gray-500">Partite Totali</div>
             </div>
             <div className="bg-white rounded-lg p-3 shadow-sm">
-              <div className="text-lg font-bold text-orange-600">2024/25</div>
+              <div className="text-lg font-bold text-orange-600">2025/26</div>
               <div className="text-xs text-gray-500">Stagione</div>
             </div>
           </div>
@@ -148,7 +148,7 @@ export function Footer() {
               <div className="w-6 h-6 bg-gradient-to-r from-green-500 to-red-500 rounded-full flex items-center justify-center">
                 <span className="text-white font-bold text-xs">A</span>
               </div>
-              <span>Powered by Serie A 2024/25</span>
+              <span>Powered by Serie A 2025/26</span>
             </div>
           </div>
         </div>

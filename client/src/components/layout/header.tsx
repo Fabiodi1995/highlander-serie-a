@@ -107,21 +107,23 @@ export function Header() {
             </div>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            {navigationItems.map((item) => (
-              <Link key={item.href} href={item.href}>
-                <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors cursor-pointer ${
-                  item.active 
-                    ? "bg-green-100 text-green-800" 
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                }`}>
-                  <item.icon className="h-4 w-4" />
-                  <span className="font-medium">{item.label}</span>
-                </div>
-              </Link>
-            ))}
-          </nav>
+          {/* Desktop Navigation - Only for authenticated users */}
+          {user && (
+            <nav className="hidden md:flex items-center space-x-8">
+              {navigationItems.map((item) => (
+                <Link key={item.href} href={item.href}>
+                  <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors cursor-pointer ${
+                    item.active 
+                      ? "bg-green-100 text-green-800" 
+                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                  }`}>
+                    <item.icon className="h-4 w-4" />
+                    <span className="font-medium">{item.label}</span>
+                  </div>
+                </Link>
+              ))}
+            </nav>
+          )}
 
           {/* User Menu */}
           <div className="flex items-center space-x-4">
@@ -202,8 +204,8 @@ export function Header() {
           </div>
         </div>
 
-        {/* Mobile Navigation */}
-        {mobileMenuOpen && (
+        {/* Mobile Navigation - Only for authenticated users */}
+        {mobileMenuOpen && user && (
           <div className="md:hidden py-4 border-t">
             <nav className="flex flex-col space-y-2">
               {navigationItems.map((item) => (
