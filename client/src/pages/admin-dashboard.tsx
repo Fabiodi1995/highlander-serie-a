@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -267,16 +267,29 @@ function TicketAssignmentForm({
   isPending: boolean; 
   onClose: () => void;
 }) {
-  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [ticketCount, setTicketCount] = useState<number>(1);
+
+  // Filtriamo gli utenti in modo sicuro
+  const availableUsers = React.useMemo(() => {
+    if (!users || !Array.isArray(users)) return [];
+    return users.filter(user => {
+      return user && 
+             typeof user === 'object' && 
+             user.id && 
+             user.username && 
+             user.isAdmin !== true;
+    });
+  }, [users]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      if (gameId && selectedUserId && ticketCount > 0) {
-        console.log(`Submitting ticket assignment: gameId=${gameId}, userId=${selectedUserId}, count=${ticketCount}`);
-        onAssign({ gameId, userId: selectedUserId, count: ticketCount });
-        setSelectedUserId(null);
+      const userIdNum = parseInt(selectedUserId, 10);
+      if (gameId && selectedUserId && !isNaN(userIdNum) && ticketCount > 0) {
+        console.log(`Submitting ticket assignment: gameId=${gameId}, userId=${userIdNum}, count=${ticketCount}`);
+        onAssign({ gameId, userId: userIdNum, count: ticketCount });
+        setSelectedUserId("");
         setTicketCount(1);
         onClose();
       }
@@ -288,20 +301,10 @@ function TicketAssignmentForm({
   const handleUserChange = (value: string) => {
     try {
       console.log(`User selection changed: ${value}`);
-      if (!value || value === "") {
-        setSelectedUserId(null);
-        return;
-      }
-      const parsed = parseInt(value, 10);
-      if (!isNaN(parsed) && parsed > 0) {
-        setSelectedUserId(parsed);
-      } else {
-        console.warn(`Invalid user ID: ${value}`);
-        setSelectedUserId(null);
-      }
+      setSelectedUserId(value || "");
     } catch (error) {
       console.error("Error handling user selection:", error);
-      setSelectedUserId(null);
+      setSelectedUserId("");
     }
   };
 
@@ -324,21 +327,18 @@ function TicketAssignmentForm({
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <Label htmlFor="user-select">Seleziona Giocatore</Label>
-        <Select 
-          value={selectedUserId?.toString() || ""} 
-          onValueChange={handleUserChange}
+        <select 
+          value={selectedUserId}
+          onChange={(e) => handleUserChange(e.target.value)}
+          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          <SelectTrigger>
-            <SelectValue placeholder="Scegli un giocatore" />
-          </SelectTrigger>
-          <SelectContent>
-            {users.filter(u => !u.isAdmin).map((user) => (
-              <SelectItem key={user.id} value={user.id.toString()}>
-                {user.username}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <option value="">Scegli un giocatore</option>
+          {availableUsers.map((user) => (
+            <option key={user.id} value={user.id.toString()}>
+              {user.username}
+            </option>
+          ))}
+        </select>
       </div>
       
       <div>
@@ -357,7 +357,7 @@ function TicketAssignmentForm({
         <Button type="button" variant="outline" onClick={onClose}>
           Annulla
         </Button>
-        <Button type="submit" disabled={!selectedUserId || isPending}>
+        <Button type="submit" disabled={!selectedUserId || selectedUserId === "" || isPending}>
           {isPending ? "Assegnando..." : "Assegna Ticket"}
         </Button>
       </div>
