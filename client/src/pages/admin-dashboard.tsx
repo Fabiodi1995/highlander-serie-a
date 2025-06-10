@@ -272,11 +272,51 @@ function TicketAssignmentForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (gameId && selectedUserId) {
-      onAssign({ gameId, userId: selectedUserId, count: ticketCount });
+    try {
+      if (gameId && selectedUserId && ticketCount > 0) {
+        console.log(`Submitting ticket assignment: gameId=${gameId}, userId=${selectedUserId}, count=${ticketCount}`);
+        onAssign({ gameId, userId: selectedUserId, count: ticketCount });
+        setSelectedUserId(null);
+        setTicketCount(1);
+        onClose();
+      }
+    } catch (error) {
+      console.error("Error in ticket assignment form submission:", error);
+    }
+  };
+
+  const handleUserChange = (value: string) => {
+    try {
+      console.log(`User selection changed: ${value}`);
+      if (!value || value === "") {
+        setSelectedUserId(null);
+        return;
+      }
+      const parsed = parseInt(value, 10);
+      if (!isNaN(parsed) && parsed > 0) {
+        setSelectedUserId(parsed);
+      } else {
+        console.warn(`Invalid user ID: ${value}`);
+        setSelectedUserId(null);
+      }
+    } catch (error) {
+      console.error("Error handling user selection:", error);
       setSelectedUserId(null);
+    }
+  };
+
+  const handleTicketCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      const value = e.target.value;
+      const parsed = parseInt(value, 10);
+      if (!isNaN(parsed) && parsed > 0 && parsed <= 10) {
+        setTicketCount(parsed);
+      } else if (value === "") {
+        setTicketCount(1);
+      }
+    } catch (error) {
+      console.error("Error handling ticket count change:", error);
       setTicketCount(1);
-      onClose();
     }
   };
 
@@ -286,10 +326,7 @@ function TicketAssignmentForm({
         <Label htmlFor="user-select">Seleziona Giocatore</Label>
         <Select 
           value={selectedUserId?.toString() || ""} 
-          onValueChange={(value) => {
-            const parsed = parseInt(value);
-            setSelectedUserId(isNaN(parsed) ? null : parsed);
-          }}
+          onValueChange={handleUserChange}
         >
           <SelectTrigger>
             <SelectValue placeholder="Scegli un giocatore" />
@@ -312,7 +349,7 @@ function TicketAssignmentForm({
           min="1"
           max="10"
           value={ticketCount}
-          onChange={(e) => setTicketCount(parseInt(e.target.value) || 1)}
+          onChange={handleTicketCountChange}
         />
       </div>
       
