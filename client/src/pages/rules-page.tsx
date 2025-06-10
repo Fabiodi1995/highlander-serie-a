@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { 
   Trophy, 
   Users, 
@@ -7,327 +8,267 @@ import {
   Target, 
   AlertTriangle, 
   CheckCircle,
-  Clock,
-  Star,
-  Shield
+  Timer,
+  Shield,
+  Crown
 } from "lucide-react";
 
 export default function RulesPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 py-8">
-      <div className="container mx-auto px-4 max-w-4xl">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Trophy className="h-12 w-12 text-green-600" />
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
-              Regolamento Highlander
-            </h1>
-          </div>
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Il gioco di eliminazione basato sui risultati della Serie A 2025/2026
-          </p>
-          <Badge variant="secondary" className="mt-4 text-lg px-4 py-2">
-            <Star className="h-4 w-4 mr-2" />
-            Versione Ufficiale 1.0
-          </Badge>
-        </div>
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="text-center mb-8">
+        <h1 className="text-4xl font-bold text-gray-900 mb-4 flex items-center justify-center gap-3">
+          <Shield className="h-10 w-10 text-green-600" />
+          Regolamento Highlander
+        </h1>
+        <p className="text-xl text-gray-600">
+          Il gioco di eliminazione basato sui risultati della Serie A
+        </p>
+      </div>
 
-        {/* Obiettivo del Gioco */}
-        <Card className="mb-8 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-0 shadow-lg">
-          <CardHeader className="bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-t-lg">
-            <CardTitle className="flex items-center gap-3 text-2xl">
-              <Target className="h-6 w-6" />
-              Obiettivo del Gioco
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <p className="text-lg leading-relaxed text-gray-700 dark:text-gray-300">
-              <strong>Highlander</strong> è un gioco di eliminazione progressiva basato sui risultati reali del campionato di Serie A 2025/2026. 
-              L'obiettivo è essere l'ultimo giocatore rimasto in vita, dimostrando le migliori capacità predittive sui risultati delle partite.
-            </p>
-            <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border-l-4 border-green-500">
-              <p className="font-semibold text-green-800 dark:text-green-200">
-                "Ne può rimanere solo uno!" - Come nel film omonimo, solo un giocatore potrà proclamarsi vincitore.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Setup del Gioco */}
-        <Card className="mb-8 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-0 shadow-lg">
+      <div className="space-y-8">
+        {/* Panoramica del Gioco */}
+        <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-3 text-xl">
-              <Users className="h-5 w-5 text-blue-600" />
-              Setup del Gioco
+            <CardTitle className="flex items-center gap-2">
+              <Trophy className="h-6 w-6 text-yellow-600" />
+              Panoramica del Gioco
             </CardTitle>
+            <CardDescription>
+              Come funziona Highlander e qual è l'obiettivo
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Partecipanti</h4>
-                <ul className="space-y-2 text-gray-700 dark:text-gray-300">
-                  <li>• Minimo 4 giocatori, massimo 50 per partita</li>
-                  <li>• Un amministratore gestisce la partita</li>
-                  <li>• Registrazione obbligatoria con dati completi</li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Durata</h4>
-                <ul className="space-y-2 text-gray-700 dark:text-gray-300">
-                  <li>• Una partita dura tutto il campionato Serie A</li>
-                  <li>• 38 giornate di campionato</li>
-                  <li>• Circa 9 mesi di gioco</li>
-                </ul>
-              </div>
+            <p className="text-gray-700 leading-relaxed">
+              Highlander è un gioco di eliminazione strategico basato sui risultati reali della Serie A italiana. 
+              I giocatori devono scegliere saggiamente le squadre che credono vinceranno le partite di ogni giornata, 
+              sapendo che ogni squadra può essere selezionata una sola volta durante l'intero gioco.
+            </p>
+            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+              <h4 className="font-semibold text-green-800 mb-2 flex items-center gap-2">
+                <Crown className="h-4 w-4" />
+                Obiettivo
+              </h4>
+              <p className="text-green-700">
+                Essere l'ultimo giocatore rimasto attivo dopo che tutte le altre persone sono state eliminate. 
+                Come nel film "Highlander": <em>"Ne rimarrà soltanto uno!"</em>
+              </p>
             </div>
           </CardContent>
         </Card>
 
         {/* Meccaniche di Gioco */}
-        <Card className="mb-8 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-0 shadow-lg">
+        <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-3 text-xl">
-              <Calendar className="h-5 w-5 text-purple-600" />
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-6 w-6 text-blue-600" />
               Meccaniche di Gioco
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Fase 1: Selezione */}
-            <div className="border-l-4 border-blue-500 pl-4">
-              <h4 className="font-bold text-lg text-gray-900 dark:text-white mb-2">
-                Fase 1: Selezione delle Squadre
-              </h4>
-              <ul className="space-y-2 text-gray-700 dark:text-gray-300">
-                <li>• <strong>Prima della giornata:</strong> ogni giocatore deve selezionare le squadre che crede vinceranno</li>
-                <li>• <strong>Deadline:</strong> 2 ore prima del primo fischio d'inizio della giornata</li>
-                <li>• <strong>Numero selezioni:</strong> variabile in base alle partite della giornata (di solito 10 partite = 10 selezioni)</li>
-                <li>• <strong>Vincolo importante:</strong> una volta selezionata una squadra, non può essere più scelta nelle giornate successive</li>
-              </ul>
-            </div>
-
-            {/* Fase 2: Risultati */}
-            <div className="border-l-4 border-green-500 pl-4">
-              <h4 className="font-bold text-lg text-gray-900 dark:text-white mb-2">
-                Fase 2: Valutazione dei Risultati
-              </h4>
-              <ul className="space-y-2 text-gray-700 dark:text-gray-300">
-                <li>• <strong>Vittoria:</strong> la squadra scelta deve vincere la partita (3 punti)</li>
-                <li>• <strong>Pareggio o Sconfitta:</strong> comportano l'eliminazione dal gioco</li>
-                <li>• <strong>Partite rinviate:</strong> vengono considerate nel momento del recupero</li>
-                <li>• <strong>Risultati ufficiali:</strong> si considerano solo i risultati ratificati dalla Lega Serie A</li>
-              </ul>
-            </div>
-
-            {/* Fase 3: Eliminazione */}
-            <div className="border-l-4 border-red-500 pl-4">
-              <h4 className="font-bold text-lg text-gray-900 dark:text-white mb-2">
-                Fase 3: Eliminazione
-              </h4>
-              <ul className="space-y-2 text-gray-700 dark:text-gray-300">
-                <li>• I giocatori che sbagliano una o più predizioni vengono <strong>eliminati immediatamente</strong></li>
-                <li>• L'eliminazione è <strong>irreversibile</strong> - non si può rientrare nel gioco</li>
-                <li>• I giocatori eliminati possono continuare a seguire la partita come spettatori</li>
-              </ul>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Regole Speciali */}
-        <Card className="mb-8 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-0 shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-3 text-xl">
-              <AlertTriangle className="h-5 w-5 text-orange-600" />
-              Regole Speciali e Situazioni Particolari
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-6">
-              <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                <h4 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
-                  Partite Rinviate o Sospese
-                </h4>
-                <p className="text-yellow-700 dark:text-yellow-300">
-                  Se una partita viene rinviata o sospesa, le selezioni rimangono valide e verranno valutate 
-                  quando la partita verrà effettivamente giocata e completata.
-                </p>
-              </div>
-
-              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">
-                  Errori Tecnici o Dispute
-                </h4>
-                <p className="text-blue-700 dark:text-blue-300">
-                  In caso di errori tecnici del sistema o dispute sui risultati, la decisione finale 
-                  spetta all'amministratore del gioco. Tutti i risultati si basano sui dati ufficiali della Lega Serie A.
-                </p>
-              </div>
-
-              <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                <h4 className="font-semibold text-red-800 dark:text-red-200 mb-2">
-                  Selezioni Mancate
-                </h4>
-                <p className="text-red-700 dark:text-red-300">
-                  Se un giocatore non effettua le selezioni entro la deadline, viene automaticamente eliminato 
-                  dal gioco. Non sono previste eccezioni o proroghe.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Strategia */}
-        <Card className="mb-8 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-0 shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-3 text-xl">
-              <Shield className="h-5 w-5 text-indigo-600" />
-              Strategia e Consigli
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
             <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Strategia Conservativa</h4>
-                <ul className="space-y-2 text-gray-700 dark:text-gray-300">
-                  <li>• Scegli le squadre più forti nelle prime giornate</li>
-                  <li>• Evita big match nelle prime fasi</li>
-                  <li>• Tieni le squadre di vertice per le giornate difficili</li>
+              <div className="space-y-4">
+                <h4 className="font-semibold text-gray-800">Selezione delle Squadre</h4>
+                <ul className="space-y-2 text-gray-700">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    Ogni giornata devi scegliere una squadra che pensi vincerà
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    Ogni squadra può essere scelta una sola volta per tutto il gioco
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    Devi fare la selezione prima che inizi la giornata
+                  </li>
                 </ul>
               </div>
-              <div>
-                <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Strategia Aggressiva</h4>
-                <ul className="space-y-2 text-gray-700 dark:text-gray-300">
-                  <li>• Usa le big immediatamente contro avversari deboli</li>
-                  <li>• Rischia con squadre di medio livello</li>
-                  <li>• Punta su risultati sorprendenti</li>
-                </ul>
+              
+              <div className="space-y-4">
+                <h4 className="font-semibold text-gray-800">Stati del Ticket</h4>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Badge className="bg-green-100 text-green-800 border-green-200">Attivo</Badge>
+                    <span className="text-sm text-gray-600">Ticket ancora in gioco</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Badge className="bg-blue-100 text-blue-800 border-blue-200">Superato</Badge>
+                    <span className="text-sm text-gray-600">Ha superato round precedenti</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Badge className="bg-red-100 text-red-800 border-red-200">Eliminato</Badge>
+                    <span className="text-sm text-gray-600">Eliminato dal gioco</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">Vincitore</Badge>
+                    <span className="text-sm text-gray-600">Ha vinto il gioco</span>
+                  </div>
+                </div>
               </div>
-            </div>
-
-            <div className="mt-6 p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg">
-              <h4 className="font-semibold text-indigo-800 dark:text-indigo-200 mb-2">
-                Regola d'Oro
-              </h4>
-              <p className="text-indigo-700 dark:text-indigo-300">
-                Ricorda che ogni squadra può essere usata <strong>una sola volta</strong> durante tutto il campionato. 
-                Pianifica con cura le tue selezioni considerando l'intero arco della stagione!
-              </p>
             </div>
           </CardContent>
         </Card>
 
-        {/* Vittoria e Classifiche */}
-        <Card className="mb-8 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-0 shadow-lg">
-          <CardHeader className="bg-gradient-to-r from-yellow-500 to-orange-600 text-white rounded-t-lg">
-            <CardTitle className="flex items-center gap-3 text-2xl">
-              <Trophy className="h-6 w-6" />
+        {/* Regole di Eliminazione */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-6 w-6 text-red-600" />
+              Regole di Eliminazione
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+              <h4 className="font-semibold text-red-800 mb-3">Vieni eliminato se:</h4>
+              <ul className="space-y-2 text-red-700">
+                <li className="flex items-start gap-2">
+                  <span className="text-red-500 font-bold">•</span>
+                  La squadra che hai scelto perde la partita
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-red-500 font-bold">•</span>
+                  La squadra che hai scelto pareggia la partita
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-red-500 font-bold">•</span>
+                  Non fai una selezione entro il tempo limite
+                </li>
+              </ul>
+            </div>
+            
+            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+              <h4 className="font-semibold text-green-800 mb-3">Rimani in gioco se:</h4>
+              <ul className="space-y-2 text-green-700">
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                  La squadra che hai scelto vince la partita
+                </li>
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Condizioni di Vittoria */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Crown className="h-6 w-6 text-yellow-600" />
               Condizioni di Vittoria
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-6 space-y-4">
-            <div className="text-center">
-              <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-4" />
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                Highlander - Ne può rimanere solo uno!
-              </h3>
-            </div>
-
-            <div className="space-y-4">
-              <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2">Vincitore per Eliminazione</h4>
-                <p className="text-green-700 dark:text-green-300">
-                  Il giocatore che rimane l'unico superstite vince immediatamente la partita, anche se ha più ticket attivi.
+          <CardContent className="space-y-4">
+            <p className="text-gray-700">
+              Il gioco può terminare in diverse situazioni:
+            </p>
+            
+            <div className="grid gap-4">
+              <div className="border border-yellow-200 bg-yellow-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-yellow-800 mb-2">Vincitore Singolo</h4>
+                <p className="text-yellow-700">
+                  Se rimane solo un giocatore attivo, quello è il vincitore
                 </p>
               </div>
-
-              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">Vincitore per Raggiungimento Round Limite</h4>
-                <p className="text-blue-700 dark:text-blue-300">
-                  Il gioco termina automaticamente al completamento del 20° round. Se più giocatori sopravvivono, 
-                  vince chi ha il maggior numero di ticket rimasti attivi.
+              
+              <div className="border border-blue-200 bg-blue-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-blue-800 mb-2">Vincitori Multipli</h4>
+                <p className="text-blue-700">
+                  Se più giocatori sopravvivono fino alla 38ª giornata di Serie A o al 20º round del gioco, 
+                  tutti i sopravvissuti sono dichiarati vincitori
                 </p>
               </div>
-
-              <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                <h4 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2">Vincitore per Fine Campionato</h4>
-                <p className="text-yellow-700 dark:text-yellow-300">
-                  Se il gioco raggiunge la 38° giornata di Serie A, vince chi ha più ticket sopravvissuti. 
-                  In caso di pareggio, vince chi si è iscritto per primo al gioco.
+              
+              <div className="border border-gray-200 bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-semibold text-gray-800 mb-2">Nessun Vincitore</h4>
+                <p className="text-gray-700">
+                  Se tutti i giocatori vengono eliminati prima della fine, il gioco termina senza vincitori
                 </p>
-              </div>
-
-              <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-                <h4 className="font-semibold text-red-800 dark:text-red-200 mb-2">Eliminazione Totale</h4>
-                <p className="text-red-700 dark:text-red-300">
-                  Se tutti i giocatori vengono eliminati prima della fine, vince l'ultimo eliminato.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-6 p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg">
-              <h4 className="font-semibold text-indigo-800 dark:text-indigo-200 mb-2">
-                Calcolo dei Round
-              </h4>
-              <p className="text-indigo-700 dark:text-indigo-300 mb-3">
-                Il round di gioco non corrisponde alla giornata di Serie A. Esempio:
-              </p>
-              <div className="grid md:grid-cols-2 gap-4 text-sm">
-                <div className="bg-white dark:bg-gray-800 p-3 rounded border-l-4 border-indigo-500">
-                  <strong>Gioco iniziato alla 10° giornata:</strong><br/>
-                  11° giornata = Round 1<br/>
-                  29° giornata = Round 19<br/>
-                  30° giornata = Round 20 (FINE)
-                </div>
-                <div className="bg-white dark:bg-gray-800 p-3 rounded border-l-4 border-indigo-500">
-                  <strong>Gioco iniziato alla 21° giornata:</strong><br/>
-                  22° giornata = Round 1<br/>
-                  37° giornata = Round 16<br/>
-                  38° giornata = Round 17 (FINE)
-                </div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Fair Play */}
-        <Card className="mb-8 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-0 shadow-lg">
+        {/* Tempistiche */}
+        <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-3 text-xl">
-              <Clock className="h-5 w-5 text-gray-600" />
-              Fair Play e Comportamento
+            <CardTitle className="flex items-center gap-2">
+              <Timer className="h-6 w-6 text-purple-600" />
+              Tempistiche e Scadenze
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="prose dark:prose-invert max-w-none">
-              <p className="text-gray-700 dark:text-gray-300">
-                Il gioco si basa sui principi di lealtà e fair play. È vietato:
-              </p>
-              <ul className="space-y-2 text-gray-700 dark:text-gray-300">
-                <li>• Creare account multipli per lo stesso giocatore</li>
-                <li>• Condividere informazioni privilegiate sui risultati</li>
-                <li>• Utilizzare bot o sistemi automatici per le selezioni</li>
-                <li>• Mancare di rispetto ad altri giocatori</li>
-              </ul>
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <Calendar className="h-5 w-5 text-purple-500 mt-0.5" />
+                <div>
+                  <h4 className="font-semibold text-gray-800">Selezioni</h4>
+                  <p className="text-gray-600 text-sm">
+                    Le selezioni devono essere effettuate prima dell'inizio della giornata di Serie A
+                  </p>
+                </div>
+              </div>
               
-              <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <p className="text-gray-600 dark:text-gray-400 text-sm italic">
-                  "Il gioco deve rimanere divertente e leale per tutti i partecipanti. 
-                  Comportamenti scorretti possono portare all'esclusione dal gioco."
+              <div className="flex items-start gap-3">
+                <Timer className="h-5 w-5 text-purple-500 mt-0.5" />
+                <div>
+                  <h4 className="font-semibold text-gray-800">Assegnazione Automatica</h4>
+                  <p className="text-gray-600 text-sm">
+                    Se non fai una selezione in tempo, il sistema potrebbe assegnartene una automaticamente 
+                    o potresti essere eliminato (a discrezione dell'amministratore)
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Registrazione */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-6 w-6 text-green-600" />
+              Registrazione e Partecipazione
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-semibold text-gray-800 mb-2">Come Partecipare</h4>
+                <ol className="list-decimal list-inside space-y-2 text-gray-700">
+                  <li>Registrati sulla piattaforma con username e password</li>
+                  <li>Aspetta che un amministratore crei un nuovo gioco</li>
+                  <li>Ricevi i tuoi ticket di partecipazione dall'amministratore</li>
+                  <li>Inizia a fare le tue selezioni quando il gioco diventa attivo</li>
+                </ol>
+              </div>
+              
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <h4 className="font-semibold text-blue-800 mb-2">Ticket Multipli</h4>
+                <p className="text-blue-700 text-sm">
+                  Puoi ricevere più ticket per lo stesso gioco, aumentando le tue possibilità di vittoria. 
+                  Ogni ticket è indipendente e ha le sue selezioni separate.
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Footer */}
-        <div className="text-center mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
-          <p className="text-gray-500 dark:text-gray-400">
-            Regolamento Highlander - Serie A 2025/2026 | Versione 2.0
-          </p>
-          <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">
-            Ultimo aggiornamento: Gennaio 2025
-          </p>
-        </div>
+        {/* Note Finali */}
+        <Card className="border-2 border-green-200 bg-green-50">
+          <CardContent className="pt-6">
+            <div className="text-center space-y-4">
+              <div className="flex justify-center">
+                <Shield className="h-12 w-12 text-green-600" />
+              </div>
+              <h3 className="text-xl font-bold text-green-800">Fair Play</h3>
+              <p className="text-green-700 max-w-2xl mx-auto">
+                Highlander è un gioco basato sulla strategia e sulla conoscenza del calcio. 
+                Gioca sempre in modo leale e rispetta gli altri partecipanti. 
+                Le decisioni degli amministratori sono definitive.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

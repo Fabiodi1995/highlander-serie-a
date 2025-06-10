@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { useFieldValidation } from "@/hooks/use-field-validation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +13,7 @@ import { insertUserSchema } from "@shared/schema";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link } from "wouter";
+import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { z } from "zod";
 
 const loginSchema = z.object({
@@ -35,6 +37,13 @@ type RegisterData = z.infer<typeof registerSchema>;
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
   const [, setLocation] = useLocation();
+  const {
+    usernameValidation,
+    emailValidation,
+    validateUsername,
+    validateEmail,
+    resetValidation
+  } = useFieldValidation();
 
   const loginForm = useForm<LoginData>({
     resolver: zodResolver(loginSchema),

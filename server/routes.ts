@@ -14,6 +14,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await storage.seedTeams();
   await storage.seedMatches();
 
+  // Validation endpoints for registration
+  app.get("/api/validate/username/:username", async (req, res) => {
+    try {
+      const { username } = req.params;
+      const existingUser = await storage.getUserByUsername(username);
+      res.json({ available: !existingUser });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/validate/email/:email", async (req, res) => {
+    try {
+      const { email } = req.params;
+      const existingUser = await storage.getUserByEmail(email);
+      res.json({ available: !existingUser });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Users API (admin only)
   app.get("/api/users", async (req, res) => {
     if (!req.isAuthenticated() || !req.user!.isAdmin) return res.sendStatus(403);
