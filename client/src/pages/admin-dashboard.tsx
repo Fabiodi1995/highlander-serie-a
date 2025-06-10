@@ -1052,111 +1052,119 @@ export default function AdminDashboard() {
                     </Button>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Nome Gioco</TableHead>
-                          <TableHead>Stato</TableHead>
-                          <TableHead>Giornata Corrente</TableHead>
-                          <TableHead>Creato</TableHead>
-                          <TableHead>Azioni</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {games.map((game) => (
-                          <TableRow key={game.id}>
-                            <TableCell>
-                              <div>
-                                <div className="font-medium">{game.name}</div>
-                                {game.description && (
-                                  <div className="text-sm text-gray-500">{game.description}</div>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <GameStatusBadge status={game.status} />
-                            </TableCell>
-                            <TableCell>
-                              {game.status === "registration" ? "Non Iniziato" : `Giornata ${game.currentRound}`}
-                            </TableCell>
-                            <TableCell>
-                              {new Date(game.createdAt).toLocaleDateString()}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex space-x-2">
-                                {game.status === "registration" && (
-                                  <>
+                  <ModernTable
+                    data={games}
+                    columns={[
+                      { key: 'name', label: 'Nome Gioco', sortable: true },
+                      { key: 'status', label: 'Stato', sortable: true, align: 'center' },
+                      { key: 'currentRound', label: 'Giornata', sortable: true, align: 'center' },
+                      { key: 'createdAt', label: 'Creato', sortable: true, align: 'center' },
+                      { key: 'actions', label: 'Azioni', sortable: false }
+                    ]}
+                    renderCell={(game, columnKey) => {
+                      switch (columnKey) {
+                        case 'name':
+                          return (
+                            <div>
+                              <div className="font-medium">{game.name}</div>
+                              {game.description && (
+                                <div className="text-sm text-gray-500">{game.description}</div>
+                              )}
+                            </div>
+                          );
+                        case 'status':
+                          return <StatusBadge status={game.status} />;
+                        case 'currentRound':
+                          return game.status === "registration" ? 
+                            <span className="text-gray-500">Non Iniziato</span> : 
+                            <span className="font-mono">Giornata {game.currentRound}</span>;
+                        case 'createdAt':
+                          return <span className="text-sm">{new Date(game.createdAt).toLocaleDateString('it-IT')}</span>;
+                        case 'actions':
+                          return (
+                            <div className="flex gap-1 flex-wrap">
+                              {game.status === "registration" && (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleAssignTickets(game.id)}
+                                    className="text-xs"
+                                  >
+                                    <TicketIcon className="h-3 w-3 mr-1" />
+                                    Ticket
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={() => handleCloseRegistration(game.id)}
+                                    disabled={closeRegistrationMutation.isPending}
+                                    className="text-xs"
+                                  >
+                                    Chiudi
+                                  </Button>
+                                </>
+                              )}
+                              {game.status === "active" && (
+                                <>
+                                  {game.roundStatus === "selection_open" && (
                                     <Button
                                       size="sm"
                                       variant="outline"
-                                      onClick={() => handleAssignTickets(game.id)}
+                                      onClick={() => lockRoundMutation.mutate({ gameId: game.id })}
+                                      disabled={lockRoundMutation.isPending}
+                                      className="text-xs"
                                     >
-                                      <TicketIcon className="h-4 w-4 mr-1" />
-                                      Assegna Ticket
+                                      <Shield className="h-3 w-3 mr-1" />
+                                      Blocca
                                     </Button>
+                                  )}
+                                  {game.roundStatus === "selection_locked" && (
                                     <Button
                                       size="sm"
-                                      variant="destructive"
-                                      onClick={() => handleCloseRegistration(game.id)}
-                                      disabled={closeRegistrationMutation.isPending}
+                                      onClick={() => handleCalculateTurn(game)}
+                                      disabled={calculateTurnMutation.isPending}
+                                      className="text-xs"
                                     >
-                                      Chiudi Registrazioni
+                                      <Calculator className="h-3 w-3 mr-1" />
+                                      Calcola
                                     </Button>
-                                  </>
-                                )}
-                                {game.status === "active" && (
-                                  <>
-                                    {game.roundStatus === "selection_open" && (
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => lockRoundMutation.mutate({ gameId: game.id })}
-                                        disabled={lockRoundMutation.isPending}
-                                      >
-                                        <Shield className="h-4 w-4 mr-1" />
-                                        Blocca Round
-                                      </Button>
-                                    )}
-                                    {game.roundStatus === "selection_locked" && (
-                                      <Button
-                                        size="sm"
-                                        onClick={() => handleCalculateTurn(game)}
-                                        disabled={calculateTurnMutation.isPending}
-                                      >
-                                        <Calculator className="h-4 w-4 mr-1" />
-                                        Calcola Giornata
-                                      </Button>
-                                    )}
-                                    {game.roundStatus === "calculated" && (
-                                      <Button
-                                        size="sm"
-                                        variant="default"
-                                        onClick={() => startNewRoundMutation.mutate(game.id)}
-                                        disabled={startNewRoundMutation.isPending}
-                                      >
-                                        <Play className="h-4 w-4 mr-1" />
-                                        Inizia Nuovo Round
-                                      </Button>
-                                    )}
-                                  </>
-                                )}
-                                <Button 
-                                  size="sm" 
-                                  variant="outline"
-                                  onClick={() => handleDeleteGame(game.id)}
-                                  disabled={deleteGameMutation.isPending}
-                                >
-                                  <Trash2 className="h-4 w-4 mr-1" />
-                                  Elimina
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
+                                  )}
+                                  {game.roundStatus === "calculated" && (
+                                    <Button
+                                      size="sm"
+                                      variant="default"
+                                      onClick={() => startNewRoundMutation.mutate(game.id)}
+                                      disabled={startNewRoundMutation.isPending}
+                                      className="text-xs"
+                                    >
+                                      <Play className="h-3 w-3 mr-1" />
+                                      Nuovo Round
+                                    </Button>
+                                  )}
+                                </>
+                              )}
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => handleDeleteGame(game.id)}
+                                disabled={deleteGameMutation.isPending}
+                                className="text-xs text-red-600 hover:text-red-700"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          );
+                        default:
+                          return '';
+                      }
+                    }}
+                    searchFields={['name', 'description']}
+                    searchPlaceholder="Cerca gioco..."
+                    defaultSortKey="createdAt"
+                    defaultSortDirection="desc"
+                    tabKey="games"
+                  />
                 )}
               </CardContent>
             </Card>
