@@ -32,13 +32,24 @@ function PlayerHistoryTableWrapper({
     return <div className="text-center py-4">Impossibile caricare i dati dello storico</div>;
   }
 
+  // Safety checks for data integrity
+  if (!gameHistory.tickets || !Array.isArray(gameHistory.tickets)) {
+    console.error('Invalid tickets data:', gameHistory);
+    return <div className="text-center py-4">Dati dello storico non validi</div>;
+  }
+
+  // Extract users safely
+  const users = gameHistory.tickets
+    .map((t: any) => t.user)
+    .filter((user: any) => user != null);
+
   return (
     <PlayerHistoryTable
       game={gameHistory.game}
       allTickets={gameHistory.tickets}
       allTeamSelections={[]}
       teams={teams}
-      users={gameHistory.tickets.map((t: any) => t.user)}
+      users={users}
     />
   );
 }
