@@ -525,7 +525,7 @@ function PlayerHistoryTable({
               ...gameRounds.reduce((acc, round, index) => {
                 acc[`round_${round}`] = {
                   round,
-                  roundDisplay: `R${index + 1} (G${round})`,
+                  roundDisplay: `Giornata ${round}`,
                   cellStyle: getCellStyle(ticket, round),
                   cellContent: getCellContent(ticket, round, currentUser?.id)
                 };
@@ -540,7 +540,7 @@ function PlayerHistoryTable({
             { key: 'status', label: 'Stato', sortable: true, align: 'center' as const },
             ...gameRounds.map((round, index) => ({
               key: `round_${round}`,
-              label: `R${index + 1} (G${round})`,
+              label: `Giornata ${round}`,
               sortable: false,
               align: 'center' as const,
               width: '120px'
@@ -556,7 +556,7 @@ function PlayerHistoryTable({
                     <span>{item.ticketName}</span>
                     {!item.status || item.status === 'Eliminato' ? (
                       <Badge variant="destructive" className="text-xs">
-                        Eliminato R{item.eliminatedInRound}
+                        Eliminato G{item.eliminatedInRound}
                       </Badge>
                     ) : null}
                   </div>
@@ -1418,7 +1418,7 @@ export default function AdminDashboard() {
                       { key: 'username', label: 'Giocatore', sortable: true },
                       { key: 'gameName', label: 'Gioco', sortable: true },
                       { key: 'status', label: 'Stato', sortable: true, align: 'center' },
-                      { key: 'eliminatedInRound', label: 'Round Eliminazione', sortable: true, align: 'center' },
+                      { key: 'eliminatedInRound', label: 'Giornata Eliminazione', sortable: true, align: 'center' },
                       { key: 'actions', label: 'Azioni', sortable: false, align: 'center', width: '100px' }
                     ]}
                     renderCell={(ticket, columnKey) => {
@@ -1433,7 +1433,7 @@ export default function AdminDashboard() {
                           return <StatusBadge status={ticket.status || 'active'} />;
                         case 'eliminatedInRound':
                           return ticket.eliminatedInRound ? 
-                            <span className="font-mono">Round {ticket.eliminatedInRound}</span> : 
+                            <span className="font-mono">Giornata {ticket.eliminatedInRound}</span> : 
                             <span className="text-gray-400">—</span>;
                         case 'actions':
                           const game = games.find(g => g.id === ticket.gameId);
