@@ -286,7 +286,10 @@ function TicketAssignmentForm({
         <Label htmlFor="user-select">Seleziona Giocatore</Label>
         <Select 
           value={selectedUserId?.toString() || ""} 
-          onValueChange={(value) => setSelectedUserId(parseInt(value))}
+          onValueChange={(value) => {
+            const parsed = parseInt(value);
+            setSelectedUserId(isNaN(parsed) ? null : parsed);
+          }}
         >
           <SelectTrigger>
             <SelectValue placeholder="Scegli un giocatore" />
