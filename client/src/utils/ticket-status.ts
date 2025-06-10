@@ -1,0 +1,89 @@
+import type { Ticket, Game } from "@shared/schema";
+
+export type TicketStatus = 'winner' | 'active' | 'passed' | 'eliminated';
+
+export interface TicketWithStatus extends Ticket {
+  status: TicketStatus;
+  statusLabel: string;
+  statusColor: string;
+}
+
+export function getTicketStatus(ticket: Ticket, game: Game): TicketStatus {
+  // Se il ticket è stato eliminato
+  if (!ticket.isActive) {
+    return 'eliminated';
+  }
+
+  // Se il gioco è completato
+  if (game.status === 'completed') {
+    // Se il ticket è ancora attivo alla fine del gioco, è vincitore
+    return 'winner';
+  }
+
+  // Se il gioco è ancora attivo
+  if (game.status === 'active') {
+    // Se siamo nel round corrente del gioco, il ticket è attivo
+    if (ticket.eliminatedInRound === null || ticket.eliminatedInRound >= game.currentRound) {
+      return 'active';
+    }
+    
+    // Se il ticket ha superato round precedenti ma non è nel round corrente
+    return 'passed';
+  }
+
+  // Default per giochi in registrazione
+  return 'active';
+}
+
+export function getTicketStatusLabel(status: TicketStatus): string {
+  switch (status) {
+    case 'winner':
+      return 'Vincitore';
+    case 'active':
+      return 'Attivo';
+    case 'passed':
+      return 'Superato';
+    case 'eliminated':
+      return 'Eliminato';
+    default:
+      return 'Sconosciuto';
+  }
+}
+
+export function getTicketStatusColor(status: TicketStatus): string {
+  switch (status) {
+    case 'winner':
+      return 'text-yellow-600 bg-yellow-50 border-yellow-200';
+    case 'active':
+      return 'text-green-600 bg-green-50 border-green-200';
+    case 'passed':
+      return 'text-blue-600 bg-blue-50 border-blue-200';
+    case 'eliminated':
+      return 'text-red-600 bg-red-50 border-red-200';
+    default:
+      return 'text-gray-600 bg-gray-50 border-gray-200';
+  }
+}
+
+export function enhanceTicketsWithStatus(tickets: Ticket[], game: Game): TicketWithStatus[] {
+  return tickets.map(ticket => {
+    const status = getTicketStatus(ticket, game);
+    return {
+      ...ticket,
+      status,
+      statusLabel: getTicketStatusLabel(status),
+      statusColor: getTicketStatusColor(status)
+    };
+  });
+}
+
+export function getStatusSortOrder(status: TicketStatus): number {
+  // Ordinamento: Vincitore, Attivo, Superato, Eliminato
+  switch (status) {
+    case 'winner': return 0;
+    case 'active': return 1;
+    case 'passed': return 2;
+    case 'eliminated': return 3;
+    default: return 4;
+  }
+}

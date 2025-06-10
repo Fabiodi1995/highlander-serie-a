@@ -22,7 +22,8 @@ import {
   Menu, 
   X,
   Crown,
-  Target
+  Target,
+  Shield
 } from "lucide-react";
 
 export function Header() {
@@ -78,10 +79,10 @@ export function Header() {
       active: location === "/"
     },
     {
-      href: "/game-interface",
-      label: "Selezioni",
-      icon: Target,
-      active: location.startsWith("/game")
+      href: "/rules",
+      label: "Regolamento",
+      icon: Shield,
+      active: location === "/rules"
     }
   ];
 

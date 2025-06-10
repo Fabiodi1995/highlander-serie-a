@@ -1,0 +1,93 @@
+Feedback sulle Modifiche Richieste
+1. Sistema di Ordinamento Tabelle e Stati Ticket
+Corner Cases:
+
+Cosa succede quando più colonne hanno lo stesso valore (es. stesso nome, stessa data)?
+	l'ordinamento segue la regola che se più colonne hanno lo stesso valore la discriminante è la prima colonna utile (da destra verso sinistra) ordinando in modo alfanumerico
+Come gestire l'ordinamento con dati mancanti (null/undefined)?
+	in caso di valori nulli mostrami quali sono in modo da mitigarli, in caso non fossero gestiti considerali come priorità più bassa nell'ordinamento
+Performance con tabelle molto grandi (centinaia di ticket)?
+	effettua una paginazione delle tabelle in modo che mostrino massimo 20 righe per volta e l'utente può ampliarla di 20 righe alla volta (ESEMPIO: TABELLA CON 67 RIGHE: L'utente vedrà le prime 20 righe in base all'ordinamento selezionato e vedrà un pulsante tipo 'mostra altro' che, quando cliccato, mostrerà altre 20 righe (quindi 40 in totale) e vedrà ancora il pulsante 'mostra altro' che, quando cliccato, mostrerà 67 righe, a questo punto (quando non ci sono più righe da mostrare) questo pulsante di questa tabella non verrà visualizzato
+
+Miglioramenti suggeriti:
+	
+
+Implementare ordinamento multi-livello (primario + secondario)
+Aggiungere indicatori visivi per la colonna di ordinamento attiva
+Salvare le preferenze di ordinamento dell'utente in localStorage
+2. Logica Vincitori Multipli
+Corner Cases:
+
+Come gestire la visualizzazione quando ci sono 10+ vincitori?
+	rispettare l'ordinamento come descritto in precedenza
+Cosa succede se tutti i ticket vengono eliminati prima dell'ultimo round?
+	il gioco finisce senza vincitori, il sistema gestirà la fine del gioco senza vincitori in questo caso
+Come distinguere i vincitori nelle statistiche finali?
+	non ci sono distinzioni nelle statistiche del gioco, ogni vincitore è uguale a prescindere dal numero di ticket o dalla registrazione o altro 
+Miglioramenti suggeriti:
+
+Aggiungere celebrazione speciale per i vincitori
+Implementare sistema di punti/ranking anche tra i vincitori
+Considerare premi differenziati per posizioni multiple
+	Non applicare questi 3 miglioramenti suggeriti al momento
+
+3. Navigazione e Sezioni
+Corner Cases:
+
+Come gestire la navigazione mobile con più sezioni?
+	è un'app suggerisci una soluzione che trovi più idonea, ricorda che dovrà essere un applicativo sia per desktop ma soprattutto per mobile Android e IOs
+Conflitti tra autorizzazioni admin e sezioni pubbliche?
+	specifica quali sono questi conflitti al termine di queste modifiche
+
+Migliorimenti suggeriti:
+
+Implementare breadcrumb per navigazione complessa
+Aggiungere search/filtro nelle sezioni pubbliche
+	applicare questi 2 miglioramenti suggeriti
+
+4. Autenticazione e UX
+Corner Cases:
+
+Gestione errori di rete vs errori di credenziali
+Rate limiting per tentativi di login multipli
+Accessibilità per screen reader sul logo centrato
+	non applicare queste 2 gestione degli errori per il momento
+
+5. Integrazione Google Maps API
+Corner Cases CRITICI:
+
+Quota limits: Google Maps ha limiti giornalieri costosi
+	trova una soluzione gratuita considerando che saranno poche le integrazione richieste al giorno
+Privacy GDPR: Richiede consensi espliciti per geolocalizzazione
+	implementa questo punto
+Fallback offline: Cosa succede se API non disponibile?
+	continua senza problemi, se disponibile mostra se non disponibile non dovrebbero esserci problemi alla registrazione
+Validazione indirizzi: Come gestire indirizzi inesistenti o ambigui?
+	permetti l'inserimento di indirizzi inesistenti o ambigui
+Costi: Ogni chiamata API ha un costo, può diventare significativo
+	trova API gratuite altrimenti non implementare queste API per l'indirizzo
+
+Miglioramenti suggeriti:
+
+Implementare debouncing per ridurre chiamate API
+Cache locale per indirizzi già validati
+Fallback graceful senza Google Maps
+Validazione lato client prima delle chiamate API
+Monitoraggio usage per evitare sorprese nei costi
+	applica questi miglioramenti in base a ciò che è stato descrito prima, se non è possibile non implementare
+
+6. Validazione Form Registrazione
+Corner Cases:
+
+Campi facoltativi vs obbligatori con Google Maps
+Gestione caratteri speciali negli indirizzi
+Validazione email duplicata real-time
+Raccomandazioni Prioritarie:
+INIZIARE con ordinamento tabelle e stati ticket (basso rischio)
+VALUTARE ATTENTAMENTE l'integrazione Google Maps per i costi
+IMPLEMENTARE validazione form robusta prima dell'integrazione API
+TESTARE extensively la logica vincitori multipli
+CONSIDERARE alternative gratuite a Google Maps (OpenStreetMap/Nominatim)
+	gestisci questi corner case in base a ciò che è stato descritto prima ed aggiungi il controllo sulla registrazione se un'email o un username è già presente impedendo di proseguire in questo caso e notificando con un messaggio di errore l'utente che quel campo è già stato utilizzato
+
+hai altri dubbi, suggerimenti, vedi criticità o possiamo procedere?

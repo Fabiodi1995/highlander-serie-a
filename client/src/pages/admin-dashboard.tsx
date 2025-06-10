@@ -19,6 +19,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { TeamLogo } from "@/components/team-logo";
+import { SortableTable, StatusBadge } from "@/components/ui/sortable-table";
+import { enhanceTicketsWithStatus, getStatusSortOrder, type TicketWithStatus } from "@/utils/ticket-status";
 import type { Game, User as UserType, Team, TeamSelection, Ticket, Match } from "@shared/schema";
 import { z } from "zod";
 
