@@ -15,18 +15,25 @@ import type { Game, Ticket, Team, TeamSelection, User as UserType } from "@share
 // Player History Table Component - adapted for ModernTable
 function PlayerHistoryTable({ 
   game, 
-  userTickets, 
+  allTickets, 
   allTeamSelections, 
-  teams 
+  teams,
+  users 
 }: { 
   game: Game; 
-  userTickets: Ticket[] | undefined; 
+  allTickets: any[] | undefined; 
   allTeamSelections: any[] | undefined; 
   teams: Team[] | undefined; 
+  users: UserType[] | undefined;
 }) {
-  if (!userTickets || !allTeamSelections || !teams) {
+  const { user: currentUser } = useAuth();
+  
+  if (!allTickets || !allTeamSelections || !teams || !users) {
     return <div className="text-center py-4">Caricamento dati...</div>;
   }
+
+  // Filter tickets for this game - show ALL tickets, not just user's tickets
+  const gameTickets = allTickets.filter(ticket => ticket.gameId === game.id);
 
   // Filter team selections for this game - flatten all selections from all tickets
   const gameData = allTeamSelections.find(gameData => gameData.game.id === game.id);

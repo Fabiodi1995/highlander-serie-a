@@ -1062,6 +1062,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get game history with privacy logic for all players
+  app.get("/api/games/:gameId/player-history", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    const gameId = parseInt(req.params.gameId);
+    const currentUserId = req.user!.id;
+    
+    try {
+      // Get game info
+      const game = await storage.getGame(gameId);
+      if (!game) {
+        return res.status(404).json({ error: 'Game not found' });
+      }
+      
+      // Get all tickets for this game
+      const allTickets = await storage.getTicketsByGame(gameId);
+      
+      // Get all users who have tickets in this game
+      const userIds = [...new Set(allTickets.map(ticket => ticket.userId))];
+      const users = await Promise.all(
+        userIds.map(async (userId) => await storage.getUser(userId))
+      );
+      const usersMap = users.reduce((acc: any, user) => {
+        if (user) acc[user.id] = user;
+        return acc;
+      }, {});
+      
+      // Get all team selections for each ticket
+      const processedTickets = [];
+      for (const ticket of allTickets) {
+        const ticketSelections = await storage.getTeamSelectionsByTicket(ticket.id);
+        
+        // Group selections by round
+        const selectionsByRound = ticketSelections.reduce((acc: any, selection) => {
+          acc[selection.round] = selection;
+          return acc;
+        }, {});
+        
+        // Apply privacy logic: hide other players' selections for open rounds
+        const isCurrentRoundOpen = game.roundStatus === "selection_open";
+        const processedSelections: any = {};
+        
+        for (const [roundStr, selection] of Object.entries(selectionsByRound)) {
+          const round = parseInt(roundStr);
+          const sel = selection as any;
+          
+          // Privacy check: hide other players' selections for current open round
+          if (isCurrentRoundOpen && round === game.currentRound && ticket.userId !== currentUserId) {
+            processedSelections[round] = { ...sel, teamId: null, hidden: true };
+          } else {
+            processedSelections[round] = sel;
+          }
+        }
+        
+        processedTickets.push({
+          ...ticket,
+          user: usersMap[ticket.userId],
+          selections: processedSelections
+        });
+      }
+      
+      res.json({
+        game,
+        tickets: processedTickets
+      });
+    } catch (error) {
+      console.error('Error fetching game player history:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   // User profile routes
   app.patch("/api/user/profile", async (req, res) => {
     if (!req.isAuthenticated()) {
