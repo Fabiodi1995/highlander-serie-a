@@ -1,5 +1,6 @@
 import { createContext, ReactNode, useContext, useEffect, useState, useRef } from "react";
-import { useQuery, useMutation, queryClient } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient } from "../lib/queryClient";
 import { useAuth } from "./use-auth";
 import { useNotifications } from "./use-notifications";
 

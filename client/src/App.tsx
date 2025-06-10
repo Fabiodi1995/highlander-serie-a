@@ -58,8 +58,8 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="system" storageKey="highlander-ui-theme">
         <AuthProvider>
-          <PWAProvider>
-            <NotificationProvider>
+          <NotificationProvider>
+            <PWAProvider>
               <AnalyticsProvider>
                 <AchievementsProvider>
                   <SocialProvider>
@@ -74,8 +74,8 @@ function App() {
                   </SocialProvider>
                 </AchievementsProvider>
               </AnalyticsProvider>
-            </NotificationProvider>
-          </PWAProvider>
+            </PWAProvider>
+          </NotificationProvider>
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
