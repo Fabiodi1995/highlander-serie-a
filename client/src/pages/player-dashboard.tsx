@@ -39,20 +39,15 @@ function PlayerHistoryTableWrapper({
     return <div className="text-center py-4">Dati dello storico non validi</div>;
   }
 
-  // Filter tickets to show only current user's tickets
-  const userTickets = gameHistory.tickets.filter((ticket: any) => 
-    ticket.userId === currentUser?.id
-  );
-
-  // Extract users safely (only current user)
-  const users = userTickets
+  // Extract users safely (all users for complete game history view)
+  const users = gameHistory.tickets
     .map((t: any) => t.user)
     .filter((user: any) => user != null);
 
   return (
     <PlayerHistoryTable
       game={gameHistory.game}
-      allTickets={userTickets}
+      allTickets={gameHistory.tickets}
       allTeamSelections={[]}
       teams={teams}
       users={users}
@@ -302,7 +297,10 @@ function DetailedGameView({
     return <div className="text-center py-4 text-red-500">Errore nel caricamento dei dati del gioco</div>;
   }
 
-  const allTickets = allGameData.ticketSelections?.map((ts: any) => ts.ticket) || [];
+  // Filter to show only current user's tickets in the team selections view
+  const userTickets = allGameData.ticketSelections
+    ?.filter((ts: any) => ts.ticket.userId === user?.id)
+    ?.map((ts: any) => ts.ticket) || [];
   
   // Create rounds array (startRound to currentRound)
   const gameRounds: number[] = [];
@@ -314,14 +312,16 @@ function DetailedGameView({
     return teams.find(t => t.id === teamId);
   };
 
-  // Get team selections grouped by ticket and round
-  const selectionsByTicket = allGameData.ticketSelections?.reduce((acc: any, ts: any) => {
-    acc[ts.ticket.id] = {};
-    ts.selections?.forEach((selection: any) => {
-      acc[ts.ticket.id][selection.round] = selection;
-    });
-    return acc;
-  }, {}) || {};
+  // Get team selections grouped by ticket and round - filter only user's tickets
+  const selectionsByTicket = allGameData.ticketSelections
+    ?.filter((ts: any) => ts.ticket.userId === user?.id)
+    ?.reduce((acc: any, ts: any) => {
+      acc[ts.ticket.id] = {};
+      ts.selections?.forEach((selection: any) => {
+        acc[ts.ticket.id][selection.round] = selection;
+      });
+      return acc;
+    }, {}) || {};
 
   const getCellContent = (ticket: any, round: number) => {
     const selection = selectionsByTicket[ticket.id]?.[round];
@@ -375,8 +375,8 @@ function DetailedGameView({
     return "bg-gray-50 text-gray-500 border border-gray-200";
   };
 
-  // Prepare data for ModernTable
-  const tableData = allTickets.map((ticket: any) => {
+  // Prepare data for ModernTable - show only user's tickets in team selections view
+  const tableData = userTickets.map((ticket: any) => {
     const roundsSurvived = ticket.eliminatedInRound ? ticket.eliminatedInRound - 1 : game.currentRound;
     const rowData: any = {
       ticketId: ticket.id,
@@ -432,13 +432,13 @@ function DetailedGameView({
       <div className="grid grid-cols-4 gap-4 text-center">
         <div className="bg-blue-50 p-3 rounded-lg">
           <div className="text-lg font-semibold text-blue-600">
-            {allTickets.filter((t: any) => t.isActive).length}
+            {userTickets.filter((t: any) => t.isActive).length}
           </div>
           <div className="text-sm text-gray-600">Ticket Attivi</div>
         </div>
         <div className="bg-red-50 p-3 rounded-lg">
           <div className="text-lg font-semibold text-red-600">
-            {allTickets.filter((t: any) => !t.isActive).length}
+            {userTickets.filter((t: any) => !t.isActive).length}
           </div>
           <div className="text-sm text-gray-600">Ticket Eliminati</div>
         </div>
