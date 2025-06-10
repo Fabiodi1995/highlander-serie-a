@@ -16,6 +16,8 @@ export const users = pgTable("users", {
   country: text("country").default("Italia"),
   isAdmin: boolean("is_admin").default(false).notNull(),
   emailVerified: boolean("email_verified").default(false).notNull(),
+  emailVerificationToken: text("email_verification_token"),
+  emailVerificationSentAt: timestamp("email_verification_sent_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

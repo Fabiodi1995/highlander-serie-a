@@ -57,28 +57,30 @@ function HomePage() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="system" storageKey="highlander-ui-theme">
-        <AuthProvider>
-          <NotificationProvider>
-            <PWAProvider>
-              <AnalyticsProvider>
-                <AchievementsProvider>
-                  <SocialProvider>
-                    <TooltipProvider>
-                      <Layout>
-                        <Router />
-                        <LegalFooter />
-                      </Layout>
-                      <CookieConsentBanner />
-                      <Toaster />
-                    </TooltipProvider>
-                  </SocialProvider>
-                </AchievementsProvider>
-              </AnalyticsProvider>
-            </PWAProvider>
-          </NotificationProvider>
-        </AuthProvider>
-      </ThemeProvider>
+      <FeatureFlagsProvider>
+        <ThemeProvider defaultTheme="system" storageKey="highlander-ui-theme">
+          <AuthProvider>
+            <NotificationProvider>
+              <PWAProvider>
+                <AnalyticsProvider>
+                  <AchievementsProvider>
+                    <SocialProvider>
+                      <TooltipProvider>
+                        <Layout>
+                          <Router />
+                          <LegalFooter />
+                        </Layout>
+                        <CookieConsentBanner />
+                        <Toaster />
+                      </TooltipProvider>
+                    </SocialProvider>
+                  </AchievementsProvider>
+                </AnalyticsProvider>
+              </PWAProvider>
+            </NotificationProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </FeatureFlagsProvider>
     </QueryClientProvider>
   );
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { useFeature } from "@/lib/feature-flags";
 import { 
   Home, 
   User, 
@@ -33,6 +34,7 @@ export function MobileBottomNav() {
   const { user } = useAuth();
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const analyticsForNonAdmin = useFeature('analyticsForNonAdmin');
 
   // Hide/show navbar on scroll
   useEffect(() => {
@@ -54,9 +56,15 @@ export function MobileBottomNav() {
 
   if (!user) return null;
 
-  const filteredNavItems = navItems.filter(item => 
-    !item.adminOnly || user.isAdmin
-  );
+  const filteredNavItems = navItems.filter(item => {
+    // Hide admin-only items for non-admin users
+    if (item.adminOnly && !user.isAdmin) return false;
+    
+    // Hide Analytics for non-admin users if feature flag is disabled
+    if (item.href === '/analytics' && !user.isAdmin && !analyticsForNonAdmin) return false;
+    
+    return true;
+  });
 
   return (
     <nav className={cn(
