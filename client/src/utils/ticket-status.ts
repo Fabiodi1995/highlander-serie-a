@@ -22,13 +22,14 @@ export function getTicketStatus(ticket: Ticket, game: Game): TicketStatus {
 
   // Se il gioco è ancora attivo
   if (game.status === 'active') {
-    // Se siamo nel round corrente del gioco, il ticket è attivo
-    if (ticket.eliminatedInRound === null || ticket.eliminatedInRound >= game.currentRound) {
-      return 'active';
+    // Se il ticket è attivo e siamo oltre il primo round
+    if (ticket.isActive && game.currentRound > 1) {
+      // Se il round corrente è maggiore di 1, significa che ha superato dei round
+      return 'passed';
     }
     
-    // Se il ticket ha superato round precedenti ma non è nel round corrente
-    return 'passed';
+    // Se siamo nel primo round o il ticket è appena entrato nel gioco
+    return 'active';
   }
 
   // Default per giochi in registrazione

@@ -74,18 +74,20 @@ export function SortableTable<T = any>({
               {columns.map((column) => (
                 <th
                   key={column.key}
-                  className={`text-left p-3 font-medium text-gray-700 ${
-                    column.sortable !== false ? 'cursor-pointer hover:bg-gray-100' : ''
+                  className={`text-left p-3 font-medium text-gray-700 border-b-2 border-gray-200 ${
+                    column.sortable !== false ? 'cursor-pointer hover:bg-gray-100 select-none' : ''
+                  } ${
+                    sortConfig.key === column.key ? 'bg-blue-50' : ''
                   }`}
                   onClick={() => column.sortable !== false && handleSort(column.key)}
                 >
-                  <div className="flex items-center justify-between">
-                    <span>{column.label}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold">{column.label}</span>
                     {column.sortable !== false && (
-                      <div className={`ml-2 ${
+                      <div className={`transition-colors duration-200 ${
                         sortConfig.key === column.key 
                           ? 'text-blue-600' 
-                          : 'text-gray-400'
+                          : 'text-gray-400 group-hover:text-gray-600'
                       }`}>
                         {getSortIconComponent(column.key)}
                       </div>

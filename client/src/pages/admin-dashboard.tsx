@@ -1258,39 +1258,62 @@ export default function AdminDashboard() {
             <Card>
               <CardHeader>
                 <CardTitle>Tutti i Ticket dei Giocatori</CardTitle>
+                <CardDescription>
+                  Visualizza e ordina tutti i ticket per stato, giocatore e gioco. 
+                  Stati: Vincitore, Attivo, Superato, Eliminato
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                {allTickets ? (
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Ticket ID</TableHead>
-                          <TableHead>Giocatore</TableHead>
-                          <TableHead>Gioco</TableHead>
-                          <TableHead>Stato</TableHead>
-                          <TableHead>Round Eliminazione</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {allTickets.map((ticket: any) => (
-                          <TableRow key={ticket.id}>
-                            <TableCell>#{ticket.id}</TableCell>
-                            <TableCell>{ticket.user?.username}</TableCell>
-                            <TableCell>{ticket.game?.name}</TableCell>
-                            <TableCell>
-                              <Badge variant={ticket.isActive ? "default" : "destructive"}>
-                                {ticket.isActive ? "Attivo" : "Eliminato"}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              {ticket.eliminatedRound || "N/A"}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
+                {allTickets && games ? (
+                  <SortableTable
+                    data={allTickets.map((ticket: any) => {
+                      const game = games.find(g => g.id === ticket.gameId);
+                      const enhancedTickets = game ? enhanceTicketsWithStatus([ticket], game) : [];
+                      const enhancedTicket = enhancedTickets[0] || ticket;
+                      
+                      return {
+                        ...ticket,
+                        ...enhancedTicket,
+                        gameName: ticket.game?.name || 'N/A',
+                        username: ticket.user?.username || 'N/A',
+                        statusSortOrder: enhancedTicket.status ? getStatusSortOrder(enhancedTicket.status) : 99
+                      };
+                    })}
+                    columns={[
+                      { key: 'id', label: 'ID Ticket', sortable: true },
+                      { key: 'username', label: 'Giocatore', sortable: true },
+                      { key: 'gameName', label: 'Gioco', sortable: true },
+                      { key: 'status', label: 'Stato', sortable: true },
+                      { key: 'eliminatedInRound', label: 'Round Eliminazione', sortable: true }
+                    ]}
+                    renderCell={(ticket, columnKey) => {
+                      switch (columnKey) {
+                        case 'id':
+                          return `#${ticket.id}`;
+                        case 'username':
+                          return ticket.username;
+                        case 'gameName':
+                          return ticket.gameName;
+                        case 'status':
+                          return <StatusBadge status={ticket.status || 'active'} />;
+                        case 'eliminatedInRound':
+                          return ticket.eliminatedInRound || 'N/A';
+                        default:
+                          return '';
+                      }
+                    }}
+                    defaultSortKey="statusSortOrder"
+                    customSortFn={(a, b, key, direction) => {
+                      if (key === 'status') {
+                        const aOrder = a.statusSortOrder || 99;
+                        const bOrder = b.statusSortOrder || 99;
+                        return direction === 'asc' ? aOrder - bOrder : bOrder - aOrder;
+                      }
+                      return 0;
+                    }}
+                    emptyMessage="Nessun ticket trovato"
+                    initialPageSize={20}
+                  />
                 ) : (
                   <div className="text-center py-8">
                     <p className="text-gray-500">Caricamento ticket...</p>
