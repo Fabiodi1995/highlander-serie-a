@@ -48,6 +48,7 @@ export function ModernTable<T = any>({
     handleSearch,
     handleTabChange,
     getSortIndicator,
+    removeSortConfig,
     processData
   } = useTableState({
     defaultSortKey,
@@ -263,15 +264,30 @@ export function ModernTable<T = any>({
         {/* Sort Info */}
         {tableState.sortConfigs.length > 0 && (
           <div className="mt-3 pt-3 border-t border-gray-200">
-            <div className="text-xs text-gray-600 flex items-center gap-2">
-              <span>Ordinato per:</span>
+            <div className="text-xs text-gray-600 flex items-center gap-2 flex-wrap">
+              <span className="font-medium">Ordinato per:</span>
               {tableState.sortConfigs
                 .sort((a, b) => a.priority - b.priority)
                 .map((config, index) => {
                   const column = columns.find(c => c.key === config.key);
                   return (
-                    <Badge key={config.key} variant="secondary" className="text-xs">
-                      {index + 1}. {column?.label} {config.direction === 'asc' ? '↑' : '↓'}
+                    <Badge 
+                      key={config.key} 
+                      variant="secondary" 
+                      className="text-xs flex items-center gap-1 pl-2 pr-1 hover:bg-gray-200 transition-colors"
+                    >
+                      <span>
+                        {index + 1}. {column?.label} {config.direction === 'asc' ? '↑' : '↓'}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-4 w-4 p-0 hover:bg-gray-300 rounded-full"
+                        onClick={() => removeSortConfig(config.key)}
+                        title={`Rimuovi ordinamento per ${column?.label}`}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
                     </Badge>
                   );
                 })

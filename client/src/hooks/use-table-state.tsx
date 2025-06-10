@@ -77,23 +77,25 @@ export function useTableState({
         // Column already sorted, toggle direction or remove
         const existingConfig = prev.sortConfigs[existingIndex];
         if (existingConfig.direction === 'asc') {
-          // Change to desc with highest priority
+          // Change to desc, keep same priority but move to top
           newSortConfigs = [
             { key: columnKey, direction: 'desc', priority: 0 },
-            ...prev.sortConfigs.filter(config => config.key !== columnKey)
-              .map(config => ({ ...config, priority: config.priority + 1 }))
+            ...prev.sortConfigs
+              .filter(config => config.key !== columnKey)
+              .map((config, index) => ({ ...config, priority: index + 1 }))
           ];
         } else {
-          // Remove this sort
+          // Remove this sort and reorder priorities
           newSortConfigs = prev.sortConfigs
             .filter(config => config.key !== columnKey)
-            .map(config => ({ ...config, priority: Math.max(0, config.priority - 1) }));
+            .map((config, index) => ({ ...config, priority: index }));
         }
       } else {
-        // New column, add as highest priority
+        // New column, add as highest priority and reorder others
         newSortConfigs = [
           { key: columnKey, direction: 'asc', priority: 0 },
-          ...prev.sortConfigs.map(config => ({ ...config, priority: config.priority + 1 }))
+          ...prev.sortConfigs
+            .map((config, index) => ({ ...config, priority: index + 1 }))
         ];
       }
 
@@ -101,6 +103,21 @@ export function useTableState({
         ...prev,
         sortConfigs: newSortConfigs.slice(0, 3), // Limit to 3 sorts max
         currentPage: 0 // Reset to first page when sorting
+      };
+    });
+  }, []);
+
+  // Add function to remove sort
+  const removeSortConfig = useCallback((columnKey: string) => {
+    setTableState(prev => {
+      const newSortConfigs = prev.sortConfigs
+        .filter(config => config.key !== columnKey)
+        .map((config, index) => ({ ...config, priority: index }));
+
+      return {
+        ...prev,
+        sortConfigs: newSortConfigs,
+        currentPage: 0
       };
     });
   }, []);
@@ -239,6 +256,7 @@ export function useTableState({
     resetState,
     getSortConfig,
     getSortIndicator,
+    removeSortConfig,
     sortData,
     processData
   };

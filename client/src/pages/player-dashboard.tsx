@@ -4,11 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User, LogOut, Calendar, Trophy, Target, ArrowLeft, Eye } from "lucide-react";
 import { Link } from "wouter";
 import { TeamLogo } from "@/components/team-logo";
+import { ModernTable, StatusBadge } from "@/components/ui/modern-table";
+import { enhanceTicketsWithStatus } from "@/utils/ticket-status";
 import type { Game, Ticket, Team, TeamSelection, User as UserType } from "@shared/schema";
 
 // Player History Table Component - adapted from admin dashboard
@@ -115,6 +116,38 @@ function PlayerHistoryTable({
     return "—";
   };
 
+  // Create data structure for ModernTable
+  const tableData = userTickets.map(ticket => {
+    const rowData: any = {
+      ticketId: ticket.id,
+      ticketName: `Ticket #${ticket.id}`,
+      status: enhanceTicketsWithStatus([ticket], game)[0]?.statusDisplay || ticket.isActive ? 'Attivo' : 'Eliminato',
+      ...gameRounds.reduce((acc, round, index) => {
+        acc[`round_${round}`] = {
+          round,
+          roundDisplay: `Round ${index + 1} (G${round})`,
+          selection: selectionsByTicket[ticket.id]?.[round],
+          cellStyle: getCellStyle(ticket, round),
+          cellContent: getCellContent(ticket, round)
+        };
+        return acc;
+      }, {} as any)
+    };
+    return rowData;
+  });
+
+  const columns = [
+    { key: 'ticketName', label: 'Ticket', sortable: true },
+    { key: 'status', label: 'Stato', sortable: true, align: 'center' as const },
+    ...gameRounds.map((round, index) => ({
+      key: `round_${round}`,
+      label: `Round ${index + 1} (G${round})`,
+      sortable: false,
+      align: 'center' as const,
+      width: '120px'
+    }))
+  ];
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -133,56 +166,31 @@ function PlayerHistoryTable({
           Nessun ticket per questo gioco
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="font-semibold">Ticket</TableHead>
-                {gameRounds.map((round, index) => (
-                  <TableHead key={round} className="text-center font-semibold min-w-[120px]">
-                    Round {index + 1} (G{round})
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {userTickets
-                .sort((a, b) => {
-                  // Calculate rounds survived for each ticket
-                  const roundsA = a.eliminatedInRound || (game.currentRound + 1);
-                  const roundsB = b.eliminatedInRound || (game.currentRound + 1);
-                  
-                  // Sort by elimination round (later eliminations first), then by ticket ID
-                  if (roundsA !== roundsB) {
-                    return roundsB - roundsA;
-                  }
-                  return a.id - b.id;
-                })
-                .map((ticket) => (
-                <TableRow key={ticket.id}>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <span className="font-medium">#{ticket.id.toString().padStart(3, '0')}</span>
-                      {!ticket.isActive && (
-                        <Badge variant="destructive" className="text-xs">
-                          Eliminato R{ticket.eliminatedInRound}
-                        </Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                  {gameRounds.map(round => (
-                    <TableCell 
-                      key={round} 
-                      className={`text-center text-sm ${getCellStyle(ticket, round)}`}
-                    >
-                      {getCellContent(ticket, round)}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <ModernTable
+          data={tableData}
+          columns={columns}
+          renderCell={(item, columnKey) => {
+            if (columnKey === 'ticketName') {
+              return <span className="font-medium">{item.ticketName}</span>;
+            }
+            if (columnKey === 'status') {
+              return <StatusBadge status={item.status} />;
+            }
+            if (columnKey.startsWith('round_')) {
+              const roundData = item[columnKey];
+              return (
+                <div className={`p-2 rounded text-center text-xs ${roundData.cellStyle}`}>
+                  {roundData.cellContent}
+                </div>
+              );
+            }
+            return '';
+          }}
+          searchFields={['ticketName']}
+          searchPlaceholder="Cerca ticket..."
+          tabKey={`game-${game.id}`}
+          emptyMessage="Nessun ticket per questo gioco"
+        />
       )}
 
       {/* Legend */}
