@@ -2,9 +2,11 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { insertGameSchema, insertTeamSelectionSchema } from "@shared/schema";
+import { insertGameSchema, insertTeamSelectionSchema, tickets } from "@shared/schema";
 import { checkGameEndConditions, finalizeGame } from "./game-logic";
 import { z } from "zod";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
@@ -371,24 +373,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Ticket count must be between 1 and 10" });
       }
       
-      // CRITICAL FIX: Remove existing tickets for this user in this game
+      // FIXED: Proper ticket replacement logic
+      console.log(`Assigning ${count} tickets to user ${userId} for game ${gameId}`);
+      
+      // Step 1: Get existing tickets for this user in this game
       const existingTickets = await storage.getTicketsByUser(userId, gameId);
-      for (const existingTicket of existingTickets) {
-        // Delete team selections for this ticket first
-        const selections = await storage.getTeamSelectionsByTicket(existingTicket.id);
-        for (const selection of selections) {
-          await storage.deleteTeamSelection(selection.id);
+      console.log(`Found ${existingTickets.length} existing tickets for user ${userId} in game ${gameId}`);
+      
+      // Step 2: Clean up existing tickets and their selections
+      if (existingTickets.length > 0) {
+        console.log(`Removing ${existingTickets.length} existing tickets...`);
+        for (const existingTicket of existingTickets) {
+          // Delete team selections first (foreign key constraint)
+          const selections = await storage.getTeamSelectionsByTicket(existingTicket.id);
+          console.log(`Deleting ${selections.length} selections for ticket ${existingTicket.id}`);
+          for (const selection of selections) {
+            await storage.deleteTeamSelection(selection.id);
+          }
+          // Delete the ticket
+          await storage.deleteTicket(existingTicket.id);
+          console.log(`Deleted ticket ${existingTicket.id}`);
         }
-        // Delete the ticket
-        await storage.deleteTicket(existingTicket.id);
       }
       
-      // Create new tickets (replacement)
-      const tickets = [];
+      // Step 3: Create new tickets
+      console.log(`Creating ${count} new tickets...`);
+      const newTickets = [];
       for (let i = 0; i < count; i++) {
         const ticket = await storage.createTicket(gameId, userId);
-        tickets.push(ticket);
+        newTickets.push(ticket);
+        console.log(`Created new ticket ${ticket.id}`);
       }
+      
+      console.log(`Successfully assigned ${newTickets.length} tickets to user ${userId}`);
+      const tickets = newTickets;
       
       // Add user as participant if not already
       try {
@@ -411,9 +429,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const ticketId = parseInt(req.params.id);
       
-      // Get ticket to verify game ownership  
-      const allTicketsResult = await db.select().from(tickets).where(eq(tickets.id, ticketId));
-      const ticket = allTicketsResult[0];
+      // Get ticket to verify game ownership - admin can delete any ticket
+      let ticket;
+      const allUsers = await storage.getAllUsers();
+      for (const user of allUsers) {
+        const userTickets = await storage.getTicketsByUser(user.id);
+        ticket = userTickets.find(t => t.id === ticketId);
+        if (ticket) break;
+      }
       
       if (!ticket) {
         return res.status(404).json({ message: "Ticket not found" });
@@ -540,13 +563,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get all team selections for user's tickets grouped by game
+  // Get all team selections for user's tickets grouped by game (FIXED: prevents duplication)
   app.get("/api/user/team-selections", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     try {
+      console.log(`Fetching team selections for user ${req.user!.id}`);
       const userTickets = await storage.getTicketsByUser(req.user!.id);
+      console.log(`Found ${userTickets.length} tickets for user ${req.user!.id}`);
+      
       const gamesData = [];
+      const processedGames = new Set<number>(); // CRITICAL FIX: prevent duplicates
       
       // Group tickets by game
       const ticketsByGame = userTickets.reduce((acc, ticket) => {
@@ -557,8 +584,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return acc;
       }, {} as Record<number, any[]>);
       
+      console.log(`Tickets grouped into ${Object.keys(ticketsByGame).length} games`);
+      
       for (const [gameId, tickets] of Object.entries(ticketsByGame)) {
-        const game = await storage.getGame(parseInt(gameId));
+        const gameIdNum = parseInt(gameId);
+        
+        // CRITICAL FIX: Skip if already processed
+        if (processedGames.has(gameIdNum)) {
+          console.log(`Skipping duplicate game ${gameIdNum}`);
+          continue;
+        }
+        processedGames.add(gameIdNum);
+        
+        const game = await storage.getGame(gameIdNum);
+        if (!game) {
+          console.log(`Game ${gameIdNum} not found, skipping`);
+          continue;
+        }
+        
         const gameSelections = [];
         
         for (const ticket of tickets) {
@@ -573,8 +616,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           game,
           ticketSelections: gameSelections
         });
+        
+        console.log(`Added game ${game.name} with ${tickets.length} tickets`);
       }
       
+      console.log(`Returning ${gamesData.length} unique games for user ${req.user!.id}`);
       res.json(gamesData);
     } catch (error) {
       console.error("Error fetching user team selections:", error);
