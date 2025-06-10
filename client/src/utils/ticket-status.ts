@@ -6,6 +6,7 @@ export interface TicketWithStatus extends Ticket {
   status: TicketStatus;
   statusLabel: string;
   statusColor: string;
+  statusDisplay: string;
 }
 
 export function getTicketStatus(ticket: Ticket, game: Game): TicketStatus {
@@ -69,11 +70,13 @@ export function getTicketStatusColor(status: TicketStatus): string {
 export function enhanceTicketsWithStatus(tickets: Ticket[], game: Game): TicketWithStatus[] {
   return tickets.map(ticket => {
     const status = getTicketStatus(ticket, game);
+    const statusLabel = getTicketStatusLabel(status);
     return {
       ...ticket,
       status,
-      statusLabel: getTicketStatusLabel(status),
-      statusColor: getTicketStatusColor(status)
+      statusLabel,
+      statusColor: getTicketStatusColor(status),
+      statusDisplay: statusLabel
     };
   });
 }

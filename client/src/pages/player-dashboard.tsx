@@ -12,7 +12,7 @@ import { ModernTable, StatusBadge } from "@/components/ui/modern-table";
 import { enhanceTicketsWithStatus } from "@/utils/ticket-status";
 import type { Game, Ticket, Team, TeamSelection, User as UserType } from "@shared/schema";
 
-// Player History Table Component - adapted from admin dashboard
+// Player History Table Component - adapted for ModernTable
 function PlayerHistoryTable({ 
   game, 
   userTickets, 
@@ -117,11 +117,13 @@ function PlayerHistoryTable({
   };
 
   // Create data structure for ModernTable
-  const tableData = userTickets.map(ticket => {
+  const enhancedTickets = enhanceTicketsWithStatus(userTickets, game);
+  const tableData = enhancedTickets.map(ticket => {
     const rowData: any = {
       ticketId: ticket.id,
       ticketName: `Ticket #${ticket.id}`,
-      status: enhanceTicketsWithStatus([ticket], game)[0]?.statusDisplay || ticket.isActive ? 'Attivo' : 'Eliminato',
+      status: ticket.status,
+      statusDisplay: ticket.statusDisplay,
       ...gameRounds.reduce((acc, round, index) => {
         acc[`round_${round}`] = {
           round,
@@ -174,7 +176,7 @@ function PlayerHistoryTable({
               return <span className="font-medium">{item.ticketName}</span>;
             }
             if (columnKey === 'status') {
-              return <StatusBadge status={item.status} />;
+              return <StatusBadge status={item.statusDisplay} />;
             }
             if (columnKey.startsWith('round_')) {
               const roundData = item[columnKey];
@@ -216,7 +218,7 @@ function PlayerHistoryTable({
   );
 }
 
-// Detailed Game View Component - shows all tickets in a specific game
+// Detailed Game View Component - converted to ModernTable
 function DetailedGameView({ 
   gameData, 
   teams, 
@@ -245,17 +247,6 @@ function DetailedGameView({
 
   const allTickets = allGameData.ticketSelections?.map((ts: any) => ts.ticket) || [];
   
-  // Sort tickets by rounds survived (later eliminations first, then by ticket ID)
-  const sortedTickets = allTickets.sort((a: any, b: any) => {
-    const roundsA = a.eliminatedInRound || (game.currentRound + 1);
-    const roundsB = b.eliminatedInRound || (game.currentRound + 1);
-    
-    if (roundsA !== roundsB) {
-      return roundsB - roundsA;
-    }
-    return a.id - b.id;
-  });
-
   // Create rounds array (startRound to currentRound)
   const gameRounds: number[] = [];
   for (let round = game.startRound; round <= game.currentRound; round++) {
@@ -278,20 +269,10 @@ function DetailedGameView({
   const getCellContent = (ticket: any, round: number) => {
     const selection = selectionsByTicket[ticket.id]?.[round];
     
-    // If ticket was eliminated before this round
     if (ticket.eliminatedInRound && ticket.eliminatedInRound < round) {
       return "—";
     }
     
-    // Check if this is the current round and round is not calculated yet
-    const isCurrentRoundInProgress = round === game.currentRound && game.roundStatus !== "calculated";
-    
-    // Hide other players' selections for current round in progress (show only own selections)
-    if (isCurrentRoundInProgress && ticket.userId !== user?.id && selection) {
-      return <span className="text-gray-400">🔒</span>; // Hidden selection indicator
-    }
-    
-    // If selection exists, show team logo
     if (selection) {
       const team = getTeam(selection.teamId);
       if (team) {
@@ -300,7 +281,6 @@ function DetailedGameView({
       return teams.find(t => t.id === selection.teamId)?.name || 'N/A';
     }
     
-    // If current round and no selection yet
     if (round === game.currentRound && ticket.isActive) {
       return "In attesa";
     }
@@ -311,92 +291,108 @@ function DetailedGameView({
   const getCellStyle = (ticket: any, round: number) => {
     const selection = selectionsByTicket[ticket.id]?.[round];
     
-    // If ticket was eliminated before this round - show red
     if (ticket.eliminatedInRound && ticket.eliminatedInRound < round) {
       return "bg-red-100 text-red-800 border border-red-200";
     }
     
-    // If ticket was eliminated in this round - show dark red
     if (ticket.eliminatedInRound === round) {
       return "bg-red-200 text-red-900 font-semibold border border-red-300";
     }
     
-    // Check if this round is the current one being played
     const isCurrentRound = round === game.currentRound && game.roundStatus !== "calculated";
     
-    // If current round in progress and other player's selection is hidden
-    if (isCurrentRound && ticket.userId !== user?.id && selection) {
-      return "bg-gray-100 text-gray-400 border border-gray-300"; // Locked/hidden style
-    }
-    
-    // If this is the current round being played and not calculated yet
     if (isCurrentRound && ticket.isActive) {
       return selection 
         ? "bg-yellow-100 text-yellow-800 border border-yellow-200" 
         : "bg-orange-100 text-orange-800 border border-orange-200";
     }
     
-    // If this round is completed
     if (selection && (round < game.currentRound || (round === game.currentRound && game.roundStatus === "calculated"))) {
       return "bg-green-100 text-green-800 border border-green-200";
     }
     
-    // If ticket has a selection for this round (fallback)
     if (selection) {
       return "bg-green-100 text-green-800 border border-green-200";
     }
     
-    // Default empty state
     return "bg-gray-50 text-gray-500 border border-gray-200";
   };
 
+  // Prepare data for ModernTable
+  const tableData = allTickets.map((ticket: any) => {
+    const roundsSurvived = ticket.eliminatedInRound ? ticket.eliminatedInRound - 1 : game.currentRound;
+    const rowData: any = {
+      ticketId: ticket.id,
+      player: ticket.user?.username || 'N/A',
+      ticketName: `#${ticket.id.toString().padStart(3, '0')}`,
+      status: ticket.isActive ? 'Attivo' : 'Eliminato',
+      roundsSurvived,
+      isCurrentUser: ticket.userId === user?.id,
+      eliminatedInRound: ticket.eliminatedInRound,
+      ...gameRounds.reduce((acc, round, index) => {
+        acc[`round_${round}`] = {
+          round,
+          roundDisplay: `R${index + 1} (G${round})`,
+          selection: selectionsByTicket[ticket.id]?.[round],
+          cellStyle: getCellStyle(ticket, round),
+          cellContent: getCellContent(ticket, round)
+        };
+        return acc;
+      }, {} as any)
+    };
+    return rowData;
+  });
+
+  const columns = [
+    { key: 'player', label: 'Giocatore', sortable: true },
+    { key: 'ticketName', label: 'Ticket', sortable: true },
+    { key: 'status', label: 'Stato', sortable: true, align: 'center' as const },
+    ...gameRounds.map((round, index) => ({
+      key: `round_${round}`,
+      label: `R${index + 1} (G${round})`,
+      sortable: false,
+      align: 'center' as const,
+      width: '120px'
+    }))
+  ];
+
   return (
-    <div className="space-y-6">
-      {/* Header with back button */}
-      <div className="flex items-center gap-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onBack}
-          className="flex items-center gap-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Torna alla Panoramica
-        </Button>
-        <div className="flex-1">
-          <h2 className="text-2xl font-bold">{game.name}</h2>
-          <div className="flex items-center space-x-4 text-sm text-gray-600">
-            <span>Giornata corrente: {game.currentRound}</span>
-            <span>Stato: {game.roundStatus}</span>
-            <Badge variant={game.status === 'active' ? 'default' : 'secondary'}>
-              {game.status}
-            </Badge>
-          </div>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <Button variant="outline" onClick={onBack} size="sm">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Torna alla panoramica
+          </Button>
+          <h3 className="text-xl font-semibold">{game.name} - Vista Dettagliata</h3>
         </div>
+        <Badge variant={game.status === 'active' ? 'default' : 'secondary'}>
+          {game.status}
+        </Badge>
       </div>
 
-      {/* Summary Statistics */}
-      <div className="grid grid-cols-4 gap-4">
-        <div className="text-center p-4 bg-green-50 rounded-lg border">
-          <div className="text-2xl font-bold text-green-600">
+      {/* Game Stats */}
+      <div className="grid grid-cols-4 gap-4 text-center">
+        <div className="bg-blue-50 p-3 rounded-lg">
+          <div className="text-lg font-semibold text-blue-600">
             {allTickets.filter((t: any) => t.isActive).length}
           </div>
           <div className="text-sm text-gray-600">Ticket Attivi</div>
         </div>
-        <div className="text-center p-4 bg-red-50 rounded-lg border">
-          <div className="text-2xl font-bold text-red-600">
+        <div className="bg-red-50 p-3 rounded-lg">
+          <div className="text-lg font-semibold text-red-600">
             {allTickets.filter((t: any) => !t.isActive).length}
           </div>
           <div className="text-sm text-gray-600">Ticket Eliminati</div>
         </div>
-        <div className="text-center p-4 bg-blue-50 rounded-lg border">
-          <div className="text-2xl font-bold text-blue-600">
-            {allTickets.length}
+        <div className="bg-green-50 p-3 rounded-lg">
+          <div className="text-lg font-semibold text-green-600">
+            {game.currentRound}
           </div>
-          <div className="text-sm text-gray-600">Totale Ticket</div>
+          <div className="text-sm text-gray-600">Giornata Corrente</div>
         </div>
-        <div className="text-center p-4 bg-yellow-50 rounded-lg border">
-          <div className="text-2xl font-bold text-yellow-600">
+        <div className="bg-purple-50 p-3 rounded-lg">
+          <div className="text-lg font-semibold text-purple-600">
             {game.currentRound - game.startRound + 1}
           </div>
           <div className="text-sm text-gray-600">Round Giocati</div>
@@ -404,63 +400,54 @@ function DetailedGameView({
       </div>
 
       {/* Detailed Table */}
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="font-semibold">Giocatore</TableHead>
-              <TableHead className="font-semibold">Ticket</TableHead>
-              <TableHead className="font-semibold">Stato</TableHead>
-              {gameRounds.map((round, index) => (
-                <TableHead key={round} className="text-center font-semibold min-w-[120px]">
-                  R{index + 1} (G{round})
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sortedTickets.map((ticket: any, index: number) => {
-              const roundsSurvived = ticket.eliminatedInRound ? ticket.eliminatedInRound - 1 : game.currentRound;
-              
-              return (
-                <TableRow key={ticket.id}>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm font-medium">{ticket.user?.username || 'N/A'}</span>
-                      {ticket.userId === user?.id && (
-                        <Badge className="bg-blue-500 text-white text-xs">Tu</Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col">
-                      <span className="font-medium">#{ticket.id.toString().padStart(3, '0')}</span>
-                      <span className="text-xs text-gray-500">{roundsSurvived} round</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {ticket.isActive ? (
-                      <Badge className="bg-green-600 text-white">Attivo</Badge>
-                    ) : (
-                      <Badge variant="destructive">
-                        Eliminato R{ticket.eliminatedInRound}
-                      </Badge>
-                    )}
-                  </TableCell>
-                  {gameRounds.map(round => (
-                    <TableCell 
-                      key={round} 
-                      className={`text-center text-sm ${getCellStyle(ticket, round)}`}
-                    >
-                      {getCellContent(ticket, round)}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </div>
+      <ModernTable
+        data={tableData}
+        columns={columns}
+        renderCell={(item, columnKey) => {
+          if (columnKey === 'player') {
+            return (
+              <div className="flex items-center space-x-2">
+                <span className="text-sm font-medium">{item.player}</span>
+                {item.isCurrentUser && (
+                  <Badge className="bg-blue-500 text-white text-xs">Tu</Badge>
+                )}
+              </div>
+            );
+          }
+          if (columnKey === 'ticketName') {
+            return (
+              <div className="flex flex-col">
+                <span className="font-medium">{item.ticketName}</span>
+                <span className="text-xs text-gray-500">{item.roundsSurvived} round</span>
+              </div>
+            );
+          }
+          if (columnKey === 'status') {
+            return item.status === 'Attivo' ? (
+              <Badge className="bg-green-600 text-white">Attivo</Badge>
+            ) : (
+              <Badge variant="destructive">
+                Eliminato R{item.eliminatedInRound}
+              </Badge>
+            );
+          }
+          if (columnKey.startsWith('round_')) {
+            const roundData = item[columnKey];
+            return (
+              <div className={`p-2 rounded text-center text-xs ${roundData.cellStyle}`}>
+                {roundData.cellContent}
+              </div>
+            );
+          }
+          return '';
+        }}
+        searchFields={['player', 'ticketName']}
+        searchPlaceholder="Cerca giocatore o ticket..."
+        defaultSortKey="roundsSurvived"
+        defaultSortDirection="desc"
+        tabKey={`detailed-game-${game.id}`}
+        emptyMessage="Nessun ticket trovato"
+      />
 
       {/* Legend */}
       <div className="flex flex-wrap gap-4 text-xs p-3 bg-gray-50 rounded-lg">
@@ -485,7 +472,7 @@ function DetailedGameView({
   );
 }
 
-// Game Overview Table Component - shows summary of games with click to expand
+// Game Overview Table Component - converted to ModernTable
 function GameOverviewTable({ 
   userTeamSelections, 
   teams,
@@ -499,179 +486,148 @@ function GameOverviewTable({
     return <div className="text-center py-4">Caricamento dati...</div>;
   }
 
-  const getTeam = (teamId: number) => {
-    return teams.find(t => t.id === teamId);
-  };
+  if (userTeamSelections.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <Trophy className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+        <h3 className="text-lg font-medium text-gray-600 mb-2">
+          Non hai ancora partecipato a nessun gioco
+        </h3>
+        <p className="text-gray-500">
+          Quando parteciperai ai giochi, qui vedrai il tuo storico
+        </p>
+      </div>
+    );
+  }
+
+  // Prepare data for ModernTable
+  const tableData = userTeamSelections.map(gameData => {
+    const game = gameData.game;
+    const userTickets = gameData.ticketSelections?.map((ts: any) => ts.ticket) || [];
+    const activeTickets = userTickets.filter((t: any) => t.isActive);
+    const eliminatedTickets = userTickets.filter((t: any) => !t.isActive);
+    
+    // Calculate best performance (longest surviving ticket)
+    const bestRound = userTickets.reduce((max: number, ticket: any) => {
+      const rounds = ticket.eliminatedInRound ? ticket.eliminatedInRound - 1 : game.currentRound;
+      return Math.max(max, rounds);
+    }, 0);
+
+    return {
+      gameId: game.id,
+      gameName: game.name,
+      status: game.status,
+      currentRound: game.currentRound,
+      totalTickets: userTickets.length,
+      activeTickets: activeTickets.length,
+      eliminatedTickets: eliminatedTickets.length,
+      bestPerformance: bestRound,
+      gameData
+    };
+  });
+
+  const columns = [
+    { key: 'gameName', label: 'Gioco', sortable: true },
+    { key: 'status', label: 'Stato', sortable: true, align: 'center' as const },
+    { key: 'currentRound', label: 'Giornata', sortable: true, align: 'center' as const },
+    { key: 'totalTickets', label: 'Ticket Totali', sortable: true, align: 'center' as const },
+    { key: 'activeTickets', label: 'Ticket Attivi', sortable: true, align: 'center' as const },
+    { key: 'bestPerformance', label: 'Miglior Performance', sortable: true, align: 'center' as const },
+    { key: 'actions', label: 'Azioni', sortable: false, align: 'center' as const }
+  ];
 
   return (
-    <div className="space-y-6">
-      {userTeamSelections.map((gameData: any) => {
-        const game = gameData.game;
-        const allTickets = gameData.ticketSelections?.map((ts: any) => ts.ticket) || [];
-        
-        // Sort tickets by rounds survived (later eliminations first, then by ticket ID)
-        const sortedTickets = allTickets.sort((a: any, b: any) => {
-          const roundsA = a.eliminatedInRound || (game.currentRound + 1);
-          const roundsB = b.eliminatedInRound || (game.currentRound + 1);
-          
-          if (roundsA !== roundsB) {
-            return roundsB - roundsA; // Later eliminations first
-          }
-          return a.id - b.id; // Then by ticket ID
-        });
-
-        return (
-          <Card key={game.id} className="hover:shadow-md transition-shadow cursor-pointer">
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle className="text-xl">{game.name}</CardTitle>
-                  <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
-                    <span>Giornata corrente: {game.currentRound}</span>
-                    <Badge variant={game.status === 'active' ? 'default' : 'secondary'}>
-                      {game.status}
-                    </Badge>
-                  </div>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onGameClick(gameData)}
-                  className="flex items-center gap-2"
-                >
-                  <Eye className="h-4 w-4" />
-                  Dettagli
-                </Button>
+    <ModernTable
+      data={tableData}
+      columns={columns}
+      renderCell={(item, columnKey) => {
+        switch (columnKey) {
+          case 'gameName':
+            return <span className="font-medium">{item.gameName}</span>;
+          case 'status':
+            return <StatusBadge status={item.status} />;
+          case 'currentRound':
+            return <span className="font-mono">Giornata {item.currentRound}</span>;
+          case 'totalTickets':
+            return <span className="font-semibold">{item.totalTickets}</span>;
+          case 'activeTickets':
+            return (
+              <div className="flex items-center justify-center">
+                <Badge variant={item.activeTickets > 0 ? 'default' : 'secondary'}>
+                  {item.activeTickets}
+                </Badge>
               </div>
-            </CardHeader>
-            <CardContent>
-              {/* Top 3 Tickets Preview */}
-              <div className="space-y-2 mb-4">
-                <h4 className="font-semibold text-sm text-gray-700">Top 3 Ticket</h4>
-                {sortedTickets.slice(0, 3).map((ticket: any, index: number) => {
-                  const ticketSelections = gameData.ticketSelections?.find((ts: any) => ts.ticket.id === ticket.id)?.selections || [];
-                  const lastSelection = ticketSelections
-                    .sort((a: any, b: any) => b.round - a.round)[0];
-                  const lastTeam = lastSelection ? getTeam(lastSelection.teamId) : null;
-                  const roundsSurvived = ticket.eliminatedInRound ? ticket.eliminatedInRound - 1 : game.currentRound;
-
-                  return (
-                    <div key={ticket.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                      <div className="flex items-center space-x-3">
-                        <span className="font-bold text-lg">#{index + 1}</span>
-                        <span className="font-medium">#{ticket.id.toString().padStart(3, '0')}</span>
-                        {ticket.isActive ? (
-                          <Badge className="bg-green-600 text-white text-xs">Attivo</Badge>
-                        ) : (
-                          <Badge variant="destructive" className="text-xs">
-                            Eliminato R{ticket.eliminatedInRound}
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm font-medium">{roundsSurvived} round</span>
-                        {lastTeam && <TeamLogo team={lastTeam} size="sm" />}
-                      </div>
-                    </div>
-                  );
-                })}
+            );
+          case 'bestPerformance':
+            return (
+              <div className="flex items-center justify-center">
+                <Badge variant="outline" className="font-mono">
+                  {item.bestPerformance} round
+                </Badge>
               </div>
-
-              {/* Statistics */}
-              <div className="grid grid-cols-3 gap-4 p-3 bg-gray-50 rounded-lg">
-                <div className="text-center">
-                  <div className="text-xl font-bold text-green-600">
-                    {allTickets.filter((t: any) => t.isActive).length}
-                  </div>
-                  <div className="text-xs text-gray-600">Attivi</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-xl font-bold text-red-600">
-                    {allTickets.filter((t: any) => !t.isActive).length}
-                  </div>
-                  <div className="text-xs text-gray-600">Eliminati</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-xl font-bold text-blue-600">
-                    {allTickets.length}
-                  </div>
-                  <div className="text-xs text-gray-600">Totale</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        );
-      })}
-    </div>
+            );
+          case 'actions':
+            return (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onGameClick(item.gameData)}
+                className="text-xs"
+              >
+                <Eye className="h-3 w-3 mr-1" />
+                Dettagli
+              </Button>
+            );
+          default:
+            return '';
+        }
+      }}
+      searchFields={['gameName']}
+      searchPlaceholder="Cerca gioco..."
+      defaultSortKey="currentRound"
+      defaultSortDirection="desc"
+      tabKey="game-overview"
+      emptyMessage="Nessun gioco trovato"
+    />
   );
 }
 
+// Game Card Component
 function GameCard({ game }: { game: Game }) {
-  const { data: tickets } = useQuery<Ticket[]>({
-    queryKey: [`/api/games/${game.id}/tickets`],
-  });
-
-  const activeTickets = tickets?.filter(t => t.isActive) || [];
-  const eliminatedTickets = tickets?.filter(t => !t.isActive) || [];
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "active":
-        return <Badge className="bg-secondary text-white">Active</Badge>;
-      case "completed":
-        return <Badge variant="destructive">Completed</Badge>;
-      case "registration":
-        return <Badge className="bg-warning text-white">Registration Open</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-
   return (
     <Card className="hover:shadow-md transition-shadow">
-      <CardHeader>
+      <CardHeader className="pb-3">
         <div className="flex justify-between items-start">
           <div>
             <CardTitle className="text-lg">{game.name}</CardTitle>
-            <CardDescription>
-              Started: {new Date(game.createdAt).toLocaleDateString()}
-            </CardDescription>
+            {game.description && (
+              <CardDescription className="mt-1">{game.description}</CardDescription>
+            )}
           </div>
-          {getStatusBadge(game.status)}
+          <Badge variant={game.status === 'active' ? 'default' : 'secondary'}>
+            {game.status}
+          </Badge>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="text-center p-3 bg-slate-50 rounded-lg">
-            <div className="text-2xl font-bold text-secondary">
-              {activeTickets.length}
-            </div>
-            <div className="text-xs text-gray-600">Active Tickets</div>
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <span className="text-gray-600">Giornata:</span>
+            <span className="ml-2 font-medium">{game.currentRound}</span>
           </div>
-          <div className="text-center p-3 bg-slate-50 rounded-lg">
-            <div className="text-2xl font-bold text-gray-400">
-              {eliminatedTickets.length}
-            </div>
-            <div className="text-xs text-gray-600">Eliminated</div>
+          <div>
+            <span className="text-gray-600">Stato round:</span>
+            <span className="ml-2 font-medium">{game.roundStatus}</span>
           </div>
         </div>
-
-        <div className="space-y-2 mb-4">
-          <div className="text-sm font-medium text-gray-700 flex items-center">
-            <Calendar className="h-4 w-4 mr-1" />
-            Current Round: Giornata {game.currentRound}
-          </div>
-        </div>
-
-        {game.status === "active" && activeTickets.length > 0 ? (
+        <div className="mt-3">
           <Link href={`/game/${game.id}`}>
-            <Button className="w-full">Make Selections</Button>
+            <Button size="sm" className="w-full">
+              <Target className="h-4 w-4 mr-2" />
+              Gioca
+            </Button>
           </Link>
-        ) : (
-          <Button className="w-full" variant="secondary" disabled>
-            {game.status === "completed" ? "Game Over" : "No Active Tickets"}
-          </Button>
-        )}
+        </div>
       </CardContent>
     </Card>
   );
@@ -679,159 +635,226 @@ function GameCard({ game }: { game: Game }) {
 
 export default function PlayerDashboard() {
   const { user, logoutMutation } = useAuth();
-  const [selectedGameData, setSelectedGameData] = useState<any | null>(null);
+  const [selectedGameData, setSelectedGameData] = useState<any>(null);
 
-  const { data: games, isLoading: gamesLoading } = useQuery<Game[]>({
-    queryKey: ["/api/games"],
-  });
-
-  const { data: teams } = useQuery<Team[]>({
-    queryKey: ["/api/teams"],
-  });
-
-  const { data: userTeamSelections } = useQuery<any[]>({
+  // Fetch user's games and team selections
+  const { data: userTeamSelections, isLoading: selectionsLoading } = useQuery<any[]>({
     queryKey: ["/api/user/team-selections"],
   });
 
-  const handleLogout = () => {
-    logoutMutation.mutate();
-  };
+  // Fetch available games
+  const { data: availableGames, isLoading: gamesLoading } = useQuery<Game[]>({
+    queryKey: ["/api/games"],
+  });
 
-  if (gamesLoading || !games) {
+  // Fetch teams
+  const { data: teams, isLoading: teamsLoading } = useQuery<Team[]>({
+    queryKey: ["/api/teams"],
+  });
+
+  const isLoading = selectionsLoading || gamesLoading || teamsLoading;
+
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Caricamento dashboard...</p>
+        </div>
       </div>
     );
   }
 
-  const activeGames = games.filter(game => game.status === "active");
-  const userGames = games.filter(game => {
-    // Check if user has tickets in this game
-    return Array.isArray(userTeamSelections) && userTeamSelections.some((gameData: any) => gameData.game?.id === game.id);
-  });
+  const activeGames = availableGames?.filter(game => game.status === 'active') || [];
+  const registrationGames = availableGames?.filter(game => game.status === 'registration') || [];
+
+  if (selectedGameData) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="container mx-auto px-4 py-8">
+          <DetailedGameView
+            gameData={selectedGameData}
+            teams={teams}
+            onBack={() => setSelectedGameData(null)}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Navigation Header */}
-      <nav className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-bold text-primary">Highlander</h1>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="p-2 bg-blue-100 rounded-full">
+                <User className="h-6 w-6 text-blue-600" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Dashboard Giocatore</h1>
+                <p className="text-gray-600">Benvenuto, {user?.username}!</p>
+              </div>
             </div>
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <User className="h-4 w-4 text-gray-500" />
-                <span className="text-gray-700">{user?.username}</span>
-              </div>
+              <Link href="/profile">
+                <Button variant="outline" size="sm">
+                  <User className="h-4 w-4 mr-2" />
+                  Profilo
+                </Button>
+              </Link>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
-                onClick={handleLogout}
+                onClick={() => logoutMutation.mutate()}
                 disabled={logoutMutation.isPending}
               >
-                <LogOut className="h-4 w-4" />
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
               </Button>
             </div>
           </div>
         </div>
-      </nav>
+      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Section */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Welcome back, {user?.username}!
-          </h2>
-          <p className="text-gray-600">
-            Manage your tickets and track your progress across all games.
-          </p>
-        </div>
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-8">
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="overview">Panoramica</TabsTrigger>
+            <TabsTrigger value="history">Storico Giocatori</TabsTrigger>
+            <TabsTrigger value="selections">Scelte Squadre</TabsTrigger>
+            <TabsTrigger value="games">Giochi Disponibili</TabsTrigger>
+          </TabsList>
 
-        {/* Active Games Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {activeGames.length === 0 ? (
-            <div className="col-span-full">
-              <Card className="text-center p-8">
+          <TabsContent value="overview" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Trophy className="h-5 w-5 mr-2" />
+                  Panoramica Giochi
+                </CardTitle>
+                <CardDescription>
+                  Vista generale delle tue partecipazioni ai giochi
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <GameOverviewTable
+                  userTeamSelections={userTeamSelections}
+                  teams={teams}
+                  onGameClick={setSelectedGameData}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="history" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Calendar className="h-5 w-5 mr-2" />
+                  Storico Giocatori
+                </CardTitle>
+                <CardDescription>
+                  Cronologia dettagliata delle tue partecipazioni
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {userTeamSelections?.map((gameData) => (
+                  <PlayerHistoryTable
+                    key={gameData.game.id}
+                    game={gameData.game}
+                    userTickets={gameData.ticketSelections?.map((ts: any) => ts.ticket)}
+                    allTeamSelections={userTeamSelections}
+                    teams={teams}
+                  />
+                ))}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="selections" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Target className="h-5 w-5 mr-2" />
+                  Scelte Squadre
+                </CardTitle>
+                <CardDescription>
+                  Le tue selezioni di squadre per ogni gioco e round
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {userTeamSelections?.map((gameData) => (
+                  <div key={gameData.game.id} className="mb-8">
+                    <PlayerHistoryTable
+                      game={gameData.game}
+                      userTickets={gameData.ticketSelections?.map((ts: any) => ts.ticket)}
+                      allTeamSelections={userTeamSelections}
+                      teams={teams}
+                    />
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="games" className="space-y-6">
+            {/* Active Games */}
+            {activeGames.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-green-600">Giochi Attivi</CardTitle>
+                  <CardDescription>
+                    Giochi in corso a cui puoi partecipare
+                  </CardDescription>
+                </CardHeader>
                 <CardContent>
-                  <Trophy className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No Active Games</h3>
-                  <p className="text-gray-600">
-                    There are no active games at the moment. Check back later for new tournaments!
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {activeGames.map((game) => (
+                      <GameCard key={game.id} game={game} />
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Registration Games */}
+            {registrationGames.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-blue-600">Registrazioni Aperte</CardTitle>
+                  <CardDescription>
+                    Giochi in fase di registrazione
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {registrationGames.map((game) => (
+                      <GameCard key={game.id} game={game} />
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* No Games Available */}
+            {activeGames.length === 0 && registrationGames.length === 0 && (
+              <Card>
+                <CardContent className="text-center py-8">
+                  <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-600 mb-2">
+                    Nessun gioco disponibile
+                  </h3>
+                  <p className="text-gray-500">
+                    Al momento non ci sono giochi attivi o in registrazione
                   </p>
                 </CardContent>
               </Card>
-            </div>
-          ) : (
-            activeGames.map((game) => (
-              <GameCard key={game.id} game={game} />
-            ))
-          )}
-        </div>
-
-        {/* Player Game Data */}
-        <div className="bg-white rounded-xl shadow-sm border">
-          <Tabs defaultValue="history" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="history" className="flex items-center gap-2">
-                <Target className="h-4 w-4" />
-                Storico Dettagliato
-              </TabsTrigger>
-              <TabsTrigger value="overview" className="flex items-center gap-2">
-                <Trophy className="h-4 w-4" />
-                Panoramica Giochi
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="history" className="p-6">
-              {userGames.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  Non hai ancora partecipato a nessun gioco
-                </div>
-              ) : (
-                <div className="space-y-8">
-                  {userGames.map((game) => {
-                    // Get user tickets for this game from userTeamSelections
-                    const gameData = Array.isArray(userTeamSelections) ? 
-                      userTeamSelections.find((gd: any) => gd.game?.id === game.id) : null;
-                    const userTickets = gameData?.ticketSelections?.map((ts: any) => ts.ticket) || [];
-                    
-                    return (
-                      <PlayerHistoryTable
-                        key={game.id}
-                        game={game}
-                        userTickets={userTickets}
-                        allTeamSelections={Array.isArray(userTeamSelections) ? userTeamSelections : []}
-                        teams={teams}
-                      />
-                    );
-                  })}
-                </div>
-              )}
-            </TabsContent>
-            
-            <TabsContent value="overview" className="p-6">
-              {userGames.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  Non hai ancora partecipato a nessun gioco
-                </div>
-              ) : selectedGameData ? (
-                <DetailedGameView 
-                  gameData={selectedGameData}
-                  teams={teams}
-                  onBack={() => setSelectedGameData(null)}
-                />
-              ) : (
-                <GameOverviewTable 
-                  userTeamSelections={Array.isArray(userTeamSelections) ? userTeamSelections : []}
-                  teams={teams}
-                  onGameClick={(gameData) => setSelectedGameData(gameData)}
-                />
-              )}
-            </TabsContent>
-          </Tabs>
-        </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
