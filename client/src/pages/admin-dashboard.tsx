@@ -462,7 +462,7 @@ function PlayerHistoryTable({
     return "bg-gray-50 text-gray-500 border border-gray-200";
   };
 
-  // Get cell content - now with privacy logic for other players' selections
+  // Get cell content - Admin sees everything, no privacy restrictions
   const getCellContent = (ticket: any, round: number, currentUserId?: number) => {
     const selection = selectionsByTicket[ticket.id]?.[round];
     
@@ -471,13 +471,8 @@ function PlayerHistoryTable({
       return "—";
     }
     
-    // Privacy logic: Hide other players' selections for rounds that are still open for selection
-    const isCurrentRoundOpen = round === game.currentRound && game.roundStatus === "selection_open";
-    const isOtherPlayersTicket = currentUserId && ticket.userId !== currentUserId;
-    
-    if (isCurrentRoundOpen && isOtherPlayersTicket && selection) {
-      return "🔒"; // Hidden selection indicator
-    }
+    // Admin users see all selections without restrictions
+    // No privacy logic applied in admin dashboard
     
     // If selection exists and should be visible, show team logo
     if (selection) {

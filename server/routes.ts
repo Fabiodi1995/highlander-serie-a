@@ -1113,8 +1113,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Privacy check: hide other players' selections for open rounds unless user is admin
           if (isCurrentRoundOpen && round === game.currentRound && ticket.userId !== currentUserId && !isCurrentUserAdmin) {
+            console.log(`🔒 Hiding selection: ticket ${ticket.id} user ${ticket.userId} round ${round} (current user: ${currentUserId}, admin: ${isCurrentUserAdmin})`);
             processedSelections[round] = { ...sel, teamId: null, hidden: true };
           } else {
+            console.log(`👁️ Showing selection: ticket ${ticket.id} user ${ticket.userId} round ${round} (current user: ${currentUserId}, admin: ${isCurrentUserAdmin})`);
             processedSelections[round] = sel;
           }
         }
