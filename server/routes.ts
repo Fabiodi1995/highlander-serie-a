@@ -371,6 +371,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Ticket count must be between 1 and 10" });
       }
       
+      // CRITICAL FIX: Remove existing tickets for this user in this game
+      const existingTickets = await storage.getTicketsByUser(userId, gameId);
+      for (const existingTicket of existingTickets) {
+        // Delete team selections for this ticket first
+        const selections = await storage.getTeamSelectionsByTicket(existingTicket.id);
+        for (const selection of selections) {
+          await storage.deleteTeamSelection(selection.id);
+        }
+        // Delete the ticket
+        await storage.deleteTicket(existingTicket.id);
+      }
+      
+      // Create new tickets (replacement)
       const tickets = [];
       for (let i = 0; i < count; i++) {
         const ticket = await storage.createTicket(gameId, userId);

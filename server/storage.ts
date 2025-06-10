@@ -42,6 +42,7 @@ export interface IStorage {
   getTicketsByGame(gameId: number): Promise<Ticket[]>;
   getTicketsByUser(userId: number, gameId?: number): Promise<Ticket[]>;
   eliminateTicket(ticketId: number, round: number): Promise<void>;
+  deleteTicket(ticketId: number): Promise<void>;
   
   // Team management
   getAllTeams(): Promise<Team[]>;
@@ -59,6 +60,7 @@ export interface IStorage {
   getTeamSelectionsByTicket(ticketId: number): Promise<TeamSelection[]>;
   getTeamSelectionsByRound(gameId: number, round: number): Promise<TeamSelection[]>;
   hasTeamBeenSelected(ticketId: number, teamId: number): Promise<boolean>;
+  deleteTeamSelection(selectionId: number): Promise<void>;
   
   sessionStore: any;
 }
@@ -287,6 +289,10 @@ export class DatabaseStorage implements IStorage {
       .where(eq(tickets.id, ticketId));
   }
 
+  async deleteTicket(ticketId: number): Promise<void> {
+    await db.delete(tickets).where(eq(tickets.id, ticketId));
+  }
+
   // Team management
   async getAllTeams(): Promise<Team[]> {
     return await db.select().from(teams).orderBy(asc(teams.name));
@@ -421,6 +427,10 @@ export class DatabaseStorage implements IStorage {
       .limit(1);
     
     return !!selection;
+  }
+
+  async deleteTeamSelection(selectionId: number): Promise<void> {
+    await db.delete(teamSelections).where(eq(teamSelections.id, selectionId));
   }
 }
 
