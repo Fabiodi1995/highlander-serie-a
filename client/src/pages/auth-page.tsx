@@ -190,9 +190,38 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Email *</FormLabel>
                             <FormControl>
-                              <Input type="email" placeholder="la-tua-email@esempio.it" {...field} />
+                              <div className="relative">
+                                <Input 
+                                  type="email" 
+                                  placeholder="la-tua-email@esempio.it" 
+                                  {...field}
+                                  onChange={(e) => {
+                                    field.onChange(e);
+                                    validateEmail(e.target.value);
+                                  }}
+                                />
+                                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                  {emailValidation.isChecking && (
+                                    <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                                  )}
+                                  {!emailValidation.isChecking && field.value && (
+                                    emailValidation.isValid ? (
+                                      <CheckCircle className="h-4 w-4 text-green-500" />
+                                    ) : (
+                                      <XCircle className="h-4 w-4 text-red-500" />
+                                    )
+                                  )}
+                                </div>
+                              </div>
                             </FormControl>
                             <FormMessage />
+                            {emailValidation.message && field.value && (
+                              <FormDescription className={
+                                emailValidation.isValid ? "text-green-600" : "text-red-600"
+                              }>
+                                {emailValidation.message}
+                              </FormDescription>
+                            )}
                           </FormItem>
                         )}
                       />
@@ -204,9 +233,37 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Username *</FormLabel>
                             <FormControl>
-                              <Input placeholder="Scegli un username" {...field} />
+                              <div className="relative">
+                                <Input 
+                                  placeholder="Scegli un username" 
+                                  {...field}
+                                  onChange={(e) => {
+                                    field.onChange(e);
+                                    validateUsername(e.target.value);
+                                  }}
+                                />
+                                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                  {usernameValidation.isChecking && (
+                                    <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                                  )}
+                                  {!usernameValidation.isChecking && field.value && (
+                                    usernameValidation.isValid ? (
+                                      <CheckCircle className="h-4 w-4 text-green-500" />
+                                    ) : (
+                                      <XCircle className="h-4 w-4 text-red-500" />
+                                    )
+                                  )}
+                                </div>
+                              </div>
                             </FormControl>
                             <FormMessage />
+                            {usernameValidation.message && field.value && (
+                              <FormDescription className={
+                                usernameValidation.isValid ? "text-green-600" : "text-red-600"
+                              }>
+                                {usernameValidation.message}
+                              </FormDescription>
+                            )}
                           </FormItem>
                         )}
                       />
@@ -417,7 +474,13 @@ export default function AuthPage() {
                       <Button 
                         type="submit" 
                         className="w-full mt-6" 
-                        disabled={registerMutation.isPending}
+                        disabled={
+                          registerMutation.isPending ||
+                          !usernameValidation.isValid ||
+                          !emailValidation.isValid ||
+                          usernameValidation.isChecking ||
+                          emailValidation.isChecking
+                        }
                       >
                         {registerMutation.isPending ? "Creazione account..." : "Registrati"}
                       </Button>
