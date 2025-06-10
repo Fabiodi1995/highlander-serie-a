@@ -8,7 +8,8 @@ import {
   Settings,
   Users,
   Menu,
-  BookOpen
+  BookOpen,
+  BarChart3
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +22,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { icon: Home, label: "Dashboard", href: "/" },
+  { icon: BarChart3, label: "Analytics", href: "/analytics" },
   { icon: BookOpen, label: "Regolamento", href: "/rules" },
   { icon: Users, label: "Admin", href: "/admin", adminOnly: true },
   { icon: User, label: "Profilo", href: "/profile" },

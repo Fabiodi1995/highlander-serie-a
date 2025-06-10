@@ -9,6 +9,11 @@ import { ProtectedRoute } from "@/lib/protected-route";
 import { Layout } from "@/components/layout/layout";
 import { CookieConsentBanner } from "@/components/ui/cookie-consent-banner";
 import { LegalFooter } from "@/components/ui/legal-footer";
+import { NotificationProvider } from "@/hooks/use-notifications";
+import { AnalyticsProvider } from "@/hooks/use-analytics";
+import { AchievementsProvider } from "@/hooks/use-achievements";
+import { SocialProvider } from "@/hooks/use-social";
+import { PWAProvider } from "@/hooks/use-pwa";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import PlayerDashboard from "@/pages/player-dashboard";
@@ -19,6 +24,7 @@ import RulesPage from "@/pages/rules-page";
 import PrivacyPolicyPage from "@/pages/privacy-policy";
 import TermsOfServicePage from "@/pages/terms-of-service";
 import CookiePolicyPage from "@/pages/cookie-policy";
+import AnalyticsDashboard from "@/pages/analytics-dashboard";
 
 function Router() {
   return (
@@ -30,6 +36,7 @@ function Router() {
       <ProtectedRoute path="/" component={HomePage} />
       <ProtectedRoute path="/profile" component={ProfilePage} />
       <ProtectedRoute path="/rules" component={RulesPage} />
+      <ProtectedRoute path="/analytics" component={AnalyticsDashboard} />
       <ProtectedRoute path="/game/:id" component={GameInterface} />
       <Route component={NotFound} />
     </Switch>
@@ -51,14 +58,24 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="system" storageKey="highlander-ui-theme">
         <AuthProvider>
-          <TooltipProvider>
-            <Layout>
-              <Router />
-              <LegalFooter />
-            </Layout>
-            <CookieConsentBanner />
-            <Toaster />
-          </TooltipProvider>
+          <PWAProvider>
+            <NotificationProvider>
+              <AnalyticsProvider>
+                <AchievementsProvider>
+                  <SocialProvider>
+                    <TooltipProvider>
+                      <Layout>
+                        <Router />
+                        <LegalFooter />
+                      </Layout>
+                      <CookieConsentBanner />
+                      <Toaster />
+                    </TooltipProvider>
+                  </SocialProvider>
+                </AchievementsProvider>
+              </AnalyticsProvider>
+            </NotificationProvider>
+          </PWAProvider>
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
