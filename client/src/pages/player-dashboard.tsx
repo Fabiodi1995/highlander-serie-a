@@ -70,12 +70,12 @@ function PlayerHistoryTable({
 }) {
   const { user: currentUser } = useAuth();
   
-  if (!allTickets || !allTeamSelections || !teams || !users) {
+  if (!allTickets || !teams || !users) {
     return <div className="text-center py-4">Caricamento dati...</div>;
   }
 
-  // Filter tickets for this game - show ALL tickets, not just user's tickets
-  const gameTickets = allTickets.filter(ticket => ticket.gameId === game.id);
+  // Use all tickets directly - they're already filtered for this game by the API
+  const gameTickets = allTickets;
 
   // Create rounds array (startRound to currentRound)
   const gameRounds: number[] = [];
@@ -88,14 +88,14 @@ function PlayerHistoryTable({
     return teams.find(t => t.id === teamId);
   };
 
-  // Get user name helper
-  const getUserName = (userId: number) => {
-    return users.find(u => u.id === userId)?.username || 'N/A';
+  // Get user name helper - tickets now include user data directly
+  const getUserName = (ticket: any) => {
+    return ticket.user?.username || 'N/A';
   };
 
   // Get cell style based on ticket status and round
   const getCellStyle = (ticket: any, round: number) => {
-    const selection = ticket.selections?.[round];
+    const selection = ticket.selections?.[round.toString()];
     
     // If ticket was eliminated before this round - show red
     if (ticket.eliminatedInRound && ticket.eliminatedInRound < round) {
@@ -175,7 +175,7 @@ function PlayerHistoryTable({
         </div>
       </div>
 
-      {allTickets.length === 0 ? (
+      {gameTickets.length === 0 ? (
         <div className="text-center py-4 text-gray-500">
           Nessun ticket per questo gioco
         </div>
@@ -194,7 +194,7 @@ function PlayerHistoryTable({
               </tr>
             </thead>
             <tbody>
-              {allTickets
+              {gameTickets
                 .sort((a, b) => {
                   // Calculate rounds survived for each ticket
                   const roundsA = a.eliminatedInRound || (game.currentRound + 1);
@@ -209,7 +209,7 @@ function PlayerHistoryTable({
                 .map((ticket) => (
                 <tr key={ticket.id} className="border-b hover:bg-gray-50">
                   <td className="p-3 font-medium">
-                    {getUserName(ticket.userId)}
+                    {getUserName(ticket)}
                   </td>
                   <td className="p-3">
                     <div className="flex items-center space-x-2">
