@@ -378,11 +378,13 @@ function PlayerHistoryTable({
   teams: Team[] | undefined; 
   users: UserType[] | undefined; 
 }) {
+  const { user: currentUser } = useAuth();
+  
   if (!allTickets || !allTeamSelections || !teams || !users) {
     return <div className="text-center py-4">Caricamento dati...</div>;
   }
 
-  // Filter tickets for this game
+  // Filter tickets for this game - show ALL tickets, not just specific player's
   const gameTickets = allTickets.filter(ticket => ticket.gameId === game.id);
   
   // Filter team selections for this game
@@ -460,8 +462,8 @@ function PlayerHistoryTable({
     return "bg-gray-50 text-gray-500 border border-gray-200";
   };
 
-  // Get cell content
-  const getCellContent = (ticket: any, round: number) => {
+  // Get cell content - now with privacy logic for other players' selections
+  const getCellContent = (ticket: any, round: number, currentUserId?: number) => {
     const selection = selectionsByTicket[ticket.id]?.[round];
     
     // If ticket was eliminated before this round
@@ -469,7 +471,15 @@ function PlayerHistoryTable({
       return "—";
     }
     
-    // If selection exists, show team logo
+    // Privacy logic: Hide other players' selections for rounds that are still open for selection
+    const isCurrentRoundOpen = round === game.currentRound && game.roundStatus === "selection_open";
+    const isOtherPlayersTicket = currentUserId && ticket.userId !== currentUserId;
+    
+    if (isCurrentRoundOpen && isOtherPlayersTicket && selection) {
+      return "🔒"; // Hidden selection indicator
+    }
+    
+    // If selection exists and should be visible, show team logo
     if (selection) {
       const team = getTeam(selection.teamId);
       if (team) {
@@ -553,7 +563,7 @@ function PlayerHistoryTable({
                       key={round} 
                       className={`text-center text-sm ${getCellStyle(ticket, round)}`}
                     >
-                      {getCellContent(ticket, round)}
+                      {getCellContent(ticket, round, currentUser?.id)}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -580,6 +590,10 @@ function PlayerHistoryTable({
         <div className="flex items-center space-x-2">
           <div className="w-4 h-4 bg-orange-100 border border-orange-200 rounded"></div>
           <span>In attesa selezione</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <span className="text-lg">🔒</span>
+          <span>Selezione nascosta (round aperto)</span>
         </div>
       </div>
     </div>
