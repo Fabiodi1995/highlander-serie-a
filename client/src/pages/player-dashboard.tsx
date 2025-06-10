@@ -642,17 +642,12 @@ export default function PlayerDashboard() {
     queryKey: ["/api/user/team-selections"],
   });
 
-  // Fetch available games
-  const { data: availableGames, isLoading: gamesLoading } = useQuery<Game[]>({
-    queryKey: ["/api/games"],
-  });
-
   // Fetch teams
   const { data: teams, isLoading: teamsLoading } = useQuery<Team[]>({
     queryKey: ["/api/teams"],
   });
 
-  const isLoading = selectionsLoading || gamesLoading || teamsLoading;
+  const isLoading = selectionsLoading || teamsLoading;
 
   if (isLoading) {
     return (
@@ -665,8 +660,19 @@ export default function PlayerDashboard() {
     );
   }
 
-  const activeGames = availableGames?.filter(game => game.status === 'active') || [];
-  const registrationGames = availableGames?.filter(game => game.status === 'registration') || [];
+  // FIXED: Extract unique games from user selections only (no duplicates)
+  const userGames = userTeamSelections?.map(selection => selection.game) || [];
+  const uniqueGamesMap = new Map();
+  
+  userGames.forEach(game => {
+    if (game && !uniqueGamesMap.has(game.id)) {
+      uniqueGamesMap.set(game.id, game);
+    }
+  });
+  
+  const uniqueGames = Array.from(uniqueGamesMap.values());
+  const activeGames = uniqueGames.filter(game => game.status === 'active');
+  const registrationGames = uniqueGames.filter(game => game.status === 'registration');
 
   if (selectedGameData) {
     return (
