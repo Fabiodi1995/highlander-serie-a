@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { insertGameSchema, insertTeamSelectionSchema } from "@shared/schema";
+import { checkGameEndConditions, finalizeGame } from "./game-logic";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
