@@ -662,20 +662,28 @@ export default function AdminDashboard() {
 
   const assignTicketMutation = useMutation({
     mutationFn: async ({ gameId, userId, count }: { gameId: number; userId: number; count: number }) => {
+      console.log(`Attempting to assign ${count} tickets to user ${userId} for game ${gameId}`);
       const res = await apiRequest("POST", `/api/games/${gameId}/tickets`, { userId, count });
+      if (!res.ok) {
+        const errorData = await res.text();
+        console.error(`Ticket assignment failed: ${res.status} - ${errorData}`);
+        throw new Error(`Errore ${res.status}: ${errorData}`);
+      }
       return await res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/games"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/all-tickets"] });
       toast({
         title: "Successo",
         description: "Ticket assegnati con successo",
       });
     },
     onError: (error: Error) => {
+      console.error("Ticket assignment error:", error);
       toast({
-        title: "Errore",
-        description: error.message,
+        title: "Errore nell'assegnazione ticket",
+        description: error.message || "Errore sconosciuto",
         variant: "destructive",
       });
     },

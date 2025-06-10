@@ -338,7 +338,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/games/:id/tickets", async (req, res) => {
-    if (!req.isAuthenticated() || !req.user!.isAdmin) return res.sendStatus(403);
+    console.log(`Ticket assignment request - Authenticated: ${req.isAuthenticated()}, User: ${req.user?.username}, IsAdmin: ${req.user?.isAdmin}`);
+    
+    if (!req.isAuthenticated()) {
+      console.log("User not authenticated for ticket assignment");
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    
+    if (!req.user!.isAdmin) {
+      console.log(`User ${req.user!.username} is not admin - cannot assign tickets`);
+      return res.status(403).json({ message: "Admin access required" });
+    }
     
     try {
       const gameId = parseInt(req.params.id);
