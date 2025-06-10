@@ -1352,7 +1352,7 @@ export default function AdminDashboard() {
                                 case 'ticketDisplay':
                                   return <span className="font-mono text-blue-600">{item.ticketDisplay}</span>;
                                 case 'round':
-                                  return <span className="font-mono">G{item.round}</span>;
+                                  return <span className="font-mono">Giornata {item.round}</span>;
                                 case 'teamName':
                                   return (
                                     <div className="flex items-center space-x-2">
