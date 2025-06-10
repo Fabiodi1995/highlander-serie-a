@@ -19,7 +19,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { TeamLogo } from "@/components/team-logo";
-import { SortableTable, StatusBadge } from "@/components/ui/sortable-table";
+import { ModernTable, StatusBadge } from "@/components/ui/modern-table";
 import { enhanceTicketsWithStatus, getStatusSortOrder, type TicketWithStatus } from "@/utils/ticket-status";
 import type { Game, User as UserType, Team, TeamSelection, Ticket, Match } from "@shared/schema";
 import { z } from "zod";
@@ -1265,7 +1265,7 @@ export default function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 {allTickets && games ? (
-                  <SortableTable
+                  <ModernTable
                     data={allTickets.map((ticket: any) => {
                       const game = games.find(g => g.id === ticket.gameId);
                       const enhancedTickets = game ? enhanceTicketsWithStatus([ticket], game) : [];
@@ -1280,29 +1280,32 @@ export default function AdminDashboard() {
                       };
                     })}
                     columns={[
-                      { key: 'id', label: 'ID Ticket', sortable: true },
+                      { key: 'id', label: 'ID Ticket', sortable: true, width: '100px' },
                       { key: 'username', label: 'Giocatore', sortable: true },
                       { key: 'gameName', label: 'Gioco', sortable: true },
-                      { key: 'status', label: 'Stato', sortable: true },
-                      { key: 'eliminatedInRound', label: 'Round Eliminazione', sortable: true }
+                      { key: 'status', label: 'Stato', sortable: true, align: 'center' },
+                      { key: 'eliminatedInRound', label: 'Round Eliminazione', sortable: true, align: 'center' }
                     ]}
                     renderCell={(ticket, columnKey) => {
                       switch (columnKey) {
                         case 'id':
-                          return `#${ticket.id}`;
+                          return <span className="font-mono text-blue-600">#{ticket.id}</span>;
                         case 'username':
-                          return ticket.username;
+                          return <span className="font-medium">{ticket.username}</span>;
                         case 'gameName':
                           return ticket.gameName;
                         case 'status':
                           return <StatusBadge status={ticket.status || 'active'} />;
                         case 'eliminatedInRound':
-                          return ticket.eliminatedInRound || 'N/A';
+                          return ticket.eliminatedInRound ? 
+                            <span className="font-mono">Round {ticket.eliminatedInRound}</span> : 
+                            <span className="text-gray-400">—</span>;
                         default:
                           return '';
                       }
                     }}
-                    defaultSortKey="statusSortOrder"
+                    defaultSortKey="status"
+                    defaultSortDirection="asc"
                     customSortFn={(a, b, key, direction) => {
                       if (key === 'status') {
                         const aOrder = a.statusSortOrder || 99;
@@ -1311,8 +1314,10 @@ export default function AdminDashboard() {
                       }
                       return 0;
                     }}
+                    searchFields={['username', 'gameName']}
+                    searchPlaceholder="Cerca per giocatore o gioco..."
                     emptyMessage="Nessun ticket trovato"
-                    initialPageSize={20}
+                    tabKey="tickets"
                   />
                 ) : (
                   <div className="text-center py-8">
@@ -1381,28 +1386,35 @@ export default function AdminDashboard() {
                 {users && (
                   <div className="mt-6">
                     <h4 className="text-lg font-medium mb-4">Utenti Registrati</h4>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Username</TableHead>
-                          <TableHead>ID</TableHead>
-                          <TableHead>Admin</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {users.map((user) => (
-                          <TableRow key={user.id}>
-                            <TableCell>{user.username}</TableCell>
-                            <TableCell>#{user.id}</TableCell>
-                            <TableCell>
+                    <ModernTable
+                      data={users}
+                      columns={[
+                        { key: 'username', label: 'Username', sortable: true },
+                        { key: 'id', label: 'ID', sortable: true, width: '80px', align: 'center' },
+                        { key: 'isAdmin', label: 'Ruolo', sortable: true, align: 'center' }
+                      ]}
+                      renderCell={(user, columnKey) => {
+                        switch (columnKey) {
+                          case 'username':
+                            return <span className="font-medium">{user.username}</span>;
+                          case 'id':
+                            return <span className="font-mono text-blue-600">#{user.id}</span>;
+                          case 'isAdmin':
+                            return (
                               <Badge variant={user.isAdmin ? "default" : "secondary"}>
                                 {user.isAdmin ? "Admin" : "Giocatore"}
                               </Badge>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                            );
+                          default:
+                            return '';
+                        }
+                      }}
+                      searchFields={['username']}
+                      searchPlaceholder="Cerca utente..."
+                      defaultSortKey="username"
+                      compact={true}
+                      tabKey="overview-users"
+                    />
                   </div>
                 )}
               </CardContent>
