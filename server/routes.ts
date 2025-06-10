@@ -1066,6 +1066,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/games/:gameId/player-history", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
+    console.log(`🔍 Player history request: User ${req.user!.id} (admin: ${req.user!.isAdmin}) for game ${req.params.gameId}`);
+    
     const gameId = parseInt(req.params.gameId);
     const currentUserId = req.user!.id;
     
