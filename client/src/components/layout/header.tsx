@@ -126,82 +126,76 @@ export function Header() {
           )}
 
           {/* User Menu */}
-          <div className="flex items-center space-x-4">
-            {user ? (
-              <>
-                {/* Notifications */}
-                <NotificationCenter
-                  notifications={notifications}
-                  onMarkAsRead={handleMarkAsRead}
-                  onClearAll={handleClearAll}
-                />
+          {user ? (
+            <div className="flex items-center space-x-4">
+              {/* Notifications */}
+              <NotificationCenter
+                notifications={notifications}
+                onMarkAsRead={handleMarkAsRead}
+                onClearAll={handleClearAll}
+              />
 
-                {/* Theme Toggle */}
-                <ThemeToggle />
+              {/* Theme Toggle */}
+              <ThemeToggle />
 
-                {/* User Role Badge */}
-                <Badge variant={user.isAdmin ? "default" : "secondary"} className="hidden sm:flex">
-                  {user.isAdmin ? "Admin" : "Giocatore"}
-                </Badge>
+              {/* User Role Badge */}
+              <Badge variant={user.isAdmin ? "default" : "secondary"} className="hidden sm:flex">
+                {user.isAdmin ? "Admin" : "Giocatore"}
+              </Badge>
 
-                {/* User Dropdown */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                      <Avatar className="h-9 w-9">
-                        <AvatarFallback className="bg-green-100 text-green-800 font-semibold">
-                          {getUserInitials(user.username)}
-                        </AvatarFallback>
-                      </Avatar>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56" align="end" forceMount>
-                    <DropdownMenuLabel className="font-normal">
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{user.username}</p>
-                        <p className="text-xs leading-none text-muted-foreground">
-                          {user.isAdmin ? "Amministratore" : "Giocatore"}
-                        </p>
-                      </div>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <Link href="/profile">
-                      <DropdownMenuItem>
-                        <User className="mr-2 h-4 w-4" />
-                        <span>Il Mio Profilo</span>
-                      </DropdownMenuItem>
-                    </Link>
-                    <DropdownMenuItem disabled>
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>Impostazioni</span>
+              {/* User Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                    <Avatar className="h-9 w-9">
+                      <AvatarFallback className="bg-green-100 text-green-800 font-semibold">
+                        {getUserInitials(user.username)}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{user.username}</p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user.isAdmin ? "Amministratore" : "Giocatore"}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <Link href="/profile">
+                    <DropdownMenuItem>
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Il Mio Profilo</span>
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem 
-                      onClick={handleLogout}
-                      className="text-red-600 focus:text-red-600"
-                    >
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Disconnetti</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </>
-            ) : (
-              <Link href="/auth">
-                <Button>Accedi</Button>
-              </Link>
-            )}
+                  </Link>
+                  <DropdownMenuItem disabled>
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Impostazioni</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={handleLogout}
+                    className="text-red-600 focus:text-red-600"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Disconnetti</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-            {/* Mobile Menu Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="md:hidden"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
-          </div>
+              {/* Mobile Menu Button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="md:hidden"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              >
+                {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </Button>
+            </div>
+          ) : null}
         </div>
 
         {/* Mobile Navigation - Only for authenticated users */}
