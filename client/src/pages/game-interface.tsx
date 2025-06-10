@@ -131,6 +131,54 @@ export default function GameInterface() {
     );
   }
 
+  // CRITICAL FIX: Prevent access during registration phase
+  if (game.status === "registration") {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <nav className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center space-x-4">
+                <Link href="/">
+                  <Button variant="ghost" size="sm">
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                </Link>
+                <h1 className="text-xl font-bold text-primary">{game.name}</h1>
+              </div>
+              <span className="text-gray-700">{user?.username}</span>
+            </div>
+          </div>
+        </nav>
+        
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Card className="border-orange-200 bg-orange-50">
+            <CardHeader>
+              <CardTitle className="text-orange-800">Gioco in Fase di Registrazione</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <p className="text-orange-700">
+                  Questo gioco è ancora in fase di registrazione. Le selezioni delle squadre non sono ancora disponibili.
+                </p>
+                <p className="text-orange-600 text-sm">
+                  Attendi che l'amministratore avvii il gioco per iniziare a selezionare le squadre.
+                </p>
+                <div className="pt-4">
+                  <Link href="/">
+                    <Button variant="outline" className="border-orange-300 text-orange-700 hover:bg-orange-100">
+                      Torna alla Dashboard
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Navigation Header */}

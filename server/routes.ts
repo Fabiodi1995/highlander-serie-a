@@ -404,6 +404,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete ticket endpoint for admin
+  app.delete("/api/tickets/:id", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user!.isAdmin) return res.sendStatus(403);
+    
+    try {
+      const ticketId = parseInt(req.params.id);
+      
+      // Get ticket to verify game ownership
+      const tickets = await storage.getTicketsByUser(0); // Get all tickets
+      const ticket = tickets.find(t => t.id === ticketId);
+      
+      if (!ticket) {
+        return res.status(404).json({ message: "Ticket not found" });
+      }
+      
+      const game = await storage.getGame(ticket.gameId);
+      if (!game || game.createdBy !== req.user!.id) {
+        return res.status(403).json({ message: "Access denied - not your game" });
+      }
+      
+      if (game.status !== "registration") {
+        return res.status(400).json({ message: "Cannot delete tickets - registration is closed" });
+      }
+      
+      // Delete team selections for this ticket first
+      const selections = await storage.getTeamSelectionsByTicket(ticketId);
+      for (const selection of selections) {
+        await storage.deleteTeamSelection(selection.id);
+      }
+      
+      // Delete the ticket
+      await storage.deleteTicket(ticketId);
+      
+      res.status(200).json({ message: "Ticket deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting ticket:", error);
+      res.status(500).json({ message: "Failed to delete ticket" });
+    }
+  });
+
   // Teams API
   app.get("/api/teams", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
@@ -783,9 +823,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const teamByName = new Map(allTeams.map(t => [t.name, t]));
         
         const dbMatches = [];
-        for (const match of roundMatches.slice(0, 10)) { // Ensure exactly 10 matches
-          const homeTeam = teamByName.get(match['Squadra Casa']);
-          const awayTeam = teamByName.get(match['Squadra Trasferta']);
+        for (const matchItem of roundMatches.slice(0, 10)) { // Ensure exactly 10 matches
+          const matchData = matchItem as any; // Type assertion for Excel data
+          const homeTeam = teamByName.get(matchData['Squadra Casa']);
+          const awayTeam = teamByName.get(matchData['Squadra Trasferta']);
           
           if (homeTeam && awayTeam) {
             dbMatches.push({
@@ -795,7 +836,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               homeScore: null,
               awayScore: null,
               result: null,
-              matchDate: new Date(match.Data || new Date()),
+              matchDate: new Date(matchData.Data || new Date()),
               isCompleted: false
             });
           }

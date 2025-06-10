@@ -681,6 +681,28 @@ export default function AdminDashboard() {
     },
   });
 
+  const deleteTicketMutation = useMutation({
+    mutationFn: async (ticketId: number) => {
+      const res = await apiRequest("DELETE", `/api/tickets/${ticketId}`);
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/games"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/all-tickets"] });
+      toast({
+        title: "Successo",
+        description: "Ticket eliminato con successo",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Errore",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const lockRoundMutation = useMutation({
     mutationFn: async ({ gameId, forceConfirm }: { gameId: number; forceConfirm?: boolean }) => {
       const res = await apiRequest("POST", `/api/games/${gameId}/lock-round`, { forceConfirm });
@@ -1292,7 +1314,8 @@ export default function AdminDashboard() {
                       { key: 'username', label: 'Giocatore', sortable: true },
                       { key: 'gameName', label: 'Gioco', sortable: true },
                       { key: 'status', label: 'Stato', sortable: true, align: 'center' },
-                      { key: 'eliminatedInRound', label: 'Round Eliminazione', sortable: true, align: 'center' }
+                      { key: 'eliminatedInRound', label: 'Round Eliminazione', sortable: true, align: 'center' },
+                      { key: 'actions', label: 'Azioni', sortable: false, align: 'center', width: '100px' }
                     ]}
                     renderCell={(ticket, columnKey) => {
                       switch (columnKey) {
