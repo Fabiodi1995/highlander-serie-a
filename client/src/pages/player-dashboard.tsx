@@ -20,6 +20,7 @@ function PlayerHistoryTableWrapper({
   game: Game; 
   teams: Team[] | undefined; 
 }) {
+  const { user: currentUser } = useAuth();
   const { data: gameHistory, isLoading } = useQuery<any>({
     queryKey: [`/api/games/${game.id}/player-history`],
   });
@@ -38,15 +39,20 @@ function PlayerHistoryTableWrapper({
     return <div className="text-center py-4">Dati dello storico non validi</div>;
   }
 
-  // Extract users safely
-  const users = gameHistory.tickets
+  // Filter tickets to show only current user's tickets
+  const userTickets = gameHistory.tickets.filter((ticket: any) => 
+    ticket.userId === currentUser?.id
+  );
+
+  // Extract users safely (only current user)
+  const users = userTickets
     .map((t: any) => t.user)
     .filter((user: any) => user != null);
 
   return (
     <PlayerHistoryTable
       game={gameHistory.game}
-      allTickets={gameHistory.tickets}
+      allTickets={userTickets}
       allTeamSelections={[]}
       teams={teams}
       users={users}
