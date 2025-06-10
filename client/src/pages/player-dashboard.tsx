@@ -55,6 +55,54 @@ function PlayerHistoryTableWrapper({
   );
 }
 
+// User Team Selections Table Wrapper - shows ONLY user's tickets for team selections view
+function UserSelectionsTableWrapper({ 
+  game, 
+  teams 
+}: { 
+  game: Game; 
+  teams: Team[] | undefined; 
+}) {
+  const { user: currentUser } = useAuth();
+  const { data: gameHistory, isLoading } = useQuery<any>({
+    queryKey: [`/api/games/${game.id}/player-history`],
+  });
+
+  if (isLoading) {
+    return <div className="text-center py-4">Caricamento selezioni...</div>;
+  }
+
+  if (!gameHistory) {
+    return <div className="text-center py-4">Impossibile caricare i dati delle selezioni</div>;
+  }
+
+  // Safety checks for data integrity
+  if (!gameHistory.tickets || !Array.isArray(gameHistory.tickets)) {
+    console.error('Invalid tickets data:', gameHistory);
+    return <div className="text-center py-4">Dati delle selezioni non validi</div>;
+  }
+
+  // Filter tickets to show only current user's tickets
+  const userTickets = gameHistory.tickets.filter((ticket: any) => 
+    ticket.userId === currentUser?.id
+  );
+
+  // Extract users safely (only current user)
+  const users = userTickets
+    .map((t: any) => t.user)
+    .filter((user: any) => user != null);
+
+  return (
+    <PlayerHistoryTable
+      game={gameHistory.game}
+      allTickets={userTickets}
+      allTeamSelections={[]}
+      teams={teams}
+      users={users}
+    />
+  );
+}
+
 // Player History Table Component - adapted for ModernTable
 function PlayerHistoryTable({ 
   game, 
@@ -849,7 +897,7 @@ export default function PlayerDashboard() {
               <CardContent>
                 {userTeamSelections?.map((gameData) => (
                   <div key={gameData.game.id} className="mb-8">
-                    <PlayerHistoryTableWrapper
+                    <UserSelectionsTableWrapper
                       game={gameData.game}
                       teams={teams}
                     />
