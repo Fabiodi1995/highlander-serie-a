@@ -33,11 +33,11 @@ export function calculateGameRound(
 /**
  * Calcola il round massimo possibile per un gioco
  * @param gameStartRound Giornata di Serie A quando è iniziato il gioco
- * @returns Il numero massimo di round (max 20 o fino alla 38° giornata)
+ * @returns Il numero massimo di round (fino alla 38° giornata)
  */
 export function calculateMaxRounds(gameStartRound: number): number {
   const remainingMatches = 38 - gameStartRound + 1;
-  return Math.min(20, remainingMatches);
+  return remainingMatches;
 }
 
 /**

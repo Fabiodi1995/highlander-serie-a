@@ -730,10 +730,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const newRound = game.currentRound + 1;
       const serieARound = game.startRound + newRound - 1;
       
-      if (newRound > 20) {
-        return res.status(400).json({ message: "Maximum 20 rounds reached" });
-      }
-      
       if (serieARound > 38) {
         return res.status(400).json({ message: "Serie A season ended (38 rounds maximum)" });
       }
