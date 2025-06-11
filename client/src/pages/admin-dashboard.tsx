@@ -1334,15 +1334,34 @@ export default function AdminDashboard() {
                 {allTeamSelections && Array.isArray(allTeamSelections) ? (
                   <div className="space-y-6">
                     {allTeamSelections.map((gameData: any) => {
-                      // Prepare data for ModernTable with enhanced ticket status
+                      // Prepare data for ModernTable with round-specific status
                       const tableData = gameData.selections ? gameData.selections.map((selection: any) => {
                         const ticket = allTickets?.find(t => t.id === selection.ticketId);
                         const user = users?.find(u => u.id === ticket?.userId);
                         const game = games?.find(g => g.id === gameData.game.id);
                         
-                        // Enhance ticket with proper status including "Superato"
-                        const enhancedTickets = game && ticket ? enhanceTicketsWithStatus([ticket], game) : [];
-                        const enhancedTicket = enhancedTickets[0] || ticket;
+                        // Calculate round-specific status
+                        let roundStatus = "Attivo";
+                        if (!ticket || !ticket.isActive) {
+                          roundStatus = "Eliminato";
+                        } else if (game) {
+                          // If ticket was eliminated before this round
+                          if (ticket.eliminatedInRound && ticket.eliminatedInRound < selection.round) {
+                            roundStatus = "Eliminato";
+                          }
+                          // If ticket was eliminated in this round
+                          else if (ticket.eliminatedInRound === selection.round) {
+                            roundStatus = "Eliminato";
+                          }
+                          // If this is current round and not calculated yet
+                          else if (selection.round === game.currentRound && game.roundStatus !== "calculated") {
+                            roundStatus = "Attivo";
+                          }
+                          // If round is completed (superato)
+                          else if (selection.round < game.currentRound || (selection.round === game.currentRound && game.roundStatus === "calculated")) {
+                            roundStatus = "Superato";
+                          }
+                        }
                         
                         return {
                           selectionId: selection.id,
@@ -1352,8 +1371,8 @@ export default function AdminDashboard() {
                           round: selection.round,
                           teamName: teams?.find(t => t.id === selection.teamId)?.name || `Team ${selection.teamId}`,
                           teamId: selection.teamId,
-                          status: enhancedTicket?.status || (ticket?.isActive ? "Attivo" : "Eliminato"),
-                          statusSortOrder: enhancedTicket?.status ? getStatusSortOrder(enhancedTicket.status) : 99,
+                          status: roundStatus,
+                          statusSortOrder: getStatusSortOrder(roundStatus),
                           isActive: ticket?.isActive || false
                         };
                       }) : [];
