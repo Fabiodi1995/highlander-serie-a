@@ -124,7 +124,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
             icon: '/favicon.ico',
             tag: `game-reminder-${gameId}`,
             requireInteraction: true,
-            data: { url: `/game/${gameId}` }
+            data: { url: `/games/${gameId}` }
           }
         );
       }, reminderTime);
@@ -141,7 +141,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
             icon: '/favicon.ico',
             tag: `game-final-reminder-${gameId}`,
             requireInteraction: true,
-            data: { url: `/game/${gameId}` }
+            data: { url: `/games/${gameId}` }
           }
         );
       }, finalReminderTime);

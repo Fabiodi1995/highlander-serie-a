@@ -726,7 +726,7 @@ function GameCard({ game }: { game: Game }) {
           </div>
         </div>
         <div className="mt-3">
-          <Link href={`/game/${game.id}`}>
+          <Link href={`/games/${game.id}`}>
             <Button size="sm" className="w-full">
               <Target className="h-4 w-4 mr-2" />
               Gioca
