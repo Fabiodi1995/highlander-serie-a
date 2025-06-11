@@ -25,26 +25,40 @@ export function getTicketStatus(ticket: Ticket, game: Game): TicketStatus {
     const currentRound = game.currentRound;
     const roundStatus = game.roundStatus;
     
-    // LOGICA DEGLI STATI:
-    // - ATTIVO: Ticket che partecipa al round corrente (non ancora calcolato)
-    // - SUPERATO: Ticket che ha completato con successo round precedenti o il round corrente
+    // LOGICA CORRETTA DEGLI STATI:
+    // - ATTIVO: Ticket nel round corrente non ancora calcolato (round 1 o round corrente con selection_open/selection_locked)
+    // - SUPERATO: Ticket che ha completato round precedenti O il round corrente è stato calcolato
     
-    // Round 1: sempre ATTIVO fino al calcolo
+    // Se siamo nel round 1
     if (currentRound === 1) {
-      if (roundStatus === 'calculated') {
-        return 'passed'; // Ha superato il primo round
-      }
-      return 'active'; // Ancora in gioco nel primo round
-    }
-    
-    // Round 2+: distinguere tra attivo nel round corrente vs superato
-    if (currentRound > 1) {
-      // Se il round corrente non è ancora stato calcolato, il ticket è ATTIVO
+      // Round 1 non ancora calcolato = ATTIVO
       if (roundStatus === 'selection_open' || roundStatus === 'selection_locked') {
         return 'active';
       }
+      // Round 1 calcolato = SUPERATO
+      if (roundStatus === 'calculated') {
+        return 'passed';
+      }
+    }
+    
+    // Se siamo in round 2+
+    if (currentRound > 1) {
+      // Round corrente con selezioni aperte = ticket ha SUPERATO i round precedenti
+      if (roundStatus === 'selection_open') {
+        return 'passed'; // Ha superato i round precedenti per arrivare qui
+      }
       
-      // Se il round corrente è stato calcolato, il ticket ha SUPERATO questo round
+      // Round corrente in corso (selection_locked) = considerare la storia del ticket
+      if (roundStatus === 'selection_locked') {
+        // Se siamo oltre il round 2, significa che ha superato almeno un round
+        if (currentRound > 2) {
+          return 'passed'; // Ha superato round precedenti
+        }
+        // Se siamo al round 2, è ancora attivo nel round corrente
+        return 'active';
+      }
+      
+      // Round corrente calcolato = SUPERATO anche questo round
       if (roundStatus === 'calculated') {
         return 'passed';
       }

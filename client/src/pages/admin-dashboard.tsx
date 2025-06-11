@@ -640,24 +640,6 @@ export default function AdminDashboard() {
 
   const { data: allTickets } = useQuery<any[]>({
     queryKey: ["/api/admin/all-tickets"],
-    queryFn: async () => {
-      const res = await apiRequest("GET", "/api/admin/all-tickets");
-      const data = await res.json();
-      // Debug temporaneo per capire gli stati
-      if (data.length > 0) {
-        console.log('🎫 TICKET DEBUG:', data.slice(0, 3).map((t: any) => ({
-          id: t.id,
-          isActive: t.isActive,
-          eliminatedInRound: t.eliminatedInRound,
-          game: {
-            currentRound: t.game?.currentRound,
-            roundStatus: t.game?.roundStatus,
-            status: t.game?.status
-          }
-        })));
-      }
-      return data;
-    },
     refetchInterval: 3000,
     refetchIntervalInBackground: true,
   });
