@@ -727,9 +727,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check round limits
-      const newRound = game.currentRound + 1;
-      const serieARound = game.startRound + newRound - 1;
+      const roundsPlayed = game.currentRound - game.startRound + 1;
+      const nextRoundNumber = roundsPlayed + 1;
+      const serieARound = game.startRound + nextRoundNumber - 1;
       
+      // Primary condition: Maximum 20 rounds per game
+      if (nextRoundNumber > 20) {
+        return res.status(400).json({ message: "Maximum 20 rounds reached" });
+      }
+      
+      // Secondary condition: Serie A season cannot exceed round 38
       if (serieARound > 38) {
         return res.status(400).json({ message: "Serie A season ended (38 rounds maximum)" });
       }
@@ -749,7 +756,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      await storage.updateGameRound(gameId, newRound);
+      await storage.updateGameRound(gameId, serieARound);
       await storage.updateGameRoundStatus(gameId, "selection_open");
       
       // Reset match results for the new round to start clean
@@ -757,7 +764,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({ 
         message: "New round started successfully",
-        newRound,
+        roundNumber: nextRoundNumber,
         serieARound
       });
     } catch (error) {
