@@ -741,20 +741,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Serie A season ended (38 rounds maximum)" });
       }
       
-      // Check if game should end due to Serie A season completion
-      if (serieARound === 38) {
-        const activeTickets = await storage.getTicketsByGame(gameId);
-        const remainingTickets = activeTickets.filter(t => t.isActive);
-        
-        if (remainingTickets.length > 1) {
-          await storage.updateGameStatus(gameId, "completed");
-          return res.json({ 
-            message: "Game completed - Serie A season ended with multiple winners",
-            multipleWinners: true,
-            survivors: remainingTickets.length
-          });
-        }
-      }
+      // Allow starting round 38 - the game will end when round 38 is calculated
       
       await storage.updateGameRound(gameId, serieARound);
       await storage.updateGameRoundStatus(gameId, "selection_open");
