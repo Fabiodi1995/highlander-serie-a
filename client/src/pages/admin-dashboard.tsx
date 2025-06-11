@@ -1340,24 +1340,28 @@ export default function AdminDashboard() {
                         const user = users?.find(u => u.id === ticket?.userId);
                         const game = games?.find(g => g.id === gameData.game.id);
                         
-                        // Calculate round-specific status
-                        let roundStatus: "Attivo" | "Superato" | "Eliminato" = "Attivo";
-                        if (!ticket || !ticket.isActive) {
+                        // Calculate round-specific status with winner support
+                        let roundStatus: "Vincitore" | "Attivo" | "Superato" | "Eliminato" = "Attivo";
+                        if (!ticket || !game) {
                           roundStatus = "Eliminato";
-                        } else if (game) {
-                          // If ticket was eliminated before this round
-                          if (ticket.eliminatedInRound && ticket.eliminatedInRound < selection.round) {
+                        } else {
+                          // Check if game is completed and ticket is still active (winner)
+                          if (game.status === 'completed' && ticket.isActive) {
+                            roundStatus = "Vincitore";
+                          }
+                          // Check if ticket was eliminated
+                          else if (!ticket.isActive) {
                             roundStatus = "Eliminato";
                           }
-                          // If ticket was eliminated in this round
-                          else if (ticket.eliminatedInRound === selection.round) {
+                          // Check if ticket was eliminated in this specific round
+                          else if (ticket.eliminatedInRound && ticket.eliminatedInRound <= selection.round) {
                             roundStatus = "Eliminato";
                           }
-                          // If this is current round and not calculated yet
+                          // Check if this is current round and not calculated yet
                           else if (selection.round === game.currentRound && game.roundStatus !== "calculated") {
                             roundStatus = "Attivo";
                           }
-                          // If round is completed (superato)
+                          // If round is completed (passed)
                           else if (selection.round < game.currentRound || (selection.round === game.currentRound && game.roundStatus === "calculated")) {
                             roundStatus = "Superato";
                           }
@@ -1372,7 +1376,7 @@ export default function AdminDashboard() {
                           teamName: teams?.find(t => t.id === selection.teamId)?.name || `Team ${selection.teamId}`,
                           teamId: selection.teamId,
                           status: roundStatus,
-                          statusSortOrder: roundStatus === "Superato" ? 2 : roundStatus === "Attivo" ? 1 : 3,
+                          statusSortOrder: roundStatus === "Vincitore" ? 0 : roundStatus === "Attivo" ? 1 : roundStatus === "Superato" ? 2 : 3,
                           isActive: ticket?.isActive || false
                         };
                       }) : [];
