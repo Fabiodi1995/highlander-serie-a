@@ -3,7 +3,7 @@ import type { Game, Ticket, GameParticipant } from "@shared/schema";
 
 export interface GameEndCondition {
   ended: boolean;
-  reason: 'single_survivor' | 'max_rounds' | 'season_end' | 'all_eliminated';
+  reason: "single_survivor" | "max_rounds" | "season_end" | "all_eliminated";
   winner?: {
     userId: number;
     username: string;
@@ -23,8 +23,11 @@ export interface GameEndCondition {
  * @param currentSerieARound Giornata corrente di Serie A
  * @returns Il round del gioco (1-based)
  */
-export function calculateGameRound(gameStartRound: number, currentSerieARound: number): number {
-  return Math.max(0, currentSerieARound - gameStartRound);
+export function calculateGameRound(
+  gameStartRound: number,
+  currentSerieARound: number,
+): number {
+  return Math.max(1, currentSerieARound - gameStartRound + 1);
 }
 
 /**
@@ -33,7 +36,7 @@ export function calculateGameRound(gameStartRound: number, currentSerieARound: n
  * @returns Il numero massimo di round (max 20 o fino alla 38° giornata)
  */
 export function calculateMaxRounds(gameStartRound: number): number {
-  const remainingMatches = 38 - gameStartRound;
+  const remainingMatches = 38 - gameStartRound + 1;
   return Math.min(20, remainingMatches);
 }
 
@@ -43,7 +46,10 @@ export function calculateMaxRounds(gameStartRound: number): number {
  * @param currentSerieARound Giornata corrente di Serie A
  * @returns Condizioni di fine gioco
  */
-export async function checkGameEndConditions(gameId: number, currentSerieARound: number): Promise<GameEndCondition> {
+export async function checkGameEndConditions(
+  gameId: number,
+  currentSerieARound: number,
+): Promise<GameEndCondition> {
   try {
     const game = await storage.getGame(gameId);
     if (!game) {
@@ -51,31 +57,39 @@ export async function checkGameEndConditions(gameId: number, currentSerieARound:
     }
 
     // Calcola il round corrente del gioco
-    const currentGameRound = calculateGameRound(game.currentRound, currentSerieARound);
-    const maxRounds = calculateMaxRounds(game.currentRound);
+    const currentGameRound = calculateGameRound(
+      game.startRound,
+      currentSerieARound,
+    );
+    const maxRounds = calculateMaxRounds(game.startRound);
 
     // Ottieni tutti i ticket attivi del gioco
     const allTickets = await storage.getTicketsByGame(gameId);
-    const activeTickets = allTickets.filter(ticket => ticket.isActive);
+    const activeTickets = allTickets.filter((ticket) => ticket.isActive);
 
     // Ottieni tutti i partecipanti con i loro ticket attivi
     const participants = await storage.getGameParticipants(gameId);
-    const survivorsMap = new Map<number, {
-      userId: number;
-      username: string;
-      ticketsRemaining: number;
-      joinedAt: Date;
-    }>();
+    const survivorsMap = new Map<
+      number,
+      {
+        userId: number;
+        username: string;
+        ticketsRemaining: number;
+        joinedAt: Date;
+      }
+    >();
 
     // Raggruppa i ticket per utente
     for (const participant of participants) {
-      const userActiveTickets = activeTickets.filter(ticket => ticket.userId === participant.userId);
+      const userActiveTickets = activeTickets.filter(
+        (ticket) => ticket.userId === participant.userId,
+      );
       if (userActiveTickets.length > 0) {
         survivorsMap.set(participant.userId, {
           userId: participant.userId,
           username: `User ${participant.userId}`, // Simplified for now
           ticketsRemaining: userActiveTickets.length,
-          joinedAt: participant.joinedAt
+          joinedAt: participant.joinedAt,
         });
       }
     }
@@ -86,8 +100,8 @@ export async function checkGameEndConditions(gameId: number, currentSerieARound:
     if (survivors.length === 0) {
       return {
         ended: true,
-        reason: 'all_eliminated',
-        survivors: []
+        reason: "all_eliminated",
+        survivors: [],
       };
     }
 
@@ -95,9 +109,9 @@ export async function checkGameEndConditions(gameId: number, currentSerieARound:
     if (survivors.length === 1) {
       return {
         ended: true,
-        reason: 'single_survivor',
+        reason: "single_survivor",
         winner: survivors[0],
-        survivors: [survivors[0]]
+        survivors: [survivors[0]],
       };
     }
 
@@ -114,9 +128,9 @@ export async function checkGameEndConditions(gameId: number, currentSerieARound:
 
       return {
         ended: true,
-        reason: 'max_rounds',
+        reason: "max_rounds",
         winner: sortedBySurvivalCount[0],
-        survivors: sortedBySurvivalCount
+        survivors: sortedBySurvivalCount,
       };
     }
 
@@ -133,19 +147,18 @@ export async function checkGameEndConditions(gameId: number, currentSerieARound:
 
       return {
         ended: true,
-        reason: 'season_end',
+        reason: "season_end",
         winner: sortedBySurvivalCount[0],
-        survivors: sortedBySurvivalCount
+        survivors: sortedBySurvivalCount,
       };
     }
 
     // Il gioco continua
     return {
       ended: false,
-      reason: 'single_survivor', // placeholder
-      survivors: survivors
+      reason: "single_survivor", // placeholder
+      survivors: survivors,
     };
-
   } catch (error) {
     console.error("Error checking game end conditions:", error);
     throw error;
@@ -157,22 +170,24 @@ export async function checkGameEndConditions(gameId: number, currentSerieARound:
  * @param gameId ID del gioco
  * @param endCondition Condizioni di fine gioco
  */
-export async function finalizeGame(gameId: number, endCondition: GameEndCondition): Promise<void> {
+export async function finalizeGame(
+  gameId: number,
+  endCondition: GameEndCondition,
+): Promise<void> {
   if (!endCondition.ended) {
     throw new Error("Cannot finalize a game that hasn't ended");
   }
 
   try {
     // Aggiorna lo status del gioco a 'completed'
-    await storage.updateGameStatus(gameId, 'completed');
+    await storage.updateGameStatus(gameId, "completed");
 
     // Log della vittoria per debugging
     console.log(`Game ${gameId} ended:`, {
       reason: endCondition.reason,
       winner: endCondition.winner,
-      totalSurvivors: endCondition.survivors?.length || 0
+      totalSurvivors: endCondition.survivors?.length || 0,
     });
-
   } catch (error) {
     console.error(`Error finalizing game ${gameId}:`, error);
     throw error;
@@ -183,12 +198,15 @@ export async function finalizeGame(gameId: number, endCondition: GameEndConditio
  * Controlla e finalizza automaticamente tutti i giochi attivi
  * @param currentSerieARound Giornata corrente di Serie A
  */
-export async function checkAllActiveGames(currentSerieARound: number): Promise<void> {
+export async function checkAllActiveGames(
+  currentSerieARound: number,
+): Promise<void> {
   try {
     // Qui dovremmo ottenere tutti i giochi attivi, ma il metodo non esiste ancora
     // Per ora lasciamo questo come placeholder per future implementazioni
-    console.log(`Checking all active games for Serie A round ${currentSerieARound}`);
-    
+    console.log(
+      `Checking all active games for Serie A round ${currentSerieARound}`,
+    );
   } catch (error) {
     console.error("Error checking all active games:", error);
   }

@@ -1341,7 +1341,7 @@ export default function AdminDashboard() {
                         const game = games?.find(g => g.id === gameData.game.id);
                         
                         // Calculate round-specific status
-                        let roundStatus = "Attivo";
+                        let roundStatus: "Attivo" | "Superato" | "Eliminato" = "Attivo";
                         if (!ticket || !ticket.isActive) {
                           roundStatus = "Eliminato";
                         } else if (game) {
@@ -1372,7 +1372,7 @@ export default function AdminDashboard() {
                           teamName: teams?.find(t => t.id === selection.teamId)?.name || `Team ${selection.teamId}`,
                           teamId: selection.teamId,
                           status: roundStatus,
-                          statusSortOrder: getStatusSortOrder(roundStatus),
+                          statusSortOrder: roundStatus === "Superato" ? 2 : roundStatus === "Attivo" ? 1 : 3,
                           isActive: ticket?.isActive || false
                         };
                       }) : [];
