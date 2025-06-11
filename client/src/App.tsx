@@ -38,7 +38,7 @@ function Router() {
       <ProtectedRoute path="/profile" component={ProfilePage} />
       <ProtectedRoute path="/rules" component={RulesPage} />
       <ProtectedRoute path="/analytics" component={AnalyticsDashboard} />
-      <ProtectedRoute path="/game/:id" component={GameInterface} />
+      <ProtectedRoute path="/games/:id" component={GameInterface} />
       <Route component={NotFound} />
     </Switch>
   );

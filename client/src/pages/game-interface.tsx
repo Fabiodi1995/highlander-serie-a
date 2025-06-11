@@ -88,39 +88,70 @@ export default function GameInterface() {
   });
 
   const handleSelectionChange = (ticketId: number, teamId: string) => {
-    setSelections(prev => ({
-      ...prev,
-      [ticketId]: parseInt(teamId)
-    }));
+    try {
+      const parsedTeamId = parseInt(teamId);
+      if (isNaN(parsedTeamId) || !teamId) {
+        console.error('Invalid team ID:', teamId);
+        return;
+      }
+      
+      setSelections(prev => ({
+        ...prev,
+        [ticketId]: parsedTeamId
+      }));
+    } catch (error) {
+      console.error('Error in handleSelectionChange:', error);
+      toast({
+        title: "Errore",
+        description: "Errore nella selezione della squadra",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSubmitSelections = () => {
-    if (!game || !gameId || isNaN(gameId)) {
+    try {
+      if (!game || !gameId || isNaN(gameId)) {
+        toast({
+          title: "Errore",
+          description: "Dati di gioco non validi",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const teamSelections = Object.entries(selections).map(([ticketId, teamId]) => {
+        const parsedTicketId = parseInt(ticketId);
+        if (isNaN(parsedTicketId) || isNaN(teamId)) {
+          throw new Error(`Dati non validi: ticketId=${ticketId}, teamId=${teamId}`);
+        }
+        
+        return {
+          ticketId: parsedTicketId,
+          teamId,
+          round: game.currentRound,
+          gameId: gameId,
+        };
+      });
+
+      if (teamSelections.length !== ticketsToShow.length) {
+        toast({
+          title: "Errore",
+          description: specificTicketId ? "Seleziona una squadra per il ticket" : "Seleziona una squadra per tutti i ticket attivi",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      submitSelectionsMutation.mutate(teamSelections);
+    } catch (error) {
+      console.error('Error in handleSubmitSelections:', error);
       toast({
         title: "Errore",
-        description: "Dati di gioco non validi",
+        description: "Errore durante l'invio delle selezioni",
         variant: "destructive",
       });
-      return;
     }
-
-    const teamSelections = Object.entries(selections).map(([ticketId, teamId]) => ({
-      ticketId: parseInt(ticketId),
-      teamId,
-      round: game.currentRound,
-      gameId: gameId,
-    }));
-
-    if (teamSelections.length !== ticketsToShow.length) {
-      toast({
-        title: "Errore",
-        description: specificTicketId ? "Seleziona una squadra per il ticket" : "Seleziona una squadra per tutti i ticket attivi",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    submitSelectionsMutation.mutate(teamSelections);
   };
 
   if (!game) {
@@ -337,16 +368,31 @@ function TicketSelectionCard({
     queryKey: [`/api/tickets/${ticket.id}/selections`],
   });
 
+  // Gestione sicura delle selezioni e dei team
+  const safeTeams = teams || [];
+  const safeSelections = allSelections || [];
+
   // Solo le selezioni dei round precedenti (completati), non il round corrente
-  const previousSelections = allSelections?.filter(s => s.round < currentRound) || [];
-  const usedTeamIds = new Set(previousSelections.map(s => s.teamId));
-  const availableTeams = teams.filter(team => !usedTeamIds.has(team.id));
+  const previousSelections = safeSelections.filter(s => 
+    s && typeof s.round === 'number' && s.round < currentRound
+  );
+  
+  const usedTeamIds = new Set(
+    previousSelections
+      .filter(s => s && typeof s.teamId === 'number')
+      .map(s => s.teamId)
+  );
+  
+  const availableTeams = safeTeams.filter(team => 
+    team && typeof team.id === 'number' && !usedTeamIds.has(team.id)
+  );
 
   const previousTeamNames = previousSelections.length > 0 
     ? previousSelections
         .map(selection => {
-          const team = teams.find(t => t.id === selection.teamId);
-          return team?.name;
+          if (!selection || typeof selection.teamId !== 'number') return null;
+          const team = safeTeams.find(t => t && t.id === selection.teamId);
+          return team?.name || null;
         })
         .filter(Boolean)
         .join(", ")
@@ -379,14 +425,25 @@ function TicketSelectionCard({
               <SelectValue placeholder={disabled ? "Selezioni bloccate" : "Scegli una squadra..."} />
             </SelectTrigger>
             <SelectContent>
-              {availableTeams.map((team) => (
-                <SelectItem key={team.id} value={team.id.toString()}>
-                  <div className="flex items-center gap-2">
-                    <TeamLogo team={team} size="sm" />
-                    <span>{team.name}</span>
-                  </div>
+              {availableTeams.length > 0 ? (
+                availableTeams.map((team) => {
+                  if (!team || typeof team.id !== 'number' || !team.name) {
+                    return null;
+                  }
+                  return (
+                    <SelectItem key={team.id} value={team.id.toString()}>
+                      <div className="flex items-center gap-2">
+                        <TeamLogo team={team} size="sm" />
+                        <span>{team.name}</span>
+                      </div>
+                    </SelectItem>
+                  );
+                })
+              ) : (
+                <SelectItem value="no-teams" disabled>
+                  Nessuna squadra disponibile
                 </SelectItem>
-              ))}
+              )}
             </SelectContent>
           </Select>
         </div>
