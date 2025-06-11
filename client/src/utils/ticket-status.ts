@@ -20,29 +20,36 @@ export function getTicketStatus(ticket: Ticket, game: Game): TicketStatus {
     return 'winner';
   }
 
-  // Se il gioco è ancora attivo
+  // Se il gioco è attivo
   if (game.status === 'active') {
-    // CASO 1: Round 1 con selezioni aperte/chiuse = ATTIVO
-    if (game.currentRound === 1) {
-      return 'active';
+    const currentRound = game.currentRound;
+    const roundStatus = game.roundStatus;
+    
+    // LOGICA DEGLI STATI:
+    // - ATTIVO: Ticket che partecipa al round corrente (non ancora calcolato)
+    // - SUPERATO: Ticket che ha completato con successo round precedenti o il round corrente
+    
+    // Round 1: sempre ATTIVO fino al calcolo
+    if (currentRound === 1) {
+      if (roundStatus === 'calculated') {
+        return 'passed'; // Ha superato il primo round
+      }
+      return 'active'; // Ancora in gioco nel primo round
     }
     
-    // CASO 2: Round > 1
-    if (game.currentRound > 1) {
-      // Se siamo nel round corrente e le selezioni sono ancora aperte o chiuse ma non calcolate,
-      // il ticket è ATTIVO per il round corrente
-      if (game.roundStatus === 'selection_open' || game.roundStatus === 'selection_locked') {
+    // Round 2+: distinguere tra attivo nel round corrente vs superato
+    if (currentRound > 1) {
+      // Se il round corrente non è ancora stato calcolato, il ticket è ATTIVO
+      if (roundStatus === 'selection_open' || roundStatus === 'selection_locked') {
         return 'active';
       }
       
-      // Se i risultati del round corrente sono stati calcolati,
-      // il ticket ha SUPERATO questo round (è sopravvissuto)
-      if (game.roundStatus === 'calculated') {
+      // Se il round corrente è stato calcolato, il ticket ha SUPERATO questo round
+      if (roundStatus === 'calculated') {
         return 'passed';
       }
     }
     
-    // Fallback
     return 'active';
   }
 
