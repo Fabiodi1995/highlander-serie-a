@@ -1345,17 +1345,17 @@ export default function AdminDashboard() {
                         if (!ticket || !game) {
                           roundStatus = "Eliminato";
                         } else {
-                          // Check if game is completed and ticket is still active (winner)
-                          if (game.status === 'completed' && ticket.isActive) {
-                            roundStatus = "Vincitore";
-                          }
                           // Check if ticket was eliminated
-                          else if (!ticket.isActive) {
+                          if (!ticket.isActive) {
                             roundStatus = "Eliminato";
                           }
                           // Check if ticket was eliminated in this specific round
                           else if (ticket.eliminatedInRound && ticket.eliminatedInRound <= selection.round) {
                             roundStatus = "Eliminato";
+                          }
+                          // Check if game is completed, ticket is active, and this is the final round
+                          else if (game.status === 'completed' && ticket.isActive && selection.round === game.currentRound) {
+                            roundStatus = "Vincitore";
                           }
                           // Check if this is current round and not calculated yet
                           else if (selection.round === game.currentRound && game.roundStatus !== "calculated") {
