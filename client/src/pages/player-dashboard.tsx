@@ -157,6 +157,11 @@ function PlayerHistoryTable({
       return "bg-red-200 text-red-900 font-semibold border border-red-300";
     }
     
+    // Check if game is completed, ticket is active, and this is the final round (winner)
+    if (game.status === 'completed' && ticket.isActive && round === game.currentRound && selection) {
+      return "bg-gradient-to-r from-yellow-400 to-yellow-600 text-yellow-900 font-bold border border-yellow-500 shadow-lg";
+    }
+    
     // Check if this round is the current one being played (not calculated yet)
     const isCurrentRound = round === game.currentRound && game.roundStatus !== "calculated";
     
@@ -293,6 +298,10 @@ function PlayerHistoryTable({
 
       {/* Legend */}
       <div className="flex flex-wrap gap-4 text-xs mt-4 p-3 bg-gray-50 rounded-lg">
+        <div className="flex items-center space-x-2">
+          <div className="w-4 h-4 bg-gradient-to-r from-yellow-400 to-yellow-600 border border-yellow-500 rounded shadow-sm"></div>
+          <span className="font-semibold">Vincitore</span>
+        </div>
         <div className="flex items-center space-x-2">
           <div className="w-4 h-4 bg-green-100 border border-green-200 rounded"></div>
           <span>Sopravvissuto</span>
