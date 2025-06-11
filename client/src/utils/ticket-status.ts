@@ -22,29 +22,21 @@ export function getTicketStatus(ticket: Ticket, game: Game): TicketStatus {
 
   // Se il gioco è ancora attivo
   if (game.status === 'active') {
-    // Logica basata su currentRound e roundStatus:
-    
-    // CASO 1: Primo round - sempre ATTIVO
+    // CASO 1: Round 1 con selezioni aperte/chiuse = ATTIVO
     if (game.currentRound === 1) {
       return 'active';
     }
     
-    // CASO 2: Round successivi al primo
+    // CASO 2: Round > 1
     if (game.currentRound > 1) {
-      // Se le selezioni sono aperte per il round corrente,
-      // significa che i round precedenti sono stati calcolati e questo ticket li ha superati
-      if (game.roundStatus === 'selection_open') {
-        return 'passed';
-      }
-      
-      // Se le selezioni sono chiuse ma i risultati non ancora calcolati,
-      // il ticket è ancora "attivo" per il round corrente
-      if (game.roundStatus === 'selection_locked') {
+      // Se siamo nel round corrente e le selezioni sono ancora aperte o chiuse ma non calcolate,
+      // il ticket è ATTIVO per il round corrente
+      if (game.roundStatus === 'selection_open' || game.roundStatus === 'selection_locked') {
         return 'active';
       }
       
-      // Se i risultati sono stati calcolati per il round corrente,
-      // il ticket ha superato anche questo round
+      // Se i risultati del round corrente sono stati calcolati,
+      // il ticket ha SUPERATO questo round (è sopravvissuto)
       if (game.roundStatus === 'calculated') {
         return 'passed';
       }
