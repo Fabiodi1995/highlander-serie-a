@@ -462,33 +462,60 @@ function PlayerHistoryTable({
     return "bg-gray-50 text-gray-500 border border-gray-200";
   };
 
-  // Get cell content - Admin sees everything, no privacy restrictions
+  // Get cell content with status label
   const getCellContent = (ticket: any, round: number, currentUserId?: number) => {
     const selection = selectionsByTicket[ticket.id]?.[round];
     
     // If ticket was eliminated before this round
     if (ticket.eliminatedInRound && ticket.eliminatedInRound < round) {
-      return "—";
+      return (
+        <div className="text-center">
+          <div className="text-xs text-gray-500">—</div>
+        </div>
+      );
     }
     
-    // Admin users see all selections without restrictions
-    // No privacy logic applied in admin dashboard
+    // If ticket was eliminated in this round
+    if (ticket.eliminatedInRound === round) {
+      const team = selection ? getTeam(selection.teamId) : null;
+      return (
+        <div className="text-center">
+          {team && <TeamLogo team={team} size="sm" />}
+          <div className="text-xs font-semibold text-red-800 mt-1">ELIMINATO</div>
+        </div>
+      );
+    }
     
-    // If selection exists and should be visible, show team logo
-    if (selection) {
+    // Check if this is current round being played
+    const isCurrentRound = round === game.currentRound && game.roundStatus !== "calculated";
+    
+    // If this is current round and ticket is active
+    if (isCurrentRound && ticket.isActive) {
+      const team = selection ? getTeam(selection.teamId) : null;
+      return (
+        <div className="text-center">
+          {team ? <TeamLogo team={team} size="sm" /> : <div className="text-xs text-gray-600">In attesa</div>}
+          <div className="text-xs font-semibold text-yellow-800 mt-1">ATTIVO</div>
+        </div>
+      );
+    }
+    
+    // If round is completed (superato)
+    if (selection && (round < game.currentRound || (round === game.currentRound && game.roundStatus === "calculated"))) {
       const team = getTeam(selection.teamId);
-      if (team) {
-        return <TeamLogo team={team} size="sm" />;
-      }
-      return getTeamName(selection.teamId);
+      return (
+        <div className="text-center">
+          {team && <TeamLogo team={team} size="sm" />}
+          <div className="text-xs font-semibold text-green-800 mt-1">SUPERATO</div>
+        </div>
+      );
     }
     
-    // If current round and no selection yet
-    if (round === game.currentRound && ticket.isActive) {
-      return "In attesa";
-    }
-    
-    return "—";
+    return (
+      <div className="text-center">
+        <div className="text-xs text-gray-500">—</div>
+      </div>
+    );
   };
 
   return (
