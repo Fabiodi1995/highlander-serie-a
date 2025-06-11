@@ -23,10 +23,20 @@ export function getTicketStatus(ticket: Ticket, game: Game): TicketStatus {
 
   // Se il gioco è ancora attivo
   if (game.status === 'active') {
-    // Se il ticket è attivo e siamo oltre il primo round
+    // Un ticket può essere considerato "superato" solo se:
+    // 1. È attivo
+    // 2. Siamo oltre il primo round 
+    // 3. I risultati del round precedente sono stati calcolati (roundStatus è "results_calculated" o "selection_open")
+    
     if (ticket.isActive && game.currentRound > 1) {
-      // Se il round corrente è maggiore di 1, significa che ha superato dei round
-      return 'passed';
+      // Se siamo nel round corrente e i risultati del round precedente sono stati calcolati
+      // allora il ticket ha effettivamente "superato" i round precedenti
+      if (game.roundStatus === 'selection_open' || game.roundStatus === 'results_calculated') {
+        return 'passed';
+      }
+      // Se siamo ancora nella fase di calcolo risultati del round corrente, 
+      // il ticket è ancora "attivo" in attesa di sapere se sopravvive
+      return 'active';
     }
     
     // Se siamo nel primo round o il ticket è appena entrato nel gioco
