@@ -23,23 +23,37 @@ export function getTicketStatus(ticket: Ticket, game: Game): TicketStatus {
 
   // Se il gioco è ancora attivo
   if (game.status === 'active') {
-    // Un ticket può essere considerato "superato" solo se:
-    // 1. È attivo
-    // 2. Siamo oltre il primo round 
-    // 3. I risultati del round precedente sono stati calcolati (roundStatus è "results_calculated" o "selection_open")
+    // Logica per determinare se un ticket ha "superato" dei round:
+    // - È attivo
+    // - Siamo oltre il primo round
+    // - Il ticket ha effettivamente superato round precedenti
     
     if (ticket.isActive && game.currentRound > 1) {
-      // Se siamo nel round corrente e i risultati del round precedente sono stati calcolati
-      // allora il ticket ha effettivamente "superato" i round precedenti
-      if (game.roundStatus === 'selection_open' || game.roundStatus === 'results_calculated') {
+      // Se siamo nel round corrente con selezioni aperte,
+      // significa che i round precedenti sono stati completati e il ticket li ha superati
+      if (game.roundStatus === 'selection_open') {
+        // Selezioni aperte = round precedenti completati e superati
         return 'passed';
       }
-      // Se siamo ancora nella fase di calcolo risultati del round corrente, 
-      // il ticket è ancora "attivo" in attesa di sapere se sopravvive
+      
+      if (game.roundStatus === 'calculated') {
+        // Risultati calcolati = anche il round corrente è completato e superato
+        return 'passed';
+      }
+      
+      // Se siamo in selection_locked (selezioni chiuse ma risultati non ancora calcolati)
+      // del round corrente, il ticket è ancora "attivo" ma ha comunque
+      // superato i round precedenti se currentRound > 1
+      if (game.roundStatus === 'selection_locked') {
+        // Se siamo oltre il primo round, ha comunque superato i precedenti
+        return 'passed';
+      }
+      
+      // Fallback per stati non riconosciuti
       return 'active';
     }
     
-    // Se siamo nel primo round o il ticket è appena entrato nel gioco
+    // Se siamo nel primo round, il ticket è sempre "attivo"
     return 'active';
   }
 
