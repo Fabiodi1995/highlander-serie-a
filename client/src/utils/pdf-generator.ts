@@ -414,9 +414,9 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
   
   // Teams legend with modern card design
   doc.setFillColor(255, 255, 255);
-  doc.rect(15, finalY, 267, Math.ceil(teams.length / 4) * 6 + 15, 'F');
+  doc.rect(15, finalY, 267, Math.ceil(teams.length / 4) * 7 + 18, 'F');
   doc.setDrawColor(226, 232, 240);
-  doc.rect(15, finalY, 267, Math.ceil(teams.length / 4) * 6 + 15, 'S');
+  doc.rect(15, finalY, 267, Math.ceil(teams.length / 4) * 7 + 18, 'S');
   
   doc.setTextColor(30, 41, 59);
   doc.setFontSize(12);
@@ -431,7 +431,7 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
   doc.setTextColor(71, 85, 105);
   allSerieATeams.forEach((team, index) => {
     const x = 20 + (index % 4) * 65;
-    const y = finalY + 15 + Math.floor(index / 4) * 6;
+    const y = finalY + 16 + Math.floor(index / 4) * 7;
     
     // Draw team logo circle
     drawTeamLogo(team, x, y - 2, 3);
@@ -441,7 +441,7 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
   });
   
   // Status legend with modern design
-  const statusY = finalY + Math.ceil(allSerieATeams.length / 4) * 6 + 25;
+  const statusY = finalY + Math.ceil(allSerieATeams.length / 4) * 7 + 30;
   
   doc.setFillColor(255, 255, 255);
   doc.rect(15, statusY, 267, 25, 'F');
@@ -482,8 +482,8 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
   doc.rect(230, statusY + 12, 12, 6, 'S');
   doc.text('Vincitore', 245, statusY + 16);
   
-  // Modern footer
-  const footerY = 200;
+  // Modern footer - positioned dynamically
+  const footerY = statusY + 35;
   doc.setFillColor(71, 85, 105);
   doc.rect(0, footerY, 297, 10, 'F');
   
