@@ -129,8 +129,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
-    return user || undefined;
+    const cacheKey = `email:${email.toLowerCase()}`;
+    const cached = userCache.get(cacheKey);
+    
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      return cached.user;
+    }
+    
+    const user = await withRetry(async () => {
+      const [result] = await db.select().from(users).where(eq(users.email, email));
+      return result || undefined;
+    });
+    
+    userCache.set(cacheKey, { user, timestamp: Date.now() });
+    return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
