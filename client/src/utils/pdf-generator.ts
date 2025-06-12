@@ -303,8 +303,11 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
       
       // If ticket was eliminated in this round
       if (ticket.eliminatedInRound === round) {
-        const teamCode = selection ? getTeamCode(selection.teamId) : '';
-        row.push(teamCode || 'X');
+        if (selection) {
+          row.push(`LOGO:${selection.teamId}`); // Show logo for eliminated team
+        } else {
+          row.push('X'); // Show X if no selection
+        }
         return;
       }
       
@@ -446,8 +449,6 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
           data.cell.styles.fillColor = [212, 237, 218];
         } else if (round === game.currentRound && ticket.isActive && selection) {
           data.cell.styles.fillColor = [255, 255, 255];
-          data.cell.styles.lineColor = [40, 167, 69];
-          data.cell.styles.lineWidth = 1;
         } else if (round === game.currentRound && ticket.isActive && !selection) {
           data.cell.styles.fillColor = [255, 243, 205];
         } else if (round > game.currentRound || !ticket.isActive) {
