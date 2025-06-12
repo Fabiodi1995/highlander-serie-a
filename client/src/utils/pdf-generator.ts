@@ -79,18 +79,38 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
   // Set font
   doc.setFont('helvetica');
   
-  // Title
-  doc.setFontSize(18);
-  doc.text('Storico Giocatori - Highlander', 20, 20);
+  // Add background gradient effect
+  doc.setFillColor(245, 247, 250);
+  doc.rect(0, 0, 297, 210, 'F');
   
-  // Game info
-  doc.setFontSize(12);
-  doc.text(`Gioco: ${game.name}`, 20, 32);
-  doc.setFontSize(9);
-  doc.text(`Stato: ${game.status}`, 20, 40);
-  doc.text(`Giornata corrente: ${game.currentRound}`, 20, 46);
-  doc.text(`Giornate: dalla ${game.startRound} alla ${Math.min(game.startRound + 19, 38)}`, 20, 52);
-  doc.text(`Data generazione: ${new Date().toLocaleDateString('it-IT')}`, 20, 58);
+  // Header section with modern design
+  doc.setFillColor(71, 85, 105); // Dark blue header
+  doc.rect(0, 0, 297, 25, 'F');
+  
+  // Title with white text
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(20);
+  doc.setFont('helvetica', 'bold');
+  doc.text('🏆 HIGHLANDER - Storico Giocatori', 20, 17);
+  
+  // Game info section with modern card design
+  doc.setFillColor(255, 255, 255);
+  doc.rect(15, 30, 267, 25, 'F');
+  doc.setDrawColor(226, 232, 240);
+  doc.rect(15, 30, 267, 25, 'S');
+  
+  // Game info text in dark color
+  doc.setTextColor(51, 65, 85);
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.text(`🎮 ${game.name}`, 20, 40);
+  
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`📊 Stato: ${game.status}`, 20, 46);
+  doc.text(`🎯 Giornata corrente: ${game.currentRound}`, 20, 51);
+  doc.text(`📅 Giornate: dalla ${game.startRound} alla ${Math.min(game.startRound + 19, 38)}`, 120, 46);
+  doc.text(`📆 Generato: ${new Date().toLocaleDateString('it-IT')} alle ${new Date().toLocaleTimeString('it-IT')}`, 120, 51);
   
   // Helper functions
   const getTeamName = (teamId: number) => {
@@ -99,6 +119,15 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
   
   const getTeamCode = (teamId: number) => {
     return teams.find(t => t.id === teamId)?.code || '???';
+  };
+
+  // Function to get team visual representation for PDF
+  const getTeamDisplay = (teamId: number) => {
+    const team = teams.find(t => t.id === teamId);
+    if (!team) return '???';
+    
+    // Create a visual representation using team code with styling
+    return team.code;
   };
   
   const getUserName = (userId: number) => {
@@ -226,47 +255,58 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
     columnStyles[3 + index] = { cellWidth: Math.max(roundColumnWidth, 8) };
   });
 
-  // Add table to PDF
+  // Add table to PDF with modern styling
   autoTable(doc, {
     head: [tableHeaders],
     body: tableData,
     startY: 65,
     styles: {
       fontSize: gameRounds.length > 15 ? 6 : 7,
-      cellPadding: 1,
+      cellPadding: 2,
       halign: 'center',
-      valign: 'middle'
+      valign: 'middle',
+      textColor: [51, 65, 85],
+      lineColor: [226, 232, 240],
+      lineWidth: 0.5
     },
     headStyles: {
-      fillColor: [71, 85, 105], // slate-600
-      textColor: 255,
+      fillColor: [30, 41, 59], // Modern dark blue
+      textColor: [255, 255, 255],
       fontSize: gameRounds.length > 15 ? 7 : 8,
       fontStyle: 'bold',
-      halign: 'center'
+      halign: 'center',
+      cellPadding: 3
     },
     alternateRowStyles: {
-      fillColor: [248, 250, 252] // slate-50
+      fillColor: [248, 250, 252] // Light gray for alternating rows
     },
     columnStyles,
-    margin: { left: 10, right: 10 },
+    margin: { left: 15, right: 15 },
+    theme: 'grid',
     didParseCell: function(data: any) {
       const rowIndex = data.row.index;
       const colIndex = data.column.index;
       const ticket = sortedTickets[rowIndex];
       const round = gameRounds[colIndex - 3];
       
-      // Color coding for status column
+      // Color coding for status column with modern styling
       if (colIndex === 2) {
         const cellValue = data.cell.text[0];
         if (cellValue === 'Vincitore') {
-          data.cell.styles.fillColor = [statusColors.vincitore.r, statusColors.vincitore.g, statusColors.vincitore.b];
-          data.cell.styles.textColor = [146, 64, 14];
+          data.cell.styles.fillColor = [255, 215, 0]; // Gold
+          data.cell.styles.textColor = [0, 0, 0];
+          data.cell.styles.fontStyle = 'bold';
         } else if (cellValue === 'Eliminato') {
-          data.cell.styles.fillColor = [statusColors.eliminato.r, statusColors.eliminato.g, statusColors.eliminato.b];
-          data.cell.styles.textColor = [153, 27, 27];
+          data.cell.styles.fillColor = [220, 53, 69]; // Red
+          data.cell.styles.textColor = [255, 255, 255];
+          data.cell.styles.fontStyle = 'bold';
         } else if (cellValue === 'Attivo') {
-          data.cell.styles.fillColor = [statusColors.attivo.r, statusColors.attivo.g, statusColors.attivo.b];
-          data.cell.styles.textColor = [146, 64, 14];
+          data.cell.styles.fillColor = [40, 167, 69]; // Green
+          data.cell.styles.textColor = [255, 255, 255];
+          data.cell.styles.fontStyle = 'bold';
+        } else if (cellValue === 'Superato') {
+          data.cell.styles.fillColor = [108, 117, 125]; // Gray
+          data.cell.styles.textColor = [255, 255, 255];
         }
       }
       
@@ -276,28 +316,30 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
         
         // Winner cell (gold)
         if (selection && game.status === 'completed' && ticket.isActive && round === game.currentRound) {
-          data.cell.styles.fillColor = [statusColors.vincitore.r, statusColors.vincitore.g, statusColors.vincitore.b];
+          data.cell.styles.fillColor = [255, 243, 205]; // Light gold
+          data.cell.styles.fontStyle = 'bold';
         }
-        // Eliminated cell (red)
+        // Eliminated cell (light red)
         else if (ticket.eliminatedInRound === round) {
-          data.cell.styles.fillColor = [statusColors.eliminato.r, statusColors.eliminato.g, statusColors.eliminato.b];
+          data.cell.styles.fillColor = [248, 215, 218]; // Light red
         }
-        // Completed round with selection (green)
+        // Completed round with selection (light green)
         else if (selection && round < game.currentRound) {
-          data.cell.styles.fillColor = [statusColors.superato.r, statusColors.superato.g, statusColors.superato.b];
+          data.cell.styles.fillColor = [212, 237, 218]; // Light green
         }
-        // Current round with selection (normal/white)
+        // Current round with selection (white with border)
         else if (round === game.currentRound && ticket.isActive && selection) {
-          // Keep default white background for current round with selection
           data.cell.styles.fillColor = [255, 255, 255];
+          data.cell.styles.lineColor = [40, 167, 69];
+          data.cell.styles.lineWidth = 1;
         }
         // Current round without selection (yellow)
         else if (round === game.currentRound && ticket.isActive && !selection) {
-          data.cell.styles.fillColor = [statusColors.noSelection.r, statusColors.noSelection.g, statusColors.noSelection.b];
+          data.cell.styles.fillColor = [255, 243, 205]; // Yellow
         }
         // Future rounds or eliminated ticket (light gray)
         else if (round > game.currentRound || !ticket.isActive) {
-          data.cell.styles.fillColor = [statusColors.futuro.r, statusColors.futuro.g, statusColors.futuro.b];
+          data.cell.styles.fillColor = [248, 249, 250]; // Very light gray
         }
         // Default case (white)
         else {
@@ -307,46 +349,86 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
     }
   });
 
-  // Add legend with team logos and colors explanation
-  const finalY = (doc as any).lastAutoTable.finalY + 10;
+  // Modern legend section
+  const finalY = (doc as any).lastAutoTable.finalY + 15;
   
-  // Teams legend
+  // Teams legend with modern card design
+  doc.setFillColor(255, 255, 255);
+  doc.rect(15, finalY, 267, Math.ceil(teams.length / 4) * 6 + 15, 'F');
+  doc.setDrawColor(226, 232, 240);
+  doc.rect(15, finalY, 267, Math.ceil(teams.length / 4) * 6 + 15, 'S');
+  
+  doc.setTextColor(30, 41, 59);
   doc.setFontSize(12);
-  doc.text('Legenda Squadre:', 20, finalY);
+  doc.setFont('helvetica', 'bold');
+  doc.text('⚽ Legenda Squadre Serie A 2024/25', 20, finalY + 8);
   
-  // Show all Serie A teams (all 20 teams)
+  // Show all Serie A teams (all 20 teams) with modern styling
   const allSerieATeams = [...teams].sort((a, b) => a.name.localeCompare(b.name));
   
   doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(71, 85, 105);
   allSerieATeams.forEach((team, index) => {
-    const x = 20 + (index % 4) * 70;
-    const y = finalY + 8 + Math.floor(index / 4) * 8;
+    const x = 20 + (index % 4) * 65;
+    const y = finalY + 15 + Math.floor(index / 4) * 6;
     doc.text(`${team.code} - ${team.name}`, x, y);
   });
   
-  // Status legend
-  const statusY = finalY + 8 + Math.ceil(allSerieATeams.length / 4) * 8 + 10;
+  // Status legend with modern design
+  const statusY = finalY + Math.ceil(allSerieATeams.length / 4) * 6 + 25;
+  
+  doc.setFillColor(255, 255, 255);
+  doc.rect(15, statusY, 267, 25, 'F');
+  doc.setDrawColor(226, 232, 240);
+  doc.rect(15, statusY, 267, 25, 'S');
+  
+  doc.setTextColor(30, 41, 59);
   doc.setFontSize(12);
-  doc.text('Legenda Stati:', 20, statusY);
+  doc.setFont('helvetica', 'bold');
+  doc.text('📊 Legenda Stati Giocatori', 20, statusY + 8);
   
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  
+  // Status indicators with modern colors
+  doc.setFillColor(212, 237, 218); // Light green
+  doc.rect(20, statusY + 12, 12, 6, 'F');
+  doc.setDrawColor(40, 167, 69);
+  doc.rect(20, statusY + 12, 12, 6, 'S');
+  doc.setTextColor(30, 41, 59);
+  doc.text('Superato', 35, statusY + 16);
+  
+  doc.setFillColor(255, 243, 205); // Light yellow
+  doc.rect(90, statusY + 12, 12, 6, 'F');
+  doc.setDrawColor(255, 193, 7);
+  doc.rect(90, statusY + 12, 12, 6, 'S');
+  doc.text('In Corso', 105, statusY + 16);
+  
+  doc.setFillColor(248, 215, 218); // Light red
+  doc.rect(160, statusY + 12, 12, 6, 'F');
+  doc.setDrawColor(220, 53, 69);
+  doc.rect(160, statusY + 12, 12, 6, 'S');
+  doc.text('Eliminato', 175, statusY + 16);
+  
+  doc.setFillColor(255, 215, 0); // Gold
+  doc.rect(230, statusY + 12, 12, 6, 'F');
+  doc.setDrawColor(255, 193, 7);
+  doc.rect(230, statusY + 12, 12, 6, 'S');
+  doc.text('Vincitore', 245, statusY + 16);
+  
+  // Modern footer
+  const footerY = 200;
+  doc.setFillColor(71, 85, 105);
+  doc.rect(0, footerY, 297, 10, 'F');
+  
+  doc.setTextColor(255, 255, 255);
   doc.setFontSize(8);
-  doc.setFillColor(statusColors.superato.r, statusColors.superato.g, statusColors.superato.b);
-  doc.rect(20, statusY + 5, 8, 4, 'F');
-  doc.text('Superato', 30, statusY + 8);
+  doc.setFont('helvetica', 'normal');
+  doc.text('🏆 HIGHLANDER - Fantasy Football Game', 20, footerY + 6);
+  doc.text(`Generato il ${new Date().toLocaleDateString('it-IT')} - © 2025`, 200, footerY + 6);
   
-  doc.setFillColor(statusColors.attivo.r, statusColors.attivo.g, statusColors.attivo.b);
-  doc.rect(70, statusY + 5, 8, 4, 'F');
-  doc.text('Attivo', 80, statusY + 8);
-  
-  doc.setFillColor(statusColors.eliminato.r, statusColors.eliminato.g, statusColors.eliminato.b);
-  doc.rect(120, statusY + 5, 8, 4, 'F');
-  doc.text('Eliminato', 130, statusY + 8);
-  
-  doc.setFillColor(statusColors.vincitore.r, statusColors.vincitore.g, statusColors.vincitore.b);
-  doc.rect(180, statusY + 5, 8, 4, 'F');
-  doc.text('Vincitore', 190, statusY + 8);
-  
-  // Save the PDF
-  const fileName = `highlander_storico_${game.name.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+  // Save the PDF with enhanced filename
+  const fileName = `Highlander_${game.name}_Storico_${new Date().toISOString().split('T')[0]}.pdf`;
   doc.save(fileName);
 }
