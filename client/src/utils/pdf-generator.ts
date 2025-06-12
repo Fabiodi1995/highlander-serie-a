@@ -128,15 +128,15 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
   doc.setFontSize(20);
   doc.setFont('helvetica', 'bold');
   
-  // Draw a simple crown symbol as Highlander logo
-  doc.setFillColor(255, 215, 0); // Gold color
-  doc.rect(15, 10, 12, 5, 'F'); // Crown base
-  // Draw crown peaks using lines
-  doc.setLineWidth(2);
-  doc.setDrawColor(255, 215, 0);
-  doc.line(18, 10, 20, 7);
-  doc.line(20, 7, 22, 10);
-  doc.line(22, 10, 24, 7);
+  // Draw Highlander crown logo
+  doc.setFillColor(255, 193, 7); // Golden yellow to match frontend
+  // Crown base
+  doc.rect(15, 12, 12, 4, 'F');
+  // Crown peaks
+  doc.rect(16, 8, 2, 4, 'F');
+  doc.rect(19, 6, 2, 6, 'F'); // Taller middle peak
+  doc.rect(22, 8, 2, 4, 'F');
+  doc.rect(25, 10, 2, 2, 'F'); // Small end peak
   
   doc.text('HIGHLANDER - Storico Giocatori', 35, 17);
   
