@@ -1,26 +1,26 @@
 import { Team } from "@shared/schema";
 
-// Import all team logos
-import atalantaLogo from "../assets/team-logos/atalanta.svg";
-import bolognaLogo from "../assets/team-logos/bologna.svg";
-import cagliariLogo from "../assets/team-logos/cagliari.svg";
-import comoLogo from "../assets/team-logos/como.svg";
-import empoliLogo from "../assets/team-logos/empoli.svg";
-import fiorentinaLogo from "../assets/team-logos/fiorentina.svg";
-import genoaLogo from "../assets/team-logos/genoa.svg";
-import hellasVeronaLogo from "../assets/team-logos/hellas-verona.svg";
-import interLogo from "../assets/team-logos/inter.svg";
-import juventusLogo from "../assets/team-logos/juventus.svg";
-import lazioLogo from "../assets/team-logos/lazio.svg";
-import lecceLogo from "../assets/team-logos/lecce.svg";
-import milanLogo from "../assets/team-logos/milan.svg";
-import monzaLogo from "../assets/team-logos/monza.svg";
-import napoliLogo from "../assets/team-logos/napoli.svg";
-import parmaLogo from "../assets/team-logos/parma.svg";
-import romaLogo from "../assets/team-logos/roma.svg";
-import torinoLogo from "../assets/team-logos/torino.svg";
-import udineseLogo from "../assets/team-logos/udinese.svg";
-import veneziaLogo from "../assets/team-logos/venezia.svg";
+// Import all team logos as PNG
+import atalantaLogo from "../assets/team-logos/atalanta.png";
+import bolognaLogo from "../assets/team-logos/bologna.png";
+import cagliariLogo from "../assets/team-logos/cagliari.png";
+import comoLogo from "../assets/team-logos/como.png";
+import empoliLogo from "../assets/team-logos/empoli.png";
+import fiorentinaLogo from "../assets/team-logos/fiorentina.png";
+import genoaLogo from "../assets/team-logos/genoa.png";
+import hellasVeronaLogo from "../assets/team-logos/hellas-verona.png";
+import interLogo from "../assets/team-logos/inter.png";
+import juventusLogo from "../assets/team-logos/juventus.png";
+import lazioLogo from "../assets/team-logos/lazio.png";
+import lecceLogo from "../assets/team-logos/lecce.png";
+import milanLogo from "../assets/team-logos/milan.png";
+import monzaLogo from "../assets/team-logos/monza.png";
+import napoliLogo from "../assets/team-logos/napoli.png";
+import parmaLogo from "../assets/team-logos/parma.png";
+import romaLogo from "../assets/team-logos/roma.png";
+import torinoLogo from "../assets/team-logos/torino.png";
+import udineseLogo from "../assets/team-logos/udinese.png";
+import veneziaLogo from "../assets/team-logos/venezia.png";
 
 interface TeamLogoProps {
   team: Team;
@@ -70,7 +70,7 @@ export function TeamLogo({ team, size = "md", showName = false }: TeamLogoProps)
         <img 
           src={logoPath} 
           alt={`Logo ${team.name}`}
-          className={`${sizeClasses[size]} rounded-full`}
+          className={`${sizeClasses[size]} object-contain`}
         />
       ) : (
         <div className={`${sizeClasses[size]} rounded-full bg-gray-300 flex items-center justify-center text-xs font-bold`}>

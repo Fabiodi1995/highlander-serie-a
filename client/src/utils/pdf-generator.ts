@@ -2,6 +2,61 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import type { Game, Ticket, Team, User } from '@shared/schema';
 
+// Import team logos for PDF generation
+import atalantaLogo from "../assets/team-logos/atalanta.png";
+import bolognaLogo from "../assets/team-logos/bologna.png";
+import cagliariLogo from "../assets/team-logos/cagliari.png";
+import comoLogo from "../assets/team-logos/como.png";
+import empoliLogo from "../assets/team-logos/empoli.png";
+import fiorentinaLogo from "../assets/team-logos/fiorentina.png";
+import genoaLogo from "../assets/team-logos/genoa.png";
+import hellasVeronaLogo from "../assets/team-logos/hellas-verona.png";
+import interLogo from "../assets/team-logos/inter.png";
+import juventusLogo from "../assets/team-logos/juventus.png";
+import lazioLogo from "../assets/team-logos/lazio.png";
+import lecceLogo from "../assets/team-logos/lecce.png";
+import milanLogo from "../assets/team-logos/milan.png";
+import monzaLogo from "../assets/team-logos/monza.png";
+import napoliLogo from "../assets/team-logos/napoli.png";
+import parmaLogo from "../assets/team-logos/parma.png";
+import romaLogo from "../assets/team-logos/roma.png";
+import torinoLogo from "../assets/team-logos/torino.png";
+import udineseLogo from "../assets/team-logos/udinese.png";
+import veneziaLogo from "../assets/team-logos/venezia.png";
+
+// Team logo mapping for PDF generation
+const teamLogoMap: { [key: string]: string } = {
+  "Atalanta": atalantaLogo,
+  "Bologna": bolognaLogo,
+  "Cagliari": cagliariLogo,
+  "Como": comoLogo,
+  "Empoli": empoliLogo,
+  "Fiorentina": fiorentinaLogo,
+  "Genoa": genoaLogo,
+  "Hellas Verona": hellasVeronaLogo,
+  "Inter": interLogo,
+  "Juventus": juventusLogo,
+  "Lazio": lazioLogo,
+  "Lecce": lecceLogo,
+  "Milan": milanLogo,
+  "Monza": monzaLogo,
+  "Napoli": napoliLogo,
+  "Parma": parmaLogo,
+  "Roma": romaLogo,
+  "Torino": torinoLogo,
+  "Udinese": udineseLogo,
+  "Venezia": veneziaLogo,
+};
+
+// Colors for different ticket statuses
+const statusColors = {
+  superato: { r: 232, g: 245, b: 232 }, // Light green
+  attivo: { r: 255, g: 249, b: 230 },   // Light yellow
+  eliminato: { r: 255, g: 232, b: 232 }, // Light red
+  vincitore: { r: 255, g: 244, b: 204 }, // Light gold
+  futuro: { r: 248, g: 249, b: 250 }     // Light gray
+};
+
 export interface GameHistoryData {
   game: Game;
   tickets: any[];
@@ -10,35 +65,72 @@ export interface GameHistoryData {
   teamSelections: any[];
 }
 
-export function generateGameHistoryPDF(data: GameHistoryData) {
+// Helper function to convert image to base64 for jsPDF
+async function loadImageAsBase64(imagePath: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('Failed to get canvas context'));
+        return;
+      }
+      
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+      
+      try {
+        const dataURL = canvas.toDataURL('image/png');
+        resolve(dataURL);
+      } catch (error) {
+        reject(error);
+      }
+    };
+    img.onerror = () => reject(new Error(`Failed to load image: ${imagePath}`));
+    img.src = imagePath;
+  });
+}
+
+// Function to get team logo for PDF
+function getTeamLogo(teamName: string): string {
+  return teamLogoMap[teamName] || '';
+}
+
+export async function generateGameHistoryPDF(data: GameHistoryData) {
   const { game, tickets, teams, users, teamSelections } = data;
   
-  // Create new PDF document
-  const doc = new jsPDF();
+  // Create new PDF document in landscape mode for better table display
+  const doc = new jsPDF({
+    orientation: 'landscape',
+    unit: 'mm',
+    format: 'a4'
+  });
   
   // Set font
   doc.setFont('helvetica');
   
   // Title
-  doc.setFontSize(20);
+  doc.setFontSize(18);
   doc.text('Storico Giocatori - Highlander', 20, 20);
   
   // Game info
-  doc.setFontSize(14);
-  doc.text(`Gioco: ${game.name}`, 20, 35);
-  doc.setFontSize(10);
-  doc.text(`Stato: ${game.status}`, 20, 45);
-  doc.text(`Giornata corrente: ${game.currentRound}`, 20, 52);
-  doc.text(`Status round: ${game.roundStatus}`, 20, 59);
-  doc.text(`Giornate: dalla ${game.startRound} alla ${game.currentRound}`, 20, 66);
-  doc.text(`Data generazione: ${new Date().toLocaleDateString('it-IT')}`, 20, 73);
+  doc.setFontSize(12);
+  doc.text(`Gioco: ${game.name}`, 20, 32);
+  doc.setFontSize(9);
+  doc.text(`Stato: ${game.status}`, 20, 40);
+  doc.text(`Giornata corrente: ${game.currentRound}`, 20, 46);
+  doc.text(`Giornate: dalla ${game.startRound} alla ${Math.min(game.startRound + 19, 38)}`, 20, 52);
+  doc.text(`Data generazione: ${new Date().toLocaleDateString('it-IT')}`, 20, 58);
   
   // Helper functions
   const getTeamName = (teamId: number) => {
     return teams.find(t => t.id === teamId)?.name || 'N/A';
   };
   
-  const getTeamLogo = (teamId: number) => {
+  const getTeamCode = (teamId: number) => {
     return teams.find(t => t.id === teamId)?.code || '???';
   };
   
@@ -63,10 +155,11 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
     }
   };
   
-  // Create rounds array
+  // Create complete rounds array (up to 20 rounds max)
+  const maxRounds = Math.min(20, 38 - game.startRound + 1);
   const gameRounds: number[] = [];
-  for (let round = game.startRound; round <= game.currentRound; round++) {
-    gameRounds.push(round);
+  for (let i = 0; i < maxRounds; i++) {
+    gameRounds.push(game.startRound + i);
   }
   
   // Create selections mapping by ticket and round
@@ -78,12 +171,12 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
     return acc;
   }, {});
   
-  // Prepare table data
+  // Prepare table headers with smaller font for 20 columns
   const tableHeaders = [
     'Giocatore',
     'Ticket',
     'Stato',
-    ...gameRounds.map(round => `R${gameRounds.indexOf(round) + 1} (G${round})`)
+    ...gameRounds.map((round, index) => `R${index + 1}`)
   ];
   
   // Sort tickets by status priority
