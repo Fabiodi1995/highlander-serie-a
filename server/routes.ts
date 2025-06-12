@@ -12,13 +12,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
   setupAuth(app);
 
-  // Initialize data with error handling
-  try {
-    await storage.seedTeams();
-    await storage.seedMatches();
-  } catch (error) {
-    console.warn("Database seeding failed, continuing:", error);
-  }
+  // Skip database seeding to prevent connection issues
+  console.log("Skipping database seeding for faster startup");
 
   // Validation endpoints for registration
   app.get("/api/validate/username/:username", async (req, res) => {
