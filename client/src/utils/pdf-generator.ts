@@ -48,7 +48,7 @@ const teamLogoMap: { [key: string]: string } = {
   "Venezia": veneziaLogo,
 };
 
-// Colors for different ticket statuses
+// Colors for different ticket statuses (light colors to not interfere with logos)
 const statusColors = {
   superato: { r: 232, g: 245, b: 232 }, // Light green
   attivo: { r: 255, g: 249, b: 230 },   // Light yellow
@@ -65,41 +65,7 @@ export interface GameHistoryData {
   teamSelections: any[];
 }
 
-// Helper function to convert image to base64 for jsPDF
-async function loadImageAsBase64(imagePath: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        reject(new Error('Failed to get canvas context'));
-        return;
-      }
-      
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx.drawImage(img, 0, 0);
-      
-      try {
-        const dataURL = canvas.toDataURL('image/png');
-        resolve(dataURL);
-      } catch (error) {
-        reject(error);
-      }
-    };
-    img.onerror = () => reject(new Error(`Failed to load image: ${imagePath}`));
-    img.src = imagePath;
-  });
-}
-
-// Function to get team logo for PDF
-function getTeamLogo(teamName: string): string {
-  return teamLogoMap[teamName] || '';
-}
-
-export async function generateGameHistoryPDF(data: GameHistoryData) {
+export function generateGameHistoryPDF(data: GameHistoryData) {
   const { game, tickets, teams, users, teamSelections } = data;
   
   // Create new PDF document in landscape mode for better table display
@@ -199,7 +165,7 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
       getTicketStatus(ticket)
     ];
     
-      // Add team selections for each round with proper status
+    // Add team selections for each round with proper status
     gameRounds.forEach(round => {
       const selection = selectionsByTicket[ticket.id]?.[round];
       
@@ -211,22 +177,22 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
       
       // If ticket was eliminated in this round
       if (ticket.eliminatedInRound === round) {
-        const teamCode = selection ? getTeamLogo(selection.teamId) : '';
-        row.push(teamCode ? `${teamCode}\nELIMINATO` : 'ELIMINATO');
+        const teamCode = selection ? getTeamCode(selection.teamId) : '';
+        row.push(teamCode || 'X');
         return;
       }
       
       // Check if this is the final round and the game is completed with this ticket still active (WINNER)
       if (selection && game.status === 'completed' && ticket.isActive && round === game.currentRound) {
-        const teamCode = getTeamLogo(selection.teamId);
-        row.push(`${teamCode}\nVINCITORE`);
+        const teamCode = getTeamCode(selection.teamId);
+        row.push(teamCode || '★');
         return;
       }
       
       // If round is completed (superato)
       if (selection && (round < game.currentRound || (round === game.currentRound && game.roundStatus === "calculated"))) {
-        const teamCode = getTeamLogo(selection.teamId);
-        row.push(`${teamCode}\nSUPERATO`);
+        const teamCode = getTeamCode(selection.teamId);
+        row.push(teamCode || '✓');
         return;
       }
       
@@ -235,8 +201,8 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
       
       // If this is current round and ticket is active
       if (isCurrentRound && ticket.isActive) {
-        const teamCode = selection ? getTeamLogo(selection.teamId) : '';
-        row.push(teamCode ? `${teamCode}\nATTIVO` : 'In attesa');
+        const teamCode = selection ? getTeamCode(selection.teamId) : '';
+        row.push(teamCode || '?');
         return;
       }
       
@@ -246,255 +212,136 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
     return row;
   });
   
+  // Calculate column widths for 20+ columns
+  const roundColumnWidth = (297 - 70) / gameRounds.length; // A4 landscape width minus fixed columns
+  const columnStyles: any = {
+    0: { cellWidth: 25 }, // Giocatore
+    1: { cellWidth: 15 }, // Ticket
+    2: { cellWidth: 20 }, // Stato
+  };
+  
+  // Set width for round columns
+  gameRounds.forEach((_, index) => {
+    columnStyles[3 + index] = { cellWidth: Math.max(roundColumnWidth, 8) };
+  });
+
   // Add table to PDF
   autoTable(doc, {
     head: [tableHeaders],
     body: tableData,
-    startY: 80,
+    startY: 65,
     styles: {
-      fontSize: 8,
-      cellPadding: 2,
+      fontSize: gameRounds.length > 15 ? 6 : 7,
+      cellPadding: 1,
+      halign: 'center',
+      valign: 'middle'
     },
     headStyles: {
       fillColor: [71, 85, 105], // slate-600
       textColor: 255,
-      fontSize: 9,
-      fontStyle: 'bold'
+      fontSize: gameRounds.length > 15 ? 7 : 8,
+      fontStyle: 'bold',
+      halign: 'center'
     },
     alternateRowStyles: {
       fillColor: [248, 250, 252] // slate-50
     },
-    columnStyles: {
-      0: { cellWidth: 25 }, // Giocatore
-      1: { cellWidth: 15 }, // Ticket
-      2: { cellWidth: 20 }, // Stato
-    },
-    margin: { left: 20, right: 20 },
-    didParseCell: function(data) {
+    columnStyles,
+    margin: { left: 10, right: 10 },
+    didParseCell: function(data: any) {
+      const rowIndex = data.row.index;
+      const colIndex = data.column.index;
+      const ticket = sortedTickets[rowIndex];
+      const round = gameRounds[colIndex - 3];
+      
       // Color coding for status column
-      if (data.column.index === 2) {
+      if (colIndex === 2) {
         const cellValue = data.cell.text[0];
         if (cellValue === 'Vincitore') {
-          data.cell.styles.fillColor = [251, 191, 36]; // yellow-400
-          data.cell.styles.textColor = [146, 64, 14]; // yellow-900
+          data.cell.styles.fillColor = [statusColors.vincitore.r, statusColors.vincitore.g, statusColors.vincitore.b];
+          data.cell.styles.textColor = [146, 64, 14];
         } else if (cellValue === 'Eliminato') {
-          data.cell.styles.fillColor = [248, 113, 113]; // red-400
-          data.cell.styles.textColor = [127, 29, 29]; // red-900
+          data.cell.styles.fillColor = [statusColors.eliminato.r, statusColors.eliminato.g, statusColors.eliminato.b];
+          data.cell.styles.textColor = [153, 27, 27];
         } else if (cellValue === 'Attivo') {
-          data.cell.styles.fillColor = [74, 222, 128]; // green-400
-          data.cell.styles.textColor = [20, 83, 45]; // green-900
+          data.cell.styles.fillColor = [statusColors.attivo.r, statusColors.attivo.g, statusColors.attivo.b];
+          data.cell.styles.textColor = [146, 64, 14];
         }
       }
       
-      // Color coding for team selection columns (from index 3 onwards)
-      if (data.column.index >= 3) {
-        const cellValue = data.cell.text[0];
+      // Color coding for round columns based on ticket status in that round
+      if (colIndex >= 3 && round && ticket) {
+        const selection = selectionsByTicket[ticket.id]?.[round];
         
-        if (cellValue.includes('VINCITORE')) {
-          data.cell.styles.fillColor = [254, 240, 138]; // yellow-200
-          data.cell.styles.textColor = [146, 64, 14]; // yellow-900
-        } else if (cellValue.includes('SUPERATO')) {
-          data.cell.styles.fillColor = [187, 247, 208]; // green-200
-          data.cell.styles.textColor = [20, 83, 45]; // green-900
-        } else if (cellValue.includes('ELIMINATO')) {
-          data.cell.styles.fillColor = [254, 202, 202]; // red-200
-          data.cell.styles.textColor = [127, 29, 29]; // red-900
-        } else if (cellValue.includes('ATTIVO')) {
-          data.cell.styles.fillColor = [254, 240, 138]; // yellow-200
-          data.cell.styles.textColor = [146, 64, 14]; // yellow-900
-        } else if (cellValue === '—') {
-          data.cell.styles.fillColor = [249, 250, 251]; // gray-50
-          data.cell.styles.textColor = [107, 114, 128]; // gray-500
+        // Winner cell
+        if (selection && game.status === 'completed' && ticket.isActive && round === game.currentRound) {
+          data.cell.styles.fillColor = [statusColors.vincitore.r, statusColors.vincitore.g, statusColors.vincitore.b];
         }
-        
-        // Center align and set smaller font for team columns
-        data.cell.styles.halign = 'center';
-        data.cell.styles.valign = 'middle';
-        data.cell.styles.fontSize = 8;
-        data.cell.styles.fontStyle = 'bold';
+        // Eliminated cell
+        else if (ticket.eliminatedInRound === round) {
+          data.cell.styles.fillColor = [statusColors.eliminato.r, statusColors.eliminato.g, statusColors.eliminato.b];
+        }
+        // Completed round (superato)
+        else if (selection && (round < game.currentRound || (round === game.currentRound && game.roundStatus === "calculated"))) {
+          data.cell.styles.fillColor = [statusColors.superato.r, statusColors.superato.g, statusColors.superato.b];
+        }
+        // Active round
+        else if (round === game.currentRound && game.roundStatus !== "calculated" && ticket.isActive && selection) {
+          data.cell.styles.fillColor = [statusColors.attivo.r, statusColors.attivo.g, statusColors.attivo.b];
+        }
+        // Future rounds or inactive
+        else if (round > game.currentRound || (!ticket.isActive && ticket.eliminatedInRound && ticket.eliminatedInRound < round)) {
+          data.cell.styles.fillColor = [statusColors.futuro.r, statusColors.futuro.g, statusColors.futuro.b];
+        }
       }
     }
   });
+
+  // Add legend with team logos and colors explanation
+  const finalY = (doc as any).lastAutoTable.finalY + 10;
   
-  // Add team legend with enhanced styling
-  const finalY = (doc as any).lastAutoTable.finalY || 140;
+  // Teams legend
+  doc.setFontSize(12);
+  doc.text('Legenda Squadre:', 20, finalY);
   
-  // Get unique teams used in selections
-  const usedTeamIds = new Set<number>();
-  teamSelections.forEach(selection => {
-    if (selection.teamId) {
-      usedTeamIds.add(selection.teamId);
-    }
+  // Get unique teams used in this game
+  const usedTeams = Array.from(new Set(
+    teamSelections.map((s: any) => s.teamId)
+  )).map(teamId => teams.find(t => t.id === teamId)).filter(Boolean);
+  
+  // Sort teams alphabetically
+  usedTeams.sort((a: any, b: any) => a.name.localeCompare(b.name));
+  
+  doc.setFontSize(8);
+  usedTeams.forEach((team: any, index: number) => {
+    const x = 20 + (index % 4) * 70;
+    const y = finalY + 8 + Math.floor(index / 4) * 8;
+    doc.text(`${team.code} - ${team.name}`, x, y);
   });
   
-  const usedTeams = teams.filter(team => usedTeamIds.has(team.id)).sort((a, b) => a.name.localeCompare(b.name));
+  // Status legend
+  const statusY = finalY + 8 + Math.ceil(usedTeams.length / 4) * 8 + 10;
+  doc.setFontSize(12);
+  doc.text('Legenda Stati:', 20, statusY);
   
-  if (usedTeams.length > 0) {
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Leggenda Squadre:', 20, finalY + 25);
-    
-    // Create a more organized grid layout
-    let currentY = finalY + 40;
-    let currentX = 20;
-    const itemsPerRow = 2;
-    let itemsInRow = 0;
-    const rowHeight = 12;
-    const columnWidth = 90;
-    
-    doc.setFontSize(9);
-    usedTeams.forEach((team, index) => {
-      if (itemsInRow >= itemsPerRow) {
-        currentY += rowHeight;
-        currentX = 20;
-        itemsInRow = 0;
-      }
-      
-      // Draw colored background box for team code (simulating logo appearance)
-      doc.setFillColor(230, 240, 250); // Light blue background
-      doc.rect(currentX, currentY - 8, 20, 10, 'F');
-      
-      // Draw team code in bold (representing the logo)
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(0, 50, 100); // Dark blue text
-      doc.text(team.code, currentX + 10, currentY - 2, { align: 'center' });
-      
-      // Draw team name
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(0, 0, 0); // Black text
-      doc.text(` = ${team.name}`, currentX + 25, currentY - 2);
-      
-      currentX += columnWidth;
-      itemsInRow++;
-    });
-  }
+  doc.setFontSize(8);
+  doc.setFillColor(statusColors.superato.r, statusColors.superato.g, statusColors.superato.b);
+  doc.rect(20, statusY + 5, 8, 4, 'F');
+  doc.text('Superato', 30, statusY + 8);
   
-  // Add footer
-  const pageCount = doc.getNumberOfPages();
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    doc.setFontSize(8);
-    doc.text(
-      `Pagina ${i} di ${pageCount} - Highlander Game Management System`,
-      doc.internal.pageSize.width / 2,
-      doc.internal.pageSize.height - 10,
-      { align: 'center' }
-    );
-  }
+  doc.setFillColor(statusColors.attivo.r, statusColors.attivo.g, statusColors.attivo.b);
+  doc.rect(70, statusY + 5, 8, 4, 'F');
+  doc.text('Attivo', 80, statusY + 8);
+  
+  doc.setFillColor(statusColors.eliminato.r, statusColors.eliminato.g, statusColors.eliminato.b);
+  doc.rect(120, statusY + 5, 8, 4, 'F');
+  doc.text('Eliminato', 130, statusY + 8);
+  
+  doc.setFillColor(statusColors.vincitore.r, statusColors.vincitore.g, statusColors.vincitore.b);
+  doc.rect(180, statusY + 5, 8, 4, 'F');
+  doc.text('Vincitore', 190, statusY + 8);
   
   // Save the PDF
   const fileName = `highlander_storico_${game.name.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
-  doc.save(fileName);
-}
-
-export function generateTeamSelectionsPDF(data: GameHistoryData, selections: any[]) {
-  const { game, teams, users } = data;
-  
-  // Create new PDF document
-  const doc = new jsPDF();
-  
-  // Set font
-  doc.setFont('helvetica');
-  
-  // Title
-  doc.setFontSize(20);
-  doc.text('Scelte Squadre - Highlander', 20, 20);
-  
-  // Game info
-  doc.setFontSize(14);
-  doc.text(`Gioco: ${game.name}`, 20, 35);
-  doc.setFontSize(10);
-  doc.text(`Stato: ${game.status}`, 20, 45);
-  doc.text(`Giornata corrente: ${game.currentRound}`, 20, 52);
-  doc.text(`Data generazione: ${new Date().toLocaleDateString('it-IT')}`, 20, 59);
-  
-  // Helper functions
-  const getTeamName = (teamId: number) => {
-    return teams.find(t => t.id === teamId)?.name || 'N/A';
-  };
-  
-  const getUserName = (username: string) => {
-    return username || 'N/A';
-  };
-  
-  // Prepare table data
-  const tableHeaders = [
-    'Giocatore',
-    'Ticket',
-    'Giornata',
-    'Squadra Scelta',
-    'Stato'
-  ];
-  
-  const tableData = selections.map(selection => [
-    getUserName(selection.username),
-    `#${selection.ticketId}`,
-    `Giornata ${selection.round}`,
-    getTeamName(selection.teamId),
-    selection.status
-  ]);
-  
-  // Add table to PDF
-  autoTable(doc, {
-    head: [tableHeaders],
-    body: tableData,
-    startY: 70,
-    styles: {
-      fontSize: 10,
-      cellPadding: 3,
-    },
-    headStyles: {
-      fillColor: [71, 85, 105], // slate-600
-      textColor: 255,
-      fontSize: 11,
-      fontStyle: 'bold'
-    },
-    alternateRowStyles: {
-      fillColor: [248, 250, 252] // slate-50
-    },
-    columnStyles: {
-      0: { cellWidth: 35 }, // Giocatore
-      1: { cellWidth: 25 }, // Ticket
-      2: { cellWidth: 30 }, // Giornata
-      3: { cellWidth: 40 }, // Squadra
-      4: { cellWidth: 30 }, // Stato
-    },
-    margin: { left: 20, right: 20 },
-    didParseCell: function(data) {
-      // Color coding for status column
-      if (data.column.index === 4) {
-        const cellValue = data.cell.text[0];
-        if (cellValue === 'Vincitore') {
-          data.cell.styles.fillColor = [251, 191, 36]; // yellow-400
-          data.cell.styles.textColor = [146, 64, 14]; // yellow-900
-        } else if (cellValue === 'Eliminato') {
-          data.cell.styles.fillColor = [248, 113, 113]; // red-400
-          data.cell.styles.textColor = [127, 29, 29]; // red-900
-        } else if (cellValue === 'Superato') {
-          data.cell.styles.fillColor = [147, 197, 253]; // blue-300
-          data.cell.styles.textColor = [30, 58, 138]; // blue-900
-        } else if (cellValue === 'Attivo') {
-          data.cell.styles.fillColor = [74, 222, 128]; // green-400
-          data.cell.styles.textColor = [20, 83, 45]; // green-900
-        }
-      }
-    }
-  });
-  
-  // Add footer
-  const pageCount = doc.getNumberOfPages();
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    doc.setFontSize(8);
-    doc.text(
-      `Pagina ${i} di ${pageCount} - Highlander Game Management System`,
-      doc.internal.pageSize.width / 2,
-      doc.internal.pageSize.height - 10,
-      { align: 'center' }
-    );
-  }
-  
-  // Save the PDF
-  const fileName = `highlander_scelte_${game.name.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
   doc.save(fileName);
 }
