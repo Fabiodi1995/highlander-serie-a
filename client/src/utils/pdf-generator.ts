@@ -106,18 +106,48 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
       getTicketStatus(ticket)
     ];
     
-    // Add team selections for each round
+      // Add team selections for each round with proper status
     gameRounds.forEach(round => {
       const selection = selectionsByTicket[ticket.id]?.[round];
-      if (selection && selection.teamId) {
-        row.push(getTeamLogo(selection.teamId));
-      } else if (ticket.eliminatedInRound && ticket.eliminatedInRound <= round) {
-        row.push('Eliminato');
-      } else if (round === game.currentRound && ticket.isActive && game.roundStatus !== "calculated") {
-        row.push('In attesa');
-      } else {
+      
+      // If ticket was eliminated before this round
+      if (ticket.eliminatedInRound && ticket.eliminatedInRound < round) {
         row.push('—');
+        return;
       }
+      
+      // If ticket was eliminated in this round
+      if (ticket.eliminatedInRound === round) {
+        const teamCode = selection ? getTeamLogo(selection.teamId) : '';
+        row.push(teamCode ? `${teamCode}\nELIMINATO` : 'ELIMINATO');
+        return;
+      }
+      
+      // Check if this is current round being played
+      const isCurrentRound = round === game.currentRound && game.roundStatus !== "calculated";
+      
+      // If this is current round and ticket is active
+      if (isCurrentRound && ticket.isActive) {
+        const teamCode = selection ? getTeamLogo(selection.teamId) : '';
+        row.push(teamCode ? `${teamCode}\nATTIVO` : 'In attesa');
+        return;
+      }
+      
+      // If round is completed (superato or vincitore)
+      if (selection && (round < game.currentRound || (round === game.currentRound && game.roundStatus === "calculated"))) {
+        const teamCode = getTeamLogo(selection.teamId);
+        // Check if this is the final round and the game is completed with this ticket still active
+        const isWinner = game.status === 'completed' && ticket.isActive && round === game.currentRound;
+        
+        if (isWinner) {
+          row.push(`${teamCode}\nVINCITORE`);
+        } else {
+          row.push(`${teamCode}\nSUPERATO`);
+        }
+        return;
+      }
+      
+      row.push('—');
     });
     
     return row;
@@ -162,13 +192,39 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
           data.cell.styles.textColor = [20, 83, 45]; // green-900
         }
       }
+      
+      // Color coding for team selection columns (from index 3 onwards)
+      if (data.column.index >= 3) {
+        const cellValue = data.cell.text[0];
+        
+        if (cellValue.includes('VINCITORE')) {
+          data.cell.styles.fillColor = [254, 240, 138]; // yellow-200
+          data.cell.styles.textColor = [146, 64, 14]; // yellow-900
+        } else if (cellValue.includes('SUPERATO')) {
+          data.cell.styles.fillColor = [187, 247, 208]; // green-200
+          data.cell.styles.textColor = [20, 83, 45]; // green-900
+        } else if (cellValue.includes('ELIMINATO')) {
+          data.cell.styles.fillColor = [254, 202, 202]; // red-200
+          data.cell.styles.textColor = [127, 29, 29]; // red-900
+        } else if (cellValue.includes('ATTIVO')) {
+          data.cell.styles.fillColor = [254, 240, 138]; // yellow-200
+          data.cell.styles.textColor = [146, 64, 14]; // yellow-900
+        } else if (cellValue === '—') {
+          data.cell.styles.fillColor = [249, 250, 251]; // gray-50
+          data.cell.styles.textColor = [107, 114, 128]; // gray-500
+        }
+        
+        // Center align and set smaller font for team columns
+        data.cell.styles.halign = 'center';
+        data.cell.styles.valign = 'middle';
+        data.cell.styles.fontSize = 8;
+        data.cell.styles.fontStyle = 'bold';
+      }
     }
   });
   
-  // Add team legend
+  // Add team legend with enhanced styling
   const finalY = (doc as any).lastAutoTable.finalY || 140;
-  doc.setFontSize(12);
-  doc.text('Leggenda Squadre:', 20, finalY + 20);
   
   // Get unique teams used in selections
   const usedTeamIds = new Set<number>();
@@ -180,29 +236,45 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
   
   const usedTeams = teams.filter(team => usedTeamIds.has(team.id)).sort((a, b) => a.name.localeCompare(b.name));
   
-  // Create legend entries with logos and names
-  let currentY = finalY + 30;
-  let currentX = 20;
-  const itemsPerRow = 3;
-  let itemsInRow = 0;
-  
-  doc.setFontSize(9);
-  usedTeams.forEach((team, index) => {
-    if (itemsInRow >= itemsPerRow) {
-      currentY += 15;
-      currentX = 20;
-      itemsInRow = 0;
-    }
+  if (usedTeams.length > 0) {
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Leggenda Squadre:', 20, finalY + 25);
     
-    // Draw team code (logo) and name
-    doc.setFont(undefined, 'bold');
-    doc.text(team.code, currentX, currentY);
-    doc.setFont(undefined, 'normal');
-    doc.text(` - ${team.name}`, currentX + 15, currentY);
+    // Create a more organized grid layout
+    let currentY = finalY + 40;
+    let currentX = 20;
+    const itemsPerRow = 2;
+    let itemsInRow = 0;
+    const rowHeight = 12;
+    const columnWidth = 90;
     
-    currentX += 65;
-    itemsInRow++;
-  });
+    doc.setFontSize(9);
+    usedTeams.forEach((team, index) => {
+      if (itemsInRow >= itemsPerRow) {
+        currentY += rowHeight;
+        currentX = 20;
+        itemsInRow = 0;
+      }
+      
+      // Draw colored background box for team code (simulating logo appearance)
+      doc.setFillColor(230, 240, 250); // Light blue background
+      doc.rect(currentX, currentY - 8, 20, 10, 'F');
+      
+      // Draw team code in bold (representing the logo)
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(0, 50, 100); // Dark blue text
+      doc.text(team.code, currentX + 10, currentY - 2, { align: 'center' });
+      
+      // Draw team name
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(0, 0, 0); // Black text
+      doc.text(` = ${team.name}`, currentX + 25, currentY - 2);
+      
+      currentX += columnWidth;
+      itemsInRow++;
+    });
+  }
   
   // Add footer
   const pageCount = doc.getNumberOfPages();
