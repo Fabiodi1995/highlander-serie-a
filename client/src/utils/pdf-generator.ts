@@ -2,27 +2,27 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import type { Game, Ticket, Team, User } from '@shared/schema';
 
-// Import team logos for PDF generation
-import atalantaLogo from "../assets/team-logos/atalanta.png";
-import bolognaLogo from "../assets/team-logos/bologna.png";
-import cagliariLogo from "../assets/team-logos/cagliari.png";
-import comoLogo from "../assets/team-logos/como.png";
-import empoliLogo from "../assets/team-logos/empoli.png";
-import fiorentinaLogo from "../assets/team-logos/fiorentina.png";
-import genoaLogo from "../assets/team-logos/genoa.png";
-import hellasVeronaLogo from "../assets/team-logos/hellas-verona.png";
-import interLogo from "../assets/team-logos/inter.png";
-import juventusLogo from "../assets/team-logos/juventus.png";
-import lazioLogo from "../assets/team-logos/lazio.png";
-import lecceLogo from "../assets/team-logos/lecce.png";
-import milanLogo from "../assets/team-logos/milan.png";
-import monzaLogo from "../assets/team-logos/monza.png";
-import napoliLogo from "../assets/team-logos/napoli.png";
-import parmaLogo from "../assets/team-logos/parma.png";
-import romaLogo from "../assets/team-logos/roma.png";
-import torinoLogo from "../assets/team-logos/torino.png";
-import udineseLogo from "../assets/team-logos/udinese.png";
-import veneziaLogo from "../assets/team-logos/venezia.png";
+// Import team logos from attached assets
+import atalantaLogo from "@assets/Atalanta_1749734308298.png";
+import bolognaLogo from "@assets/Bologna_1749734308287.png";
+import cagliariLogo from "@assets/Cagliari_1749734308284.png";
+import comoLogo from "@assets/Como_1749734308286.png";
+import empoliLogo from "@assets/Empoli_1749734308299.png";
+import fiorentinaLogo from "@assets/Fiorentina_1749734308290.png";
+import genoaLogo from "@assets/Genoa_1749734308295.png";
+import interLogo from "@assets/Inter_1749734308304.png";
+import juventusLogo from "@assets/Juventus_1749734308303.png";
+import lazioLogo from "@assets/Lazio_1749734308294.png";
+import lecceLogo from "@assets/Lecce_1749734308291.png";
+import milanLogo from "@assets/Milan_1749734308296.png";
+import monzaLogo from "@assets/Monza_1749734308289.png";
+import napoliLogo from "@assets/Napoli_1749734308305.png";
+import parmaLogo from "@assets/Parma_1749734308292.png";
+import romaLogo from "@assets/Roma_1749734308288.png";
+import torinoLogo from "@assets/Torino_1749734308302.png";
+import udineseLogo from "@assets/Udinese_1749734308301.png";
+import veneziaLogo from "@assets/Venezia_1749734308283.png";
+import veronaLogo from "@assets/Verona_1749734308300.png";
 
 // Team logo mapping for PDF generation
 const teamLogoMap: { [key: string]: string } = {
@@ -33,7 +33,7 @@ const teamLogoMap: { [key: string]: string } = {
   "Empoli": empoliLogo,
   "Fiorentina": fiorentinaLogo,
   "Genoa": genoaLogo,
-  "Hellas Verona": hellasVeronaLogo,
+  "Hellas Verona": veronaLogo,
   "Inter": interLogo,
   "Juventus": juventusLogo,
   "Lazio": lazioLogo,
@@ -66,8 +66,26 @@ export interface GameHistoryData {
   teamSelections: any[];
 }
 
-export function generateGameHistoryPDF(data: GameHistoryData) {
+export async function generateGameHistoryPDF(data: GameHistoryData) {
   const { game, tickets, teams, users, teamSelections } = data;
+  
+  // Pre-load all team logos as base64
+  const teamLogosBase64: { [key: string]: string } = {};
+  console.log('Loading team logos...');
+  
+  for (const team of teams) {
+    const logoPath = teamLogoMap[team.name];
+    if (logoPath) {
+      try {
+        teamLogosBase64[team.name] = await loadImageAsBase64(logoPath);
+        console.log(`Loaded logo for ${team.name}`);
+      } catch (error) {
+        console.warn(`Failed to load logo for ${team.name}:`, error);
+      }
+    }
+  }
+  
+  console.log('All logos loaded, generating PDF...');
   
   // Create new PDF document in landscape mode for better table display
   const doc = new jsPDF({
@@ -87,11 +105,17 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
   doc.setFillColor(71, 85, 105); // Dark blue header
   doc.rect(0, 0, 297, 25, 'F');
   
-  // Title with white text
+  // Add Highlander logo and title
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(20);
   doc.setFont('helvetica', 'bold');
-  doc.text('HIGHLANDER - Storico Giocatori', 20, 17);
+  
+  // Draw a simple crown symbol as Highlander logo
+  doc.setFillColor(255, 215, 0); // Gold color
+  doc.rect(15, 10, 12, 5, 'F'); // Simple rectangle as crown base
+  doc.triangle(18, 7, 21, 10, 24, 7, 'F'); // Crown peak
+  
+  doc.text('HIGHLANDER - Storico Giocatori', 35, 17);
   
   // Game info section with modern card design
   doc.setFillColor(255, 255, 255);
@@ -121,21 +145,46 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
     return teams.find(t => t.id === teamId)?.code || '???';
   };
 
-  // Function to draw team logo circle with color and code
-  const drawTeamLogo = (team: any, x: number, y: number, size: number = 3) => {
+  // Function to load image as base64
+  const loadImageAsBase64 = (imageSrc: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx?.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = imageSrc;
+    });
+  };
+
+  // Function to draw team logo using actual PNG image
+  const drawTeamLogo = async (team: any, x: number, y: number, size: number = 6) => {
     if (!team) return;
     
-    // Draw colored circle background
-    const color = getTeamColor(team.name);
-    (doc as any).setFillColor(color[0], color[1], color[2]);
-    (doc as any).circle(x + size/2, y + size/2, size/2, 'F');
-    
-    // Add team code text in white
-    (doc as any).setTextColor(255, 255, 255);
-    (doc as any).setFontSize(4);
-    (doc as any).setFont('helvetica', 'bold');
-    const textWidth = (doc as any).getTextWidth(team.code);
-    (doc as any).text(team.code, x + size/2 - textWidth/2, y + size/2 + 1);
+    const logoPath = teamLogoMap[team.name];
+    if (logoPath) {
+      try {
+        const base64Image = await loadImageAsBase64(logoPath);
+        (doc as any).addImage(base64Image, 'PNG', x, y, size, size);
+      } catch (error) {
+        // Fallback to colored circle with team code
+        const color = getTeamColor(team.name);
+        (doc as any).setFillColor(color[0], color[1], color[2]);
+        (doc as any).circle(x + size/2, y + size/2, size/2, 'F');
+        
+        (doc as any).setTextColor(255, 255, 255);
+        (doc as any).setFontSize(4);
+        (doc as any).setFont('helvetica', 'bold');
+        const textWidth = (doc as any).getTextWidth(team.code);
+        (doc as any).text(team.code, x + size/2 - textWidth/2, y + size/2 + 1);
+      }
+    }
   };
 
   // Function to get team colors for visual representation
