@@ -339,17 +339,30 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
     return row;
   });
   
-  // Calculate column widths for 20+ columns
-  const roundColumnWidth = (297 - 70) / gameRounds.length; // A4 landscape width minus fixed columns
+  // Calculate optimal column widths to fit within page margins
+  const pageWidth = 210; // A4 width in mm (portrait)
+  const margins = 30; // 15mm on each side
+  const availableWidth = pageWidth - margins;
+  
+  // Fixed column widths (reduced for better fit)
+  const playerWidth = 20;
+  const ticketWidth = 12;
+  const statusWidth = 18;
+  const fixedColumnsWidth = playerWidth + ticketWidth + statusWidth;
+  
+  // Calculate remaining width for round columns
+  const remainingWidth = availableWidth - fixedColumnsWidth;
+  const roundColumnWidth = Math.max(5, Math.floor(remainingWidth / gameRounds.length));
+  
   const columnStyles: any = {
-    0: { cellWidth: 25 }, // Giocatore
-    1: { cellWidth: 15 }, // Ticket
-    2: { cellWidth: 20 }, // Stato
+    0: { cellWidth: playerWidth }, // Giocatore
+    1: { cellWidth: ticketWidth }, // Ticket
+    2: { cellWidth: statusWidth }, // Stato
   };
   
   // Set width for round columns
   gameRounds.forEach((_, index) => {
-    columnStyles[3 + index] = { cellWidth: Math.max(roundColumnWidth, 8) };
+    columnStyles[3 + index] = { cellWidth: roundColumnWidth };
   });
 
   // Add table to PDF with modern styling
@@ -383,10 +396,16 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
     didParseCell: function(data: any) {
       const rowIndex = data.row.index;
       const colIndex = data.column.index;
+      
+      // Skip header row processing
+      if (data.row.section === 'head') {
+        return;
+      }
+      
       const ticket = sortedTickets[rowIndex];
       const round = gameRounds[colIndex - 3];
       
-      // Clear text for logo cells
+      // Clear text for logo cells in body rows only
       if (colIndex >= 3 && data.cell.text[0] && data.cell.text[0].startsWith('LOGO:')) {
         data.cell.text = [''];
       }
@@ -440,7 +459,12 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
       const rowIndex = data.row.index;
       const colIndex = data.column.index;
       
-      // Handle team logo drawing for round columns
+      // Skip header row processing
+      if (data.row.section === 'head') {
+        return;
+      }
+      
+      // Handle team logo drawing for round columns in body rows only
       if (colIndex >= 3 && rowIndex < sortedTickets.length) {
         const ticket = sortedTickets[rowIndex];
         const round = gameRounds[colIndex - 3];
