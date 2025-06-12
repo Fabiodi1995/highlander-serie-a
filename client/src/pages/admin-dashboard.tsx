@@ -521,11 +521,13 @@ function PlayerHistoryTable({
 
   // Handle PDF download
   const handleDownloadPDF = () => {
+    const gameSelections = allTeamSelections.find(gameData => gameData.game.id === game.id)?.selections || [];
     const pdfData: GameHistoryData = {
       game,
       tickets: gameTickets,
       teams,
-      users
+      users,
+      teamSelections: gameSelections
     };
     generateGameHistoryPDF(pdfData);
   };

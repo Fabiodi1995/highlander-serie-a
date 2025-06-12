@@ -7,10 +7,11 @@ export interface GameHistoryData {
   tickets: any[];
   teams: Team[];
   users: User[];
+  teamSelections: any[];
 }
 
 export function generateGameHistoryPDF(data: GameHistoryData) {
-  const { game, tickets, teams, users } = data;
+  const { game, tickets, teams, users, teamSelections } = data;
   
   // Create new PDF document
   const doc = new jsPDF();
@@ -28,8 +29,9 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
   doc.setFontSize(10);
   doc.text(`Stato: ${game.status}`, 20, 45);
   doc.text(`Giornata corrente: ${game.currentRound}`, 20, 52);
-  doc.text(`Giornate: dalla ${game.startRound} alla ${game.currentRound}`, 20, 59);
-  doc.text(`Data generazione: ${new Date().toLocaleDateString('it-IT')}`, 20, 66);
+  doc.text(`Round status: ${game.roundStatus}`, 20, 59);
+  doc.text(`Giornate: dalla ${game.startRound} alla ${game.currentRound}`, 20, 66);
+  doc.text(`Data generazione: ${new Date().toLocaleDateString('it-IT')}`, 20, 73);
   
   // Helper functions
   const getTeamName = (teamId: number) => {
@@ -42,8 +44,19 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
   
   const getTicketStatus = (ticket: any) => {
     if (!ticket.isActive) return 'Eliminato';
-    if (game.status === 'completed') return 'Vincitore';
-    return 'Attivo';
+    if (game.status === 'completed' && ticket.isActive) return 'Vincitore';
+    if (ticket.isActive && game.status === 'active') return 'Attivo';
+    return 'Superato';
+  };
+
+  const getStatusSortOrder = (status: string) => {
+    switch (status) {
+      case 'Vincitore': return 1;
+      case 'Attivo': return 2;
+      case 'Superato': return 3;
+      case 'Eliminato': return 4;
+      default: return 5;
+    }
   };
   
   // Create rounds array
@@ -52,15 +65,37 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
     gameRounds.push(round);
   }
   
+  // Create selections mapping by ticket and round
+  const selectionsByTicket = teamSelections.reduce((acc: any, selection: any) => {
+    if (!acc[selection.ticketId]) {
+      acc[selection.ticketId] = {};
+    }
+    acc[selection.ticketId][selection.round] = selection;
+    return acc;
+  }, {});
+  
   // Prepare table data
   const tableHeaders = [
     'Giocatore',
     'Ticket',
     'Stato',
-    ...gameRounds.map(round => `G${round}`)
+    ...gameRounds.map(round => `R${gameRounds.indexOf(round) + 1} (G${round})`)
   ];
   
-  const tableData = tickets.map(ticket => {
+  // Sort tickets by status priority
+  const sortedTickets = tickets.sort((a, b) => {
+    const statusA = getTicketStatus(a);
+    const statusB = getTicketStatus(b);
+    const orderA = getStatusSortOrder(statusA);
+    const orderB = getStatusSortOrder(statusB);
+    
+    if (orderA !== orderB) {
+      return orderA - orderB;
+    }
+    return a.id - b.id;
+  });
+  
+  const tableData = sortedTickets.map(ticket => {
     const row = [
       getUserName(ticket.userId),
       `#${ticket.id}`,
@@ -69,13 +104,13 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
     
     // Add team selections for each round
     gameRounds.forEach(round => {
-      const selection = ticket.selections?.[round.toString()];
-      if (selection?.hidden) {
-        row.push('🔒');
-      } else if (selection && selection.teamId) {
+      const selection = selectionsByTicket[ticket.id]?.[round];
+      if (selection && selection.teamId) {
         row.push(getTeamName(selection.teamId));
-      } else if (ticket.eliminatedInRound && ticket.eliminatedInRound < round) {
-        row.push('—');
+      } else if (ticket.eliminatedInRound && ticket.eliminatedInRound <= round) {
+        row.push('Eliminato');
+      } else if (round === game.currentRound && ticket.isActive && game.roundStatus !== "calculated") {
+        row.push('In attesa');
       } else {
         row.push('—');
       }
@@ -88,7 +123,7 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
   autoTable(doc, {
     head: [tableHeaders],
     body: tableData,
-    startY: 75,
+    startY: 80,
     styles: {
       fontSize: 8,
       cellPadding: 2,
