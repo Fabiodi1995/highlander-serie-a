@@ -51,10 +51,11 @@ const teamLogoMap: { [key: string]: string } = {
 // Colors for different ticket statuses (light colors to not interfere with logos)
 const statusColors = {
   superato: { r: 232, g: 245, b: 232 }, // Light green
-  attivo: { r: 255, g: 249, b: 230 },   // Light yellow
+  attivo: { r: 255, g: 249, b: 230 },   // Light yellow  
   eliminato: { r: 255, g: 232, b: 232 }, // Light red
   vincitore: { r: 255, g: 244, b: 204 }, // Light gold
-  futuro: { r: 248, g: 249, b: 250 }     // Light gray
+  futuro: { r: 248, g: 249, b: 250 },    // Light gray
+  noSelection: { r: 255, g: 249, b: 230 } // Yellow for missing selections
 };
 
 export interface GameHistoryData {
@@ -202,7 +203,7 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
       // If this is current round and ticket is active
       if (isCurrentRound && ticket.isActive) {
         const teamCode = selection ? getTeamCode(selection.teamId) : '';
-        row.push(teamCode || '?');
+        row.push(teamCode || '—');
         return;
       }
       
@@ -273,25 +274,34 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
       if (colIndex >= 3 && round && ticket) {
         const selection = selectionsByTicket[ticket.id]?.[round];
         
-        // Winner cell
+        // Winner cell (gold)
         if (selection && game.status === 'completed' && ticket.isActive && round === game.currentRound) {
           data.cell.styles.fillColor = [statusColors.vincitore.r, statusColors.vincitore.g, statusColors.vincitore.b];
         }
-        // Eliminated cell
+        // Eliminated cell (red)
         else if (ticket.eliminatedInRound === round) {
           data.cell.styles.fillColor = [statusColors.eliminato.r, statusColors.eliminato.g, statusColors.eliminato.b];
         }
-        // Completed round (superato)
-        else if (selection && (round < game.currentRound || (round === game.currentRound && game.roundStatus === "calculated"))) {
+        // Completed round with selection (green)
+        else if (selection && round < game.currentRound) {
           data.cell.styles.fillColor = [statusColors.superato.r, statusColors.superato.g, statusColors.superato.b];
         }
-        // Active round
-        else if (round === game.currentRound && game.roundStatus !== "calculated" && ticket.isActive && selection) {
-          data.cell.styles.fillColor = [statusColors.attivo.r, statusColors.attivo.g, statusColors.attivo.b];
+        // Current round with selection (normal/white)
+        else if (round === game.currentRound && ticket.isActive && selection) {
+          // Keep default white background for current round with selection
+          data.cell.styles.fillColor = [255, 255, 255];
         }
-        // Future rounds or inactive
-        else if (round > game.currentRound || (!ticket.isActive && ticket.eliminatedInRound && ticket.eliminatedInRound < round)) {
+        // Current round without selection (yellow)
+        else if (round === game.currentRound && ticket.isActive && !selection) {
+          data.cell.styles.fillColor = [statusColors.noSelection.r, statusColors.noSelection.g, statusColors.noSelection.b];
+        }
+        // Future rounds or eliminated ticket (light gray)
+        else if (round > game.currentRound || !ticket.isActive) {
           data.cell.styles.fillColor = [statusColors.futuro.r, statusColors.futuro.g, statusColors.futuro.b];
+        }
+        // Default case (white)
+        else {
+          data.cell.styles.fillColor = [255, 255, 255];
         }
       }
     }
@@ -304,23 +314,18 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
   doc.setFontSize(12);
   doc.text('Legenda Squadre:', 20, finalY);
   
-  // Get unique teams used in this game
-  const usedTeams = Array.from(new Set(
-    teamSelections.map((s: any) => s.teamId)
-  )).map(teamId => teams.find(t => t.id === teamId)).filter(Boolean);
-  
-  // Sort teams alphabetically
-  usedTeams.sort((a: any, b: any) => a.name.localeCompare(b.name));
+  // Show all Serie A teams (all 20 teams)
+  const allSerieATeams = [...teams].sort((a, b) => a.name.localeCompare(b.name));
   
   doc.setFontSize(8);
-  usedTeams.forEach((team: any, index: number) => {
+  allSerieATeams.forEach((team, index) => {
     const x = 20 + (index % 4) * 70;
     const y = finalY + 8 + Math.floor(index / 4) * 8;
     doc.text(`${team.code} - ${team.name}`, x, y);
   });
   
   // Status legend
-  const statusY = finalY + 8 + Math.ceil(usedTeams.length / 4) * 8 + 10;
+  const statusY = finalY + 8 + Math.ceil(allSerieATeams.length / 4) * 8 + 10;
   doc.setFontSize(12);
   doc.text('Legenda Stati:', 20, statusY);
   
