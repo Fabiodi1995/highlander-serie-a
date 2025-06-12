@@ -4,7 +4,7 @@ import {
   type Ticket, type Match, type TeamSelection, type InsertTeamSelection,
   type GameParticipant
 } from "@shared/schema";
-import { db } from "./db";
+import { db, safeDbQuery } from "./db";
 import { eq, and, desc, asc, sql, inArray } from "drizzle-orm";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -16,19 +16,21 @@ const userCache = new Map<string, { user: User | undefined, timestamp: number }>
 const CACHE_TTL = 60000; // 1 minute
 
 async function withRetry<T>(operation: () => Promise<T>, maxRetries = 3): Promise<T> {
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      return await operation();
-    } catch (error: any) {
-      if (error.message?.includes('Too many database connection attempts')) {
-        if (attempt === maxRetries) throw error;
-        await new Promise(resolve => setTimeout(resolve, 100 * attempt));
-        continue;
+  return safeDbQuery(async () => {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        return await operation();
+      } catch (error: any) {
+        if (error.message?.includes('Too many database connection attempts')) {
+          if (attempt === maxRetries) throw error;
+          await new Promise(resolve => setTimeout(resolve, 200 * attempt));
+          continue;
+        }
+        throw error;
       }
-      throw error;
     }
-  }
-  throw new Error('Max retries exceeded');
+    throw new Error('Max retries exceeded');
+  });
 }
 
 export interface IStorage {
@@ -146,14 +148,24 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db
-      .insert(users)
-      .values({
-        ...insertUser,
-        emailVerified: false,
-        isAdmin: false
-      })
-      .returning();
+    const user = await withRetry(async () => {
+      const [result] = await db
+        .insert(users)
+        .values({
+          ...insertUser,
+          emailVerified: false,
+          isAdmin: false
+        })
+        .returning();
+      return result;
+    });
+    
+    // Invalidate cache for this user
+    userCache.delete(`username:${insertUser.username.toLowerCase()}`);
+    if (insertUser.email) {
+      userCache.delete(`email:${insertUser.email.toLowerCase()}`);
+    }
+    
     return user;
   }
 
