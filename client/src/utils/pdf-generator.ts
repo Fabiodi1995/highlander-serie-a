@@ -91,7 +91,7 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(20);
   doc.setFont('helvetica', 'bold');
-  doc.text('🏆 HIGHLANDER - Storico Giocatori', 20, 17);
+  doc.text('HIGHLANDER - Storico Giocatori', 20, 17);
   
   // Game info section with modern card design
   doc.setFillColor(255, 255, 255);
@@ -103,14 +103,14 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
   doc.setTextColor(51, 65, 85);
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
-  doc.text(`🎮 ${game.name}`, 20, 40);
+  doc.text(`Gioco: ${game.name}`, 20, 40);
   
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  doc.text(`📊 Stato: ${game.status}`, 20, 46);
-  doc.text(`🎯 Giornata corrente: ${game.currentRound}`, 20, 51);
-  doc.text(`📅 Giornate: dalla ${game.startRound} alla ${Math.min(game.startRound + 19, 38)}`, 120, 46);
-  doc.text(`📆 Generato: ${new Date().toLocaleDateString('it-IT')} alle ${new Date().toLocaleTimeString('it-IT')}`, 120, 51);
+  doc.text(`Stato: ${game.status}`, 20, 46);
+  doc.text(`Giornata corrente: ${game.currentRound}`, 20, 51);
+  doc.text(`Giornate: dalla ${game.startRound} alla ${Math.min(game.startRound + 19, 38)}`, 120, 46);
+  doc.text(`Generato: ${new Date().toLocaleDateString('it-IT')} alle ${new Date().toLocaleTimeString('it-IT')}`, 120, 51);
   
   // Helper functions
   const getTeamName = (teamId: number) => {
@@ -121,13 +121,48 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
     return teams.find(t => t.id === teamId)?.code || '???';
   };
 
-  // Function to get team visual representation for PDF
-  const getTeamDisplay = (teamId: number) => {
-    const team = teams.find(t => t.id === teamId);
-    if (!team) return '???';
+  // Function to draw team logo circle with color and code
+  const drawTeamLogo = (team: any, x: number, y: number, size: number = 3) => {
+    if (!team) return;
     
-    // Create a visual representation using team code with styling
-    return team.code;
+    // Draw colored circle background
+    const color = getTeamColor(team.name);
+    (doc as any).setFillColor(color[0], color[1], color[2]);
+    (doc as any).circle(x + size/2, y + size/2, size/2, 'F');
+    
+    // Add team code text in white
+    (doc as any).setTextColor(255, 255, 255);
+    (doc as any).setFontSize(4);
+    (doc as any).setFont('helvetica', 'bold');
+    const textWidth = (doc as any).getTextWidth(team.code);
+    (doc as any).text(team.code, x + size/2 - textWidth/2, y + size/2 + 1);
+  };
+
+  // Function to get team colors for visual representation
+  const getTeamColor = (teamName: string) => {
+    const colorMap: { [key: string]: [number, number, number] } = {
+      "Atalanta": [0, 70, 135],
+      "Bologna": [150, 30, 45],
+      "Cagliari": [200, 16, 46],
+      "Como": [0, 85, 164],
+      "Empoli": [0, 100, 200],
+      "Fiorentina": [103, 58, 183],
+      "Genoa": [220, 20, 60],
+      "Hellas Verona": [255, 235, 59],
+      "Inter": [0, 0, 0],
+      "Juventus": [0, 0, 0],
+      "Lazio": [135, 206, 250],
+      "Lecce": [255, 235, 59],
+      "Milan": [172, 30, 45],
+      "Monza": [255, 0, 0],
+      "Napoli": [135, 206, 250],
+      "Parma": [255, 193, 7],
+      "Roma": [134, 24, 56],
+      "Torino": [140, 20, 75],
+      "Udinese": [0, 0, 0],
+      "Venezia": [255, 152, 0],
+    };
+    return colorMap[teamName] || [128, 128, 128];
   };
   
   const getUserName = (userId: number) => {
@@ -346,6 +381,37 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
           data.cell.styles.fillColor = [255, 255, 255];
         }
       }
+    },
+    didDrawCell: function(data: any) {
+      const rowIndex = data.row.index;
+      const colIndex = data.column.index;
+      const ticket = sortedTickets[rowIndex];
+      const round = gameRounds[colIndex - 3];
+      
+      // Add team logos for round columns
+      if (colIndex >= 3 && round && ticket) {
+        const selection = selectionsByTicket[ticket.id]?.[round];
+        if (selection && data.cell.text[0] !== '—') {
+          const team = teams.find(t => t.id === selection.teamId);
+          if (team) {
+            const cellX = data.cell.x + 2;
+            const cellY = data.cell.y + 1;
+            const logoSize = 3;
+            
+            // Draw team logo circle
+            const teamColor = getTeamColor(team.name);
+            doc.setFillColor(teamColor[0], teamColor[1], teamColor[2]);
+            doc.circle(cellX + logoSize, cellY + logoSize, logoSize/2, 'F');
+            
+            // Add team code
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(4);
+            doc.setFont('helvetica', 'bold');
+            const textWidth = doc.getTextWidth(team.code);
+            doc.text(team.code, cellX + logoSize - textWidth/2, cellY + logoSize + 1);
+          }
+        }
+      }
     }
   });
 
@@ -361,7 +427,7 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
   doc.setTextColor(30, 41, 59);
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.text('⚽ Legenda Squadre Serie A 2024/25', 20, finalY + 8);
+  doc.text('Legenda Squadre Serie A 2024/25', 20, finalY + 8);
   
   // Show all Serie A teams (all 20 teams) with modern styling
   const allSerieATeams = [...teams].sort((a, b) => a.name.localeCompare(b.name));
@@ -386,7 +452,7 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
   doc.setTextColor(30, 41, 59);
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.text('📊 Legenda Stati Giocatori', 20, statusY + 8);
+  doc.text('Legenda Stati Giocatori', 20, statusY + 8);
   
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
@@ -425,7 +491,7 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
-  doc.text('🏆 HIGHLANDER - Fantasy Football Game', 20, footerY + 6);
+  doc.text('HIGHLANDER - Fantasy Football Game', 20, footerY + 6);
   doc.text(`Generato il ${new Date().toLocaleDateString('it-IT')} - © 2025`, 200, footerY + 6);
   
   // Save the PDF with enhanced filename
