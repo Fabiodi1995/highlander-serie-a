@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, LogOut, Plus, Gamepad2, Play, Users, TicketIcon, Calculator, Settings, Trash2, Trophy, Target, CheckCircle, Shield } from "lucide-react";
+import { User, LogOut, Plus, Gamepad2, Play, Users, TicketIcon, Calculator, Settings, Trash2, Trophy, Target, CheckCircle, Shield, Download } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertGameSchema } from "@shared/schema";
@@ -21,6 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { TeamLogo } from "@/components/team-logo";
 import { ModernTable, StatusBadge } from "@/components/ui/modern-table";
 import { enhanceTicketsWithStatus, getStatusSortOrder, type TicketWithStatus } from "@/utils/ticket-status";
+import { generateGameHistoryPDF, type GameHistoryData } from "@/utils/pdf-generator";
 import type { Game, User as UserType, Team, TeamSelection, Ticket, Match } from "@shared/schema";
 import { z } from "zod";
 
@@ -518,6 +519,17 @@ function PlayerHistoryTable({
     );
   };
 
+  // Handle PDF download
+  const handleDownloadPDF = () => {
+    const pdfData: GameHistoryData = {
+      game,
+      tickets: gameTickets,
+      teams,
+      users
+    };
+    generateGameHistoryPDF(pdfData);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -531,6 +543,15 @@ function PlayerHistoryTable({
           <span className="text-xs text-gray-400">
             Aggiornato: {new Date().toLocaleTimeString()}
           </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDownloadPDF}
+            className="flex items-center gap-2"
+          >
+            <Download className="h-4 w-4" />
+            PDF
+          </Button>
         </div>
       </div>
 
