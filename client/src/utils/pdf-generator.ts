@@ -95,22 +95,22 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
   
   // Game info section with modern card design
   doc.setFillColor(255, 255, 255);
-  doc.rect(15, 30, 267, 25, 'F');
+  doc.rect(15, 30, 267, 28, 'F');
   doc.setDrawColor(226, 232, 240);
-  doc.rect(15, 30, 267, 25, 'S');
+  doc.rect(15, 30, 267, 28, 'S');
   
   // Game info text in dark color
   doc.setTextColor(51, 65, 85);
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
-  doc.text(`Gioco: ${game.name}`, 20, 40);
+  doc.text(`Gioco: ${game.name}`, 20, 42);
   
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  doc.text(`Stato: ${game.status}`, 20, 46);
-  doc.text(`Giornata corrente: ${game.currentRound}`, 20, 51);
-  doc.text(`Giornate: dalla ${game.startRound} alla ${Math.min(game.startRound + 19, 38)}`, 120, 46);
-  doc.text(`Generato: ${new Date().toLocaleDateString('it-IT')} alle ${new Date().toLocaleTimeString('it-IT')}`, 120, 51);
+  doc.text(`Stato: ${game.status}`, 20, 48);
+  doc.text(`Giornata corrente: ${game.currentRound}`, 20, 53);
+  doc.text(`Giornate: dalla ${game.startRound} alla ${Math.min(game.startRound + 19, 38)}`, 150, 48);
+  doc.text(`Generato: ${new Date().toLocaleDateString('it-IT')} alle ${new Date().toLocaleTimeString('it-IT')}`, 150, 53);
   
   // Helper functions
   const getTeamName = (teamId: number) => {
@@ -249,15 +249,13 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
       
       // Check if this is the final round and the game is completed with this ticket still active (WINNER)
       if (selection && game.status === 'completed' && ticket.isActive && round === game.currentRound) {
-        const teamCode = getTeamCode(selection.teamId);
-        row.push(teamCode || '★');
+        row.push(''); // Empty for logo drawing
         return;
       }
       
       // If round is completed (superato)
       if (selection && (round < game.currentRound || (round === game.currentRound && game.roundStatus === "calculated"))) {
-        const teamCode = getTeamCode(selection.teamId);
-        row.push(teamCode || '✓');
+        row.push(''); // Empty for logo drawing
         return;
       }
       
@@ -266,8 +264,11 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
       
       // If this is current round and ticket is active
       if (isCurrentRound && ticket.isActive) {
-        const teamCode = selection ? getTeamCode(selection.teamId) : '';
-        row.push(teamCode || '—');
+        if (selection) {
+          row.push(''); // Empty for logo drawing
+        } else {
+          row.push('—'); // Dash for no selection
+        }
         return;
       }
       
@@ -294,7 +295,7 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
   autoTable(doc, {
     head: [tableHeaders],
     body: tableData,
-    startY: 65,
+    startY: 68,
     styles: {
       fontSize: gameRounds.length > 15 ? 6 : 7,
       cellPadding: 2,
@@ -399,16 +400,9 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
             const logoSize = 3;
             
             // Draw team logo circle
-            const teamColor = getTeamColor(team.name);
-            doc.setFillColor(teamColor[0], teamColor[1], teamColor[2]);
-            doc.circle(cellX + logoSize, cellY + logoSize, logoSize/2, 'F');
-            
-            // Add team code
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(4);
-            doc.setFont('helvetica', 'bold');
-            const textWidth = doc.getTextWidth(team.code);
-            doc.text(team.code, cellX + logoSize - textWidth/2, cellY + logoSize + 1);
+            const cellCenterX = data.cell.x + data.cell.width / 2;
+            const cellCenterY = data.cell.y + data.cell.height / 2;
+            drawTeamLogo(team, cellCenterX - 1.5, cellCenterY - 1.5, 3);
           }
         }
       }
@@ -438,7 +432,12 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
   allSerieATeams.forEach((team, index) => {
     const x = 20 + (index % 4) * 65;
     const y = finalY + 15 + Math.floor(index / 4) * 6;
-    doc.text(`${team.code} - ${team.name}`, x, y);
+    
+    // Draw team logo circle
+    drawTeamLogo(team, x, y - 2, 3);
+    
+    // Add team name next to logo
+    doc.text(`${team.code} - ${team.name}`, x + 8, y);
   });
   
   // Status legend with modern design
