@@ -66,6 +66,24 @@ export interface GameHistoryData {
   teamSelections: any[];
 }
 
+// Function to load image as base64
+const loadImageAsBase64 = (imageSrc: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx?.drawImage(img, 0, 0);
+      resolve(canvas.toDataURL('image/png'));
+    };
+    img.onerror = () => reject(new Error('Failed to load image'));
+    img.src = imageSrc;
+  });
+};
+
 export async function generateGameHistoryPDF(data: GameHistoryData) {
   const { game, tickets, teams, users, teamSelections } = data;
   
@@ -73,7 +91,7 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
   const teamLogosBase64: { [key: string]: string } = {};
   console.log('Loading team logos...');
   
-  for (const team of teams) {
+  await Promise.all(teams.map(async (team) => {
     const logoPath = teamLogoMap[team.name];
     if (logoPath) {
       try {
@@ -83,7 +101,7 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
         console.warn(`Failed to load logo for ${team.name}:`, error);
       }
     }
-  }
+  }));
   
   console.log('All logos loaded, generating PDF...');
   
@@ -112,8 +130,13 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
   
   // Draw a simple crown symbol as Highlander logo
   doc.setFillColor(255, 215, 0); // Gold color
-  doc.rect(15, 10, 12, 5, 'F'); // Simple rectangle as crown base
-  doc.triangle(18, 7, 21, 10, 24, 7, 'F'); // Crown peak
+  doc.rect(15, 10, 12, 5, 'F'); // Crown base
+  // Draw crown peaks using lines
+  doc.setLineWidth(2);
+  doc.setDrawColor(255, 215, 0);
+  doc.line(18, 10, 20, 7);
+  doc.line(20, 7, 22, 10);
+  doc.line(22, 10, 24, 7);
   
   doc.text('HIGHLANDER - Storico Giocatori', 35, 17);
   
@@ -145,46 +168,35 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
     return teams.find(t => t.id === teamId)?.code || '???';
   };
 
-  // Function to load image as base64
-  const loadImageAsBase64 = (imageSrc: string): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        ctx?.drawImage(img, 0, 0);
-        resolve(canvas.toDataURL('image/png'));
-      };
-      img.onerror = () => reject(new Error('Failed to load image'));
-      img.src = imageSrc;
-    });
-  };
-
-  // Function to draw team logo using actual PNG image
-  const drawTeamLogo = async (team: any, x: number, y: number, size: number = 6) => {
+  // Function to draw team logo using pre-loaded base64 image
+  const drawTeamLogo = (team: any, x: number, y: number, size: number = 6) => {
     if (!team) return;
     
-    const logoPath = teamLogoMap[team.name];
-    if (logoPath) {
+    const base64Image = teamLogosBase64[team.name];
+    if (base64Image) {
       try {
-        const base64Image = await loadImageAsBase64(logoPath);
         (doc as any).addImage(base64Image, 'PNG', x, y, size, size);
       } catch (error) {
         // Fallback to colored circle with team code
-        const color = getTeamColor(team.name);
-        (doc as any).setFillColor(color[0], color[1], color[2]);
-        (doc as any).circle(x + size/2, y + size/2, size/2, 'F');
-        
-        (doc as any).setTextColor(255, 255, 255);
-        (doc as any).setFontSize(4);
-        (doc as any).setFont('helvetica', 'bold');
-        const textWidth = (doc as any).getTextWidth(team.code);
-        (doc as any).text(team.code, x + size/2 - textWidth/2, y + size/2 + 1);
+        drawTeamFallback(team, x, y, size);
       }
+    } else {
+      // Fallback if no logo loaded
+      drawTeamFallback(team, x, y, size);
     }
+  };
+
+  // Fallback function for team display
+  const drawTeamFallback = (team: any, x: number, y: number, size: number) => {
+    const color = getTeamColor(team.name);
+    (doc as any).setFillColor(color[0], color[1], color[2]);
+    (doc as any).circle(x + size/2, y + size/2, size/2, 'F');
+    
+    (doc as any).setTextColor(255, 255, 255);
+    (doc as any).setFontSize(4);
+    (doc as any).setFont('helvetica', 'bold');
+    const textWidth = (doc as any).getTextWidth(team.code);
+    (doc as any).text(team.code, x + size/2 - textWidth/2, y + size/2 + 1);
   };
 
   // Function to get team colors for visual representation
@@ -482,8 +494,8 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
     const x = 20 + (index % 4) * 65;
     const y = finalY + 16 + Math.floor(index / 4) * 7;
     
-    // Draw team logo circle
-    drawTeamLogo(team, x, y - 2, 3);
+    // Draw team logo using PNG image
+    drawTeamLogo(team, x, y - 2, 6);
     
     // Add team name next to logo
     doc.text(`${team.code} - ${team.name}`, x + 8, y);

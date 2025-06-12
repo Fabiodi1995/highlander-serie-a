@@ -536,7 +536,7 @@ function PlayerHistoryTable({
   };
 
   // Handle PDF download
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
     const gameSelections = allTeamSelections.find(gameData => gameData.game.id === game.id)?.selections || [];
     const pdfData: GameHistoryData = {
       game,
@@ -545,7 +545,11 @@ function PlayerHistoryTable({
       users,
       teamSelections: gameSelections
     };
-    generateGameHistoryPDF(pdfData);
+    try {
+      await generateGameHistoryPDF(pdfData);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+    }
   };
 
   return (
