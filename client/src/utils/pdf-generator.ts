@@ -266,9 +266,9 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
   // Prepare table headers with smaller font for 20 columns
   const tableHeaders = [
     'Giocatore',
-    'Ticket',
+    'Ticket', 
     'Stato',
-    ...gameRounds.map((round, index) => `R${index + 1}`)
+    ...gameRounds.map((round, index) => (index + 1).toString())
   ];
   
   // Sort tickets by status priority
@@ -310,13 +310,13 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
       
       // Check if this is the final round and the game is completed with this ticket still active (WINNER)
       if (selection && game.status === 'completed' && ticket.isActive && round === game.currentRound) {
-        row.push(''); // Empty for logo drawing
+        row.push(`LOGO:${selection.teamId}`); // Special marker for logo drawing
         return;
       }
       
       // If round is completed (superato)
       if (selection && (round < game.currentRound || (round === game.currentRound && game.roundStatus === "calculated"))) {
-        row.push(''); // Empty for logo drawing
+        row.push(`LOGO:${selection.teamId}`); // Special marker for logo drawing
         return;
       }
       
@@ -326,7 +326,7 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
       // If this is current round and ticket is active
       if (isCurrentRound && ticket.isActive) {
         if (selection) {
-          row.push(''); // Empty for logo drawing
+          row.push(`LOGO:${selection.teamId}`); // Special marker for logo drawing
         } else {
           row.push('—'); // Dash for no selection
         }
@@ -447,24 +447,29 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
     didDrawCell: function(data: any) {
       const rowIndex = data.row.index;
       const colIndex = data.column.index;
-      const ticket = sortedTickets[rowIndex];
-      const round = gameRounds[colIndex - 3];
       
-      // Add team logos for round columns
-      if (colIndex >= 3 && round && ticket) {
-        const selection = selectionsByTicket[ticket.id]?.[round];
-        if (selection && data.cell.text[0] !== '—') {
-          const team = teams.find(t => t.id === selection.teamId);
-          if (team) {
-            const cellX = data.cell.x + 2;
-            const cellY = data.cell.y + 1;
-            const logoSize = 3;
-            
-            // Draw team logo circle
-            const cellCenterX = data.cell.x + data.cell.width / 2;
-            const cellCenterY = data.cell.y + data.cell.height / 2;
-            drawTeamLogo(team, cellCenterX - 1.5, cellCenterY - 1.5, 3);
-          }
+      // Handle team logo drawing for round columns
+      if (colIndex >= 3 && data.cell.text[0] && data.cell.text[0].startsWith('LOGO:')) {
+        // Extract team ID from the marker before clearing text
+        const teamId = parseInt(data.cell.text[0].split(':')[1]);
+        const team = teams.find(t => t.id === teamId);
+        
+        if (team) {
+          // Clear the cell content
+          doc.setFillColor(data.cell.styles.fillColor[0], data.cell.styles.fillColor[1], data.cell.styles.fillColor[2]);
+          doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, 'F');
+          
+          // Redraw cell border
+          doc.setDrawColor(data.cell.styles.lineColor[0], data.cell.styles.lineColor[1], data.cell.styles.lineColor[2]);
+          doc.setLineWidth(data.cell.styles.lineWidth);
+          doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, 'S');
+          
+          // Position logo in center of cell
+          const cellCenterX = data.cell.x + data.cell.width / 2;
+          const cellCenterY = data.cell.y + data.cell.height / 2;
+          const logoSize = Math.min(data.cell.width - 2, data.cell.height - 2, 5);
+          
+          drawTeamLogo(team, cellCenterX - logoSize/2, cellCenterY - logoSize/2, logoSize);
         }
       }
     }
@@ -473,11 +478,12 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
   // Modern legend section
   const finalY = (doc as any).lastAutoTable.finalY + 15;
   
-  // Teams legend with modern card design
+  // Teams legend with modern card design - more compact
+  const legendHeight = Math.ceil(teams.length / 4) * 5 + 12;
   doc.setFillColor(255, 255, 255);
-  doc.rect(15, finalY, 267, Math.ceil(teams.length / 4) * 7 + 18, 'F');
+  doc.rect(15, finalY, 267, legendHeight, 'F');
   doc.setDrawColor(226, 232, 240);
-  doc.rect(15, finalY, 267, Math.ceil(teams.length / 4) * 7 + 18, 'S');
+  doc.rect(15, finalY, 267, legendHeight, 'S');
   
   doc.setTextColor(30, 41, 59);
   doc.setFontSize(12);
@@ -492,17 +498,17 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
   doc.setTextColor(71, 85, 105);
   allSerieATeams.forEach((team, index) => {
     const x = 20 + (index % 4) * 65;
-    const y = finalY + 16 + Math.floor(index / 4) * 7;
+    const y = finalY + 12 + Math.floor(index / 4) * 5;
     
-    // Draw team logo using PNG image
-    drawTeamLogo(team, x, y - 2, 6);
+    // Draw team logo using PNG image - smaller size for legend
+    drawTeamLogo(team, x, y - 1, 4);
     
     // Add team name next to logo
-    doc.text(`${team.code} - ${team.name}`, x + 8, y);
+    doc.text(`${team.code} - ${team.name}`, x + 6, y);
   });
   
   // Status legend with modern design
-  const statusY = finalY + Math.ceil(allSerieATeams.length / 4) * 7 + 30;
+  const statusY = finalY + Math.ceil(allSerieATeams.length / 4) * 5 + 20;
   
   doc.setFillColor(255, 255, 255);
   doc.rect(15, statusY, 267, 25, 'F');
@@ -543,16 +549,25 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
   doc.rect(230, statusY + 12, 12, 6, 'S');
   doc.text('Vincitore', 245, statusY + 16);
   
-  // Modern footer - positioned dynamically
+  // Check if we need a new page for footer
   const footerY = statusY + 35;
+  const pageHeight = 210; // A4 landscape height
+  
+  if (footerY + 10 > pageHeight) {
+    doc.addPage();
+    // Add content on new page if needed
+  }
+  
+  // Modern footer - positioned at bottom of current page
+  const finalFooterY = Math.min(footerY, pageHeight - 10);
   doc.setFillColor(71, 85, 105);
-  doc.rect(0, footerY, 297, 10, 'F');
+  doc.rect(0, finalFooterY, 297, 10, 'F');
   
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
-  doc.text('HIGHLANDER - Fantasy Football Game', 20, footerY + 6);
-  doc.text(`Generato il ${new Date().toLocaleDateString('it-IT')} - © 2025`, 200, footerY + 6);
+  doc.text('HIGHLANDER - Fantasy Football Game', 20, finalFooterY + 6);
+  doc.text(`Generato il ${new Date().toLocaleDateString('it-IT')} - © 2025`, 200, finalFooterY + 6);
   
   // Save the PDF with enhanced filename
   const fileName = `Highlander_${game.name}_Storico_${new Date().toISOString().split('T')[0]}.pdf`;
