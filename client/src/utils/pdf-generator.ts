@@ -165,6 +165,45 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
     }
   });
   
+  // Add team legend
+  const finalY = (doc as any).lastAutoTable.finalY || 140;
+  doc.setFontSize(12);
+  doc.text('Leggenda Squadre:', 20, finalY + 20);
+  
+  // Get unique teams used in selections
+  const usedTeamIds = new Set<number>();
+  teamSelections.forEach(selection => {
+    if (selection.teamId) {
+      usedTeamIds.add(selection.teamId);
+    }
+  });
+  
+  const usedTeams = teams.filter(team => usedTeamIds.has(team.id)).sort((a, b) => a.name.localeCompare(b.name));
+  
+  // Create legend entries with logos and names
+  let currentY = finalY + 30;
+  let currentX = 20;
+  const itemsPerRow = 3;
+  let itemsInRow = 0;
+  
+  doc.setFontSize(9);
+  usedTeams.forEach((team, index) => {
+    if (itemsInRow >= itemsPerRow) {
+      currentY += 15;
+      currentX = 20;
+      itemsInRow = 0;
+    }
+    
+    // Draw team code (logo) and name
+    doc.setFont(undefined, 'bold');
+    doc.text(team.code, currentX, currentY);
+    doc.setFont(undefined, 'normal');
+    doc.text(` - ${team.name}`, currentX + 15, currentY);
+    
+    currentX += 65;
+    itemsInRow++;
+  });
+  
   // Add footer
   const pageCount = doc.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
