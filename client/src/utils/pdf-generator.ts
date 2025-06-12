@@ -382,10 +382,12 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
     headStyles: {
       fillColor: [30, 41, 59], // Modern dark blue
       textColor: [255, 255, 255],
-      fontSize: gameRounds.length > 15 ? 7 : 8,
+      fontSize: gameRounds.length > 15 ? 6 : 7,
       fontStyle: 'bold',
       halign: 'center',
-      cellPadding: 3
+      cellPadding: 2,
+      minCellHeight: 8,
+      overflow: 'linebreak'
     },
     alternateRowStyles: {
       fillColor: [248, 250, 252] // Light gray for alternating rows
@@ -510,10 +512,10 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
     const y = finalY + 12 + Math.floor(index / 4) * 5;
     
     // Draw team logo using PNG image - smaller size for legend
-    drawTeamLogo(team, x, y - 1, 4);
+    drawTeamLogo(team, x, y - 2, 4);
     
-    // Add team name next to logo
-    doc.text(`${team.code} - ${team.name}`, x + 6, y);
+    // Add team name next to logo, aligned with logo center
+    doc.text(`${team.code} - ${team.name}`, x + 6, y + 1);
   });
   
   // Status legend with modern design
