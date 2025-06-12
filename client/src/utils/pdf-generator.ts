@@ -386,60 +386,52 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
       const ticket = sortedTickets[rowIndex];
       const round = gameRounds[colIndex - 3];
       
-      // Color coding for status column with modern styling
+      // Clear text for logo cells
+      if (colIndex >= 3 && data.cell.text[0] && data.cell.text[0].startsWith('LOGO:')) {
+        data.cell.text = [''];
+      }
+      
+      // Color coding for status column
       if (colIndex === 2) {
         const cellValue = data.cell.text[0];
         if (cellValue === 'Vincitore') {
-          data.cell.styles.fillColor = [255, 215, 0]; // Gold
+          data.cell.styles.fillColor = [255, 215, 0];
           data.cell.styles.textColor = [0, 0, 0];
           data.cell.styles.fontStyle = 'bold';
         } else if (cellValue === 'Eliminato') {
-          data.cell.styles.fillColor = [220, 53, 69]; // Red
+          data.cell.styles.fillColor = [220, 53, 69];
           data.cell.styles.textColor = [255, 255, 255];
           data.cell.styles.fontStyle = 'bold';
         } else if (cellValue === 'Attivo') {
-          data.cell.styles.fillColor = [40, 167, 69]; // Green
+          data.cell.styles.fillColor = [40, 167, 69];
           data.cell.styles.textColor = [255, 255, 255];
           data.cell.styles.fontStyle = 'bold';
         } else if (cellValue === 'Superato') {
-          data.cell.styles.fillColor = [108, 117, 125]; // Gray
+          data.cell.styles.fillColor = [108, 117, 125];
           data.cell.styles.textColor = [255, 255, 255];
         }
       }
       
-      // Color coding for round columns based on ticket status in that round
+      // Color coding for round columns
       if (colIndex >= 3 && round && ticket) {
         const selection = selectionsByTicket[ticket.id]?.[round];
         
-        // Winner cell (gold)
         if (selection && game.status === 'completed' && ticket.isActive && round === game.currentRound) {
-          data.cell.styles.fillColor = [255, 243, 205]; // Light gold
+          data.cell.styles.fillColor = [255, 243, 205];
           data.cell.styles.fontStyle = 'bold';
-        }
-        // Eliminated cell (light red)
-        else if (ticket.eliminatedInRound === round) {
-          data.cell.styles.fillColor = [248, 215, 218]; // Light red
-        }
-        // Completed round with selection (light green)
-        else if (selection && round < game.currentRound) {
-          data.cell.styles.fillColor = [212, 237, 218]; // Light green
-        }
-        // Current round with selection (white with border)
-        else if (round === game.currentRound && ticket.isActive && selection) {
+        } else if (ticket.eliminatedInRound === round) {
+          data.cell.styles.fillColor = [248, 215, 218];
+        } else if (selection && round < game.currentRound) {
+          data.cell.styles.fillColor = [212, 237, 218];
+        } else if (round === game.currentRound && ticket.isActive && selection) {
           data.cell.styles.fillColor = [255, 255, 255];
           data.cell.styles.lineColor = [40, 167, 69];
           data.cell.styles.lineWidth = 1;
-        }
-        // Current round without selection (yellow)
-        else if (round === game.currentRound && ticket.isActive && !selection) {
-          data.cell.styles.fillColor = [255, 243, 205]; // Yellow
-        }
-        // Future rounds or eliminated ticket (light gray)
-        else if (round > game.currentRound || !ticket.isActive) {
-          data.cell.styles.fillColor = [248, 249, 250]; // Very light gray
-        }
-        // Default case (white)
-        else {
+        } else if (round === game.currentRound && ticket.isActive && !selection) {
+          data.cell.styles.fillColor = [255, 243, 205];
+        } else if (round > game.currentRound || !ticket.isActive) {
+          data.cell.styles.fillColor = [248, 249, 250];
+        } else {
           data.cell.styles.fillColor = [255, 255, 255];
         }
       }
@@ -449,27 +441,20 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
       const colIndex = data.column.index;
       
       // Handle team logo drawing for round columns
-      if (colIndex >= 3 && data.cell.text[0] && data.cell.text[0].startsWith('LOGO:')) {
-        // Extract team ID from the marker before clearing text
-        const teamId = parseInt(data.cell.text[0].split(':')[1]);
-        const team = teams.find(t => t.id === teamId);
+      if (colIndex >= 3 && rowIndex < sortedTickets.length) {
+        const ticket = sortedTickets[rowIndex];
+        const round = gameRounds[colIndex - 3];
+        const selection = selectionsByTicket[ticket.id]?.[round];
         
-        if (team) {
-          // Clear the cell content
-          doc.setFillColor(data.cell.styles.fillColor[0], data.cell.styles.fillColor[1], data.cell.styles.fillColor[2]);
-          doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, 'F');
-          
-          // Redraw cell border
-          doc.setDrawColor(data.cell.styles.lineColor[0], data.cell.styles.lineColor[1], data.cell.styles.lineColor[2]);
-          doc.setLineWidth(data.cell.styles.lineWidth);
-          doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, 'S');
-          
-          // Position logo in center of cell
-          const cellCenterX = data.cell.x + data.cell.width / 2;
-          const cellCenterY = data.cell.y + data.cell.height / 2;
-          const logoSize = Math.min(data.cell.width - 2, data.cell.height - 2, 5);
-          
-          drawTeamLogo(team, cellCenterX - logoSize/2, cellCenterY - logoSize/2, logoSize);
+        if (selection) {
+          const team = teams.find(t => t.id === selection.teamId);
+          if (team) {
+            const cellCenterX = data.cell.x + data.cell.width / 2;
+            const cellCenterY = data.cell.y + data.cell.height / 2;
+            const logoSize = Math.min(data.cell.width - 2, data.cell.height - 2, 5);
+            
+            drawTeamLogo(team, cellCenterX - logoSize/2, cellCenterY - logoSize/2, logoSize);
+          }
         }
       }
     }
