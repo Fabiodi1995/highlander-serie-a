@@ -11,6 +11,26 @@ import createMemoryStore from "memorystore";
 
 const MemoryStore = createMemoryStore(session);
 
+// Simple cache to reduce database calls
+const userCache = new Map<string, { user: User | undefined, timestamp: number }>();
+const CACHE_TTL = 60000; // 1 minute
+
+async function withRetry<T>(operation: () => Promise<T>, maxRetries = 3): Promise<T> {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation();
+    } catch (error: any) {
+      if (error.message?.includes('Too many database connection attempts')) {
+        if (attempt === maxRetries) throw error;
+        await new Promise(resolve => setTimeout(resolve, 100 * attempt));
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw new Error('Max retries exceeded');
+}
+
 export interface IStorage {
   // User management
   getUser(id: number): Promise<User | undefined>;
@@ -75,13 +95,37 @@ export class DatabaseStorage implements IStorage {
 
   // User management
   async getUser(id: number): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user || undefined;
+    const cacheKey = `user:${id}`;
+    const cached = userCache.get(cacheKey);
+    
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      return cached.user;
+    }
+    
+    const user = await withRetry(async () => {
+      const [result] = await db.select().from(users).where(eq(users.id, id));
+      return result || undefined;
+    });
+    
+    userCache.set(cacheKey, { user, timestamp: Date.now() });
+    return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(sql`LOWER(${users.username}) = LOWER(${username})`);
-    return user || undefined;
+    const cacheKey = `username:${username.toLowerCase()}`;
+    const cached = userCache.get(cacheKey);
+    
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      return cached.user;
+    }
+    
+    const user = await withRetry(async () => {
+      const [result] = await db.select().from(users).where(sql`LOWER(${users.username}) = LOWER(${username})`);
+      return result || undefined;
+    });
+    
+    userCache.set(cacheKey, { user, timestamp: Date.now() });
+    return user;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
