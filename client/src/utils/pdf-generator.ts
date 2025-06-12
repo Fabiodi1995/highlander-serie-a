@@ -123,6 +123,20 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
         return;
       }
       
+      // Check if this is the final round and the game is completed with this ticket still active (WINNER)
+      if (selection && game.status === 'completed' && ticket.isActive && round === game.currentRound) {
+        const teamCode = getTeamLogo(selection.teamId);
+        row.push(`${teamCode}\nVINCITORE`);
+        return;
+      }
+      
+      // If round is completed (superato)
+      if (selection && (round < game.currentRound || (round === game.currentRound && game.roundStatus === "calculated"))) {
+        const teamCode = getTeamLogo(selection.teamId);
+        row.push(`${teamCode}\nSUPERATO`);
+        return;
+      }
+      
       // Check if this is current round being played
       const isCurrentRound = round === game.currentRound && game.roundStatus !== "calculated";
       
@@ -130,20 +144,6 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
       if (isCurrentRound && ticket.isActive) {
         const teamCode = selection ? getTeamLogo(selection.teamId) : '';
         row.push(teamCode ? `${teamCode}\nATTIVO` : 'In attesa');
-        return;
-      }
-      
-      // If round is completed (superato or vincitore)
-      if (selection && (round < game.currentRound || (round === game.currentRound && game.roundStatus === "calculated"))) {
-        const teamCode = getTeamLogo(selection.teamId);
-        // Check if this is the final round and the game is completed with this ticket still active
-        const isWinner = game.status === 'completed' && ticket.isActive && round === game.currentRound;
-        
-        if (isWinner) {
-          row.push(`${teamCode}\nVINCITORE`);
-        } else {
-          row.push(`${teamCode}\nSUPERATO`);
-        }
         return;
       }
       

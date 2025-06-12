@@ -449,13 +449,14 @@ function PlayerHistoryTable({
         : "bg-orange-100 text-orange-800 border border-orange-200";
     }
     
+    // Check if this is the final round and the game is completed with this ticket still active (WINNER)
+    if (selection && game.status === 'completed' && ticket.isActive && round === game.currentRound) {
+      return "bg-yellow-100 text-yellow-800 border border-yellow-200";
+    }
+    
     // If this round is completed (has selection and either round < currentRound OR current round is calculated)
     if (selection && (round < game.currentRound || (round === game.currentRound && game.roundStatus === "calculated"))) {
-      // Check if this is the final round and the game is completed with this ticket still active
-      const isWinner = game.status === 'completed' && ticket.isActive && round === game.currentRound;
-      return isWinner 
-        ? "bg-yellow-100 text-yellow-800 border border-yellow-200"
-        : "bg-green-100 text-green-800 border border-green-200";
+      return "bg-green-100 text-green-800 border border-green-200";
     }
     
     // If ticket has a selection for this round (fallback)
@@ -491,6 +492,28 @@ function PlayerHistoryTable({
       );
     }
     
+    // Check if this is the final round and the game is completed with this ticket still active (WINNER)
+    if (selection && game.status === 'completed' && ticket.isActive && round === game.currentRound) {
+      const team = getTeam(selection.teamId);
+      return (
+        <div className="text-center">
+          {team && <TeamLogo team={team} size="sm" />}
+          <div className="text-xs font-semibold text-yellow-800 mt-1">VINCITORE</div>
+        </div>
+      );
+    }
+    
+    // If round is completed (superato)
+    if (selection && (round < game.currentRound || (round === game.currentRound && game.roundStatus === "calculated"))) {
+      const team = getTeam(selection.teamId);
+      return (
+        <div className="text-center">
+          {team && <TeamLogo team={team} size="sm" />}
+          <div className="text-xs font-semibold text-green-800 mt-1">SUPERATO</div>
+        </div>
+      );
+    }
+    
     // Check if this is current round being played
     const isCurrentRound = round === game.currentRound && game.roundStatus !== "calculated";
     
@@ -501,22 +524,6 @@ function PlayerHistoryTable({
         <div className="text-center">
           {team ? <TeamLogo team={team} size="sm" /> : <div className="text-xs text-gray-600">In attesa</div>}
           <div className="text-xs font-semibold text-yellow-800 mt-1">ATTIVO</div>
-        </div>
-      );
-    }
-    
-    // If round is completed (superato or vincitore)
-    if (selection && (round < game.currentRound || (round === game.currentRound && game.roundStatus === "calculated"))) {
-      const team = getTeam(selection.teamId);
-      // Check if this is the final round and the game is completed with this ticket still active
-      const isWinner = game.status === 'completed' && ticket.isActive && round === game.currentRound;
-      
-      return (
-        <div className="text-center">
-          {team && <TeamLogo team={team} size="sm" />}
-          <div className={`text-xs font-semibold mt-1 ${isWinner ? 'text-yellow-800' : 'text-green-800'}`}>
-            {isWinner ? 'VINCITORE' : 'SUPERATO'}
-          </div>
         </div>
       );
     }
