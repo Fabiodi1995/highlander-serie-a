@@ -569,7 +569,7 @@ function PlayerHistoryTable({
               ticketId: ticket.id,
               player: getUserName(ticket.userId),
               ticketName: `#${ticket.id.toString().padStart(3, '0')}`,
-              status: ticket.isActive ? 'Attivo' : 'Eliminato',
+              status: !ticket.isActive ? 'Eliminato' : (game.status === 'completed' ? 'Vincitore' : 'Attivo'),
               roundsSurvived,
               eliminatedInRound: ticket.eliminatedInRound,
               ...gameRounds.reduce((acc, round, index) => {

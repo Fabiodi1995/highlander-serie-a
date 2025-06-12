@@ -29,13 +29,17 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
   doc.setFontSize(10);
   doc.text(`Stato: ${game.status}`, 20, 45);
   doc.text(`Giornata corrente: ${game.currentRound}`, 20, 52);
-  doc.text(`Round status: ${game.roundStatus}`, 20, 59);
+  doc.text(`Status round: ${game.roundStatus}`, 20, 59);
   doc.text(`Giornate: dalla ${game.startRound} alla ${game.currentRound}`, 20, 66);
   doc.text(`Data generazione: ${new Date().toLocaleDateString('it-IT')}`, 20, 73);
   
   // Helper functions
   const getTeamName = (teamId: number) => {
     return teams.find(t => t.id === teamId)?.name || 'N/A';
+  };
+  
+  const getTeamLogo = (teamId: number) => {
+    return teams.find(t => t.id === teamId)?.code || '???';
   };
   
   const getUserName = (userId: number) => {
@@ -106,7 +110,7 @@ export function generateGameHistoryPDF(data: GameHistoryData) {
     gameRounds.forEach(round => {
       const selection = selectionsByTicket[ticket.id]?.[round];
       if (selection && selection.teamId) {
-        row.push(getTeamName(selection.teamId));
+        row.push(getTeamLogo(selection.teamId));
       } else if (ticket.eliminatedInRound && ticket.eliminatedInRound <= round) {
         row.push('Eliminato');
       } else if (round === game.currentRound && ticket.isActive && game.roundStatus !== "calculated") {
