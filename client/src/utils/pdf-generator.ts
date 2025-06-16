@@ -87,10 +87,11 @@ const loadImageAsBase64 = (imageSrc: string): Promise<string> => {
 export async function generateGameHistoryPDF(data: GameHistoryData) {
   const { game, tickets, teams, users, teamSelections } = data;
   
-  // Pre-load all team logos as base64
+  // Pre-load all team logos and Highlander logo as base64
   const teamLogosBase64: { [key: string]: string } = {};
   console.log('Loading team logos...');
   
+  // Load team logos
   await Promise.all(teams.map(async (team) => {
     const logoPath = teamLogoMap[team.name];
     if (logoPath) {
@@ -102,6 +103,14 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
       }
     }
   }));
+  
+  // Load Highlander logo
+  try {
+    teamLogosBase64['HIGHLANDER'] = await loadImageAsBase64('/attached_assets/highlander_logo.png');
+    console.log('Loaded Highlander logo');
+  } catch (error) {
+    console.warn('Failed to load Highlander logo:', error);
+  }
   
   console.log('All logos loaded, generating PDF...');
   
@@ -128,35 +137,11 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
   doc.setFontSize(20);
   doc.setFont('helvetica', 'bold');
   
-  // Load and draw Highlander logo
-  const loadHighlanderLogo = async (): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(img, 0, 0);
-          resolve(canvas.toDataURL('image/png'));
-        } else {
-          reject(new Error('Could not get canvas context'));
-        }
-      };
-      img.onerror = reject;
-      img.src = '/attached_assets/highlander_logo.png';
-    });
-  };
-
-  // Try to load Highlander logo, fallback to crown design
-  try {
-    const highlanderLogoBase64 = await loadHighlanderLogo();
-    doc.addImage(highlanderLogoBase64, 'PNG', 15, 8, 12, 12);
-  } catch (error) {
-    console.warn('Could not load Highlander logo, using fallback crown');
-    // Fallback crown design
+  // Draw Highlander logo
+  if (teamLogosBase64['HIGHLANDER']) {
+    doc.addImage(teamLogosBase64['HIGHLANDER'], 'PNG', 15, 8, 12, 12);
+  } else {
+    // Fallback crown design if logo couldn't be loaded
     doc.setFillColor(255, 193, 7);
     doc.rect(15, 12, 12, 4, 'F');
     doc.rect(16, 8, 2, 4, 'F');
