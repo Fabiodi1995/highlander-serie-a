@@ -128,23 +128,50 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
   doc.setFontSize(20);
   doc.setFont('helvetica', 'bold');
   
-  // Draw Highlander crown logo
-  doc.setFillColor(255, 193, 7); // Golden yellow to match frontend
-  // Crown base
-  doc.rect(15, 12, 12, 4, 'F');
-  // Crown peaks
-  doc.rect(16, 8, 2, 4, 'F');
-  doc.rect(19, 6, 2, 6, 'F'); // Taller middle peak
-  doc.rect(22, 8, 2, 4, 'F');
-  doc.rect(25, 10, 2, 2, 'F'); // Small end peak
+  // Load and draw Highlander logo
+  const loadHighlanderLogo = async (): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL('image/png'));
+        } else {
+          reject(new Error('Could not get canvas context'));
+        }
+      };
+      img.onerror = reject;
+      img.src = '/attached_assets/highlander_logo.png';
+    });
+  };
+
+  // Try to load Highlander logo, fallback to crown design
+  try {
+    const highlanderLogoBase64 = await loadHighlanderLogo();
+    doc.addImage(highlanderLogoBase64, 'PNG', 15, 8, 12, 12);
+  } catch (error) {
+    console.warn('Could not load Highlander logo, using fallback crown');
+    // Fallback crown design
+    doc.setFillColor(255, 193, 7);
+    doc.rect(15, 12, 12, 4, 'F');
+    doc.rect(16, 8, 2, 4, 'F');
+    doc.rect(19, 6, 2, 6, 'F');
+    doc.rect(22, 8, 2, 4, 'F');
+    doc.rect(25, 10, 2, 2, 'F');
+  }
   
   doc.text('HIGHLANDER - Storico Giocatori', 35, 17);
   
   // Game info section with modern card design
   doc.setFillColor(255, 255, 255);
-  doc.rect(15, 30, 267, 28, 'F');
+  doc.rect(15, 30, 267, 32, 'F');
   doc.setDrawColor(226, 232, 240);
-  doc.rect(15, 30, 267, 28, 'S');
+  doc.rect(15, 30, 267, 32, 'S');
   
   // Game info text in dark color
   doc.setTextColor(51, 65, 85);
@@ -155,7 +182,8 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.text(`Stato: ${game.status}`, 20, 48);
-  doc.text(`Giornata corrente: ${game.currentRound}`, 20, 53);
+  doc.text(`Round di gioco corrente: ${game.currentRound}`, 20, 53);
+  doc.text(`Giornata Serie A corrente: ${game.startRound + game.currentRound - 1}`, 20, 58);
   doc.text(`Giornate: dalla ${game.startRound} alla ${Math.min(game.startRound + 19, 38)}`, 150, 48);
   doc.text(`Generato: ${new Date().toLocaleDateString('it-IT')} alle ${new Date().toLocaleTimeString('it-IT')}`, 150, 53);
   
@@ -271,8 +299,29 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
     ...gameRounds.map((round, index) => (index + 1).toString())
   ];
   
-  // Sort tickets by status priority
+  // Calculate rounds played for each ticket
+  const getTicketRoundsPlayed = (ticket: any) => {
+    let roundsPlayed = 0;
+    gameRounds.forEach(round => {
+      const selection = selectionsByTicket[ticket.id]?.[round];
+      if (selection && round <= game.currentRound) {
+        roundsPlayed++;
+      }
+    });
+    return roundsPlayed;
+  };
+
+  // Sort tickets by rounds played (descending), then by status priority
   const sortedTickets = tickets.sort((a, b) => {
+    const roundsA = getTicketRoundsPlayed(a);
+    const roundsB = getTicketRoundsPlayed(b);
+    
+    // First sort by rounds played (more rounds first)
+    if (roundsA !== roundsB) {
+      return roundsB - roundsA;
+    }
+    
+    // Then by status priority
     const statusA = getTicketStatus(a);
     const statusB = getTicketStatus(b);
     const orderA = getStatusSortOrder(statusA);
@@ -372,7 +421,7 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
   autoTable(doc, {
     head: [tableHeaders],
     body: tableData,
-    startY: 68,
+    startY: 72,
     styles: {
       fontSize: gameRounds.length > 15 ? 6 : 7,
       cellPadding: 2,
