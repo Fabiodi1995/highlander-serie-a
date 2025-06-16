@@ -106,10 +106,19 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
   
   // Load Highlander logo
   try {
-    teamLogosBase64['HIGHLANDER'] = await loadImageAsBase64('/attached_assets/highlander_logo.png');
+    // Import the logo directly from assets
+    const highlanderLogoPath = await import('@assets/highlander_logo.png');
+    teamLogosBase64['HIGHLANDER'] = await loadImageAsBase64(highlanderLogoPath.default);
     console.log('Loaded Highlander logo');
   } catch (error) {
     console.warn('Failed to load Highlander logo:', error);
+    // Try alternative path
+    try {
+      teamLogosBase64['HIGHLANDER'] = await loadImageAsBase64('/attached_assets/highlander_logo.png');
+      console.log('Loaded Highlander logo (alternative path)');
+    } catch (altError) {
+      console.warn('Failed to load Highlander logo from alternative path:', altError);
+    }
   }
   
   console.log('All logos loaded, generating PDF...');
@@ -154,9 +163,9 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
   
   // Game info section with modern card design
   doc.setFillColor(255, 255, 255);
-  doc.rect(15, 30, 267, 32, 'F');
+  doc.rect(15, 30, 267, 25, 'F');
   doc.setDrawColor(226, 232, 240);
-  doc.rect(15, 30, 267, 32, 'S');
+  doc.rect(15, 30, 267, 25, 'S');
   
   // Game info text in dark color
   doc.setTextColor(51, 65, 85);
@@ -166,11 +175,9 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
   
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  doc.text(`Stato: ${game.status}`, 20, 48);
-  doc.text(`Round di gioco corrente: ${game.currentRound}`, 20, 53);
-  doc.text(`Giornata Serie A corrente: ${game.startRound + game.currentRound - 1}`, 20, 58);
+  doc.text(`Round di gioco corrente: ${game.currentRound}`, 20, 48);
+  doc.text(`Giornata Serie A corrente: ${game.startRound + game.currentRound - 1}`, 20, 53);
   doc.text(`Giornate: dalla ${game.startRound} alla ${Math.min(game.startRound + 19, 38)}`, 150, 48);
-  doc.text(`Generato: ${new Date().toLocaleDateString('it-IT')} alle ${new Date().toLocaleTimeString('it-IT')}`, 150, 53);
   
   // Helper functions
   const getTeamName = (teamId: number) => {
@@ -406,7 +413,7 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
   autoTable(doc, {
     head: [tableHeaders],
     body: tableData,
-    startY: 72,
+    startY: 65,
     styles: {
       fontSize: gameRounds.length > 15 ? 6 : 7,
       cellPadding: 2,
