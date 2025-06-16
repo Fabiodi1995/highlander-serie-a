@@ -104,49 +104,69 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
     }
   }));
   
-  // Create Highlander logo as base64 (crown with green dot)
-  const createHighlanderLogo = (): string => {
-    const canvas = document.createElement('canvas');
-    canvas.width = 64;
-    canvas.height = 64;
-    const ctx = canvas.getContext('2d');
-    
-    if (ctx) {
-      // Set transparent background
-      ctx.clearRect(0, 0, 64, 64);
-      
-      // Draw crown in golden color
-      ctx.fillStyle = '#FFC107';
-      
-      // Crown base
-      ctx.fillRect(8, 44, 48, 12);
-      
-      // Crown peaks
-      ctx.fillRect(12, 32, 8, 12);
-      ctx.fillRect(20, 24, 8, 20);
-      ctx.fillRect(28, 20, 8, 24); // Tallest middle peak
-      ctx.fillRect(36, 24, 8, 20);
-      ctx.fillRect(44, 32, 8, 12);
-      
-      // Add green notification dot
-      ctx.fillStyle = '#4CAF50';
-      ctx.beginPath();
-      ctx.arc(50, 18, 6, 0, 2 * Math.PI);
-      ctx.fill();
-      
-      // White border for the dot
-      ctx.strokeStyle = '#FFFFFF';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      
-      return canvas.toDataURL('image/png');
-    }
-    return '';
-  };
+  // Embed the exact Highlander logo PNG as base64
+  const highlanderLogoBase64 = 'data:image/png;base64,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';
   
-  // Set the Highlander logo
-  teamLogosBase64['HIGHLANDER'] = createHighlanderLogo();
-  console.log('Created Highlander logo with crown and green dot');
+  teamLogosBase64['HIGHLANDER'] = highlanderLogoBase64;
+  console.log('Embedded exact Highlander PNG logo as base64');
   
   console.log('All logos loaded, generating PDF...');
   
