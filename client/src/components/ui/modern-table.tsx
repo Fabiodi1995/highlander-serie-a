@@ -177,26 +177,30 @@ export function ModernTable<T = any>({
               </tr>
             </thead>
             <tbody>
-              {processedData.map((item, index) => (
-                <tr 
-                  key={index} 
-                  className="border-b border-gray-100 hover:bg-blue-50/30 transition-all duration-200 group"
-                >
-                  {columns.map((column) => (
-                    <td 
-                      key={column.key} 
-                      className={`
-                        ${cellPadding} ${textSize} text-gray-900
-                        ${column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : 'text-left'}
-                        ${column.sticky ? 'sticky left-0 bg-white group-hover:bg-blue-50/30' : ''}
-                      `}
-                      style={{ width: column.width }}
-                    >
-                      {renderCell(item, column.key)}
-                    </td>
-                  ))}
-                </tr>
-              ))}
+              {processedData.map((item, index) => {
+                // Generate unique key using multiple identifiers to avoid conflicts
+                const uniqueKey = item.id || item.ticketId || item.selectionId || `${tabKey || 'table'}-${index}`;
+                return (
+                  <tr 
+                    key={uniqueKey} 
+                    className="border-b border-gray-100 hover:bg-blue-50/30 transition-all duration-200 group"
+                  >
+                    {columns.map((column) => (
+                      <td 
+                        key={`${uniqueKey}-${column.key}`} 
+                        className={`
+                          ${cellPadding} ${textSize} text-gray-900
+                          ${column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : 'text-left'}
+                          ${column.sticky ? 'sticky left-0 bg-white group-hover:bg-blue-50/30' : ''}
+                        `}
+                        style={{ width: column.width }}
+                      >
+                        {renderCell(item, column.key)}
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
