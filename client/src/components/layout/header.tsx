@@ -21,10 +21,10 @@ import {
   Settings, 
   Menu, 
   X,
-  Crown,
   Target,
   Shield
 } from "lucide-react";
+import highlanderLogo from "@assets/highlander_logo.png";
 
 export function Header() {
   const { user, logoutMutation } = useAuth();
@@ -98,8 +98,11 @@ export function Header() {
           <Link href="/">
             <div className="flex items-center space-x-2 cursor-pointer">
               <div className="relative">
-                <Crown className="h-8 w-8 text-yellow-600" />
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
+                <img 
+                  src={highlanderLogo} 
+                  alt="Highlander Logo" 
+                  className="h-8 w-8"
+                />
               </div>
               <div className="hidden sm:block">
                 <h1 className="text-xl font-bold text-gray-900">Highlander</h1>

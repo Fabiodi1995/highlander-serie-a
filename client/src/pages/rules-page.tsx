@@ -9,9 +9,9 @@ import {
   AlertTriangle, 
   CheckCircle,
   Timer,
-  Shield,
-  Crown
+  Shield
 } from "lucide-react";
+import highlanderLogo from "@assets/highlander_logo.png";
 
 export default function RulesPage() {
   return (

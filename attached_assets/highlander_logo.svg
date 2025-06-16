@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none">
+  <!-- Crown in golden yellow -->
+  <g transform="translate(8, 8)">
+    <!-- Main crown path scaled up -->
+    <path d="M23.124 6.532a1 1 0 0 1 1.752 0L30.78 17.74a2 2 0 0 0 3.032.588L42.366 11a1 1 0 0 1 1.596 1.038l-5.668 20.492a2 2 0 0 1-1.912 1.468H11.618a2 2 0 0 1-1.914-1.468L4.04 12.038A1 1 0 0 1 5.636 11l8.552 7.328a2 2 0 0 0 3.032-.588z" fill="#d97706" stroke="#b45309" stroke-width="1"/>
+    <!-- Base line -->
+    <path d="M10 42h28" stroke="#d97706" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  
+  <!-- Green notification dot -->
+  <circle cx="52" cy="12" r="6" fill="#10b981"/>
+  <circle cx="52" cy="12" r="4" fill="#059669"/>
+  <!-- White border for the dot -->
+  <circle cx="52" cy="12" r="6" fill="none" stroke="white" stroke-width="2"/>
+</svg>
