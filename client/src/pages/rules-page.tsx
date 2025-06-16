@@ -46,7 +46,7 @@ export default function RulesPage() {
             </p>
             <div className="bg-green-50 p-4 rounded-lg border border-green-200">
               <h4 className="font-semibold text-green-800 mb-2 flex items-center gap-2">
-                <Crown className="h-4 w-4" />
+                <img src={highlanderLogo} alt="Highlander" className="h-4 w-4" />
                 Obiettivo
               </h4>
               <p className="text-green-700">
@@ -153,7 +153,7 @@ export default function RulesPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Crown className="h-6 w-6 text-yellow-600" />
+              <img src={highlanderLogo} alt="Highlander" className="h-6 w-6" />
               Condizioni di Vittoria
             </CardTitle>
           </CardHeader>

@@ -4,10 +4,10 @@ import {
   Mail, 
   Github, 
   Trophy, 
-  Crown,
   Calendar,
   Users
 } from "lucide-react";
+import highlanderLogo from "@assets/highlander_logo.png";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -16,7 +16,7 @@ export function Footer() {
     platform: [
       { href: "/", label: "Dashboard", icon: Trophy },
       { href: "/rules", label: "Regolamento", icon: Shield },
-      { href: "/standings", label: "Classifiche", icon: Crown },
+      { href: "/standings", label: "Classifiche", icon: () => <img src={highlanderLogo} alt="Crown" className="h-4 w-4" /> },
       { href: "/calendar", label: "Calendario", icon: Calendar }
     ],
     support: [

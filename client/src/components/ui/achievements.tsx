@@ -9,7 +9,6 @@ import {
   Star,
   Target,
   Users,
-  Crown,
   Shield,
   Zap,
   Award,
@@ -17,6 +16,7 @@ import {
   Calendar,
   Lock
 } from "lucide-react";
+import highlanderLogo from "@assets/highlander_logo.png";
 
 interface Achievement {
   id: number;
@@ -82,7 +82,7 @@ export function AchievementSystem({ achievements, userStats }: AchievementSystem
       trophy: <Trophy className="h-8 w-8" />,
       star: <Star className="h-8 w-8" />,
       target: <Target className="h-8 w-8" />,
-      crown: <Crown className="h-8 w-8" />,
+      crown: <img src={highlanderLogo} alt="Crown" className="h-8 w-8" />,
       shield: <Shield className="h-8 w-8" />,
       zap: <Zap className="h-8 w-8" />,
       award: <Award className="h-8 w-8" />,
@@ -124,7 +124,7 @@ export function AchievementSystem({ achievements, userStats }: AchievementSystem
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="flex items-center gap-2">
-                <Crown className="h-5 w-5 text-yellow-500" />
+                <img src={highlanderLogo} alt="Crown" className="h-5 w-5" />
                 Livello {userStats.currentLevel}
               </CardTitle>
               <CardDescription>
