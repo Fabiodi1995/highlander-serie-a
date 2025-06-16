@@ -42,8 +42,11 @@ export function Footer() {
             <div className="md:col-span-2">
               <div className="flex items-center space-x-2 mb-4">
                 <div className="relative">
-                  <Crown className="h-8 w-8 text-yellow-600" />
-                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
+                  <img 
+                    src={highlanderLogo} 
+                    alt="Highlander Logo" 
+                    className="h-8 w-8"
+                  />
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-gray-900">Highlander</h3>
