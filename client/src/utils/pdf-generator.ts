@@ -104,20 +104,20 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
     }
   }));
   
-  // Load Highlander logo
-  try {
-    // Import the logo directly from assets
-    const highlanderLogoPath = await import('@assets/highlander_logo.png');
-    teamLogosBase64['HIGHLANDER'] = await loadImageAsBase64(highlanderLogoPath.default);
-    console.log('Loaded Highlander logo');
-  } catch (error) {
-    console.warn('Failed to load Highlander logo:', error);
-    // Try alternative path
+  // Load Highlander logo - try multiple paths
+  const highlanderPaths = [
+    '/attached_assets/highlander_logo.png',
+    './attached_assets/highlander_logo.png',
+    'attached_assets/highlander_logo.png'
+  ];
+  
+  for (const path of highlanderPaths) {
     try {
-      teamLogosBase64['HIGHLANDER'] = await loadImageAsBase64('/attached_assets/highlander_logo.png');
-      console.log('Loaded Highlander logo (alternative path)');
-    } catch (altError) {
-      console.warn('Failed to load Highlander logo from alternative path:', altError);
+      teamLogosBase64['HIGHLANDER'] = await loadImageAsBase64(path);
+      console.log(`Loaded Highlander logo from: ${path}`);
+      break;
+    } catch (error) {
+      console.warn(`Failed to load Highlander logo from ${path}:`, error);
     }
   }
   
@@ -175,8 +175,10 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
   
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
+  // Calculate the correct Serie A round based on game start and current round
+  const currentSerieARound = game.startRound + game.currentRound - 1;
   doc.text(`Round di gioco corrente: ${game.currentRound}`, 20, 48);
-  doc.text(`Giornata Serie A corrente: ${game.startRound + game.currentRound - 1}`, 20, 53);
+  doc.text(`Giornata Serie A corrente: ${currentSerieARound}`, 20, 53);
   doc.text(`Giornate: dalla ${game.startRound} alla ${Math.min(game.startRound + 19, 38)}`, 150, 48);
   
   // Helper functions
