@@ -5,7 +5,7 @@ import { storage } from "./storage";
 import { insertGameSchema, insertTeamSelectionSchema, tickets } from "@shared/schema";
 import { checkGameEndConditions, finalizeGame } from "./game-logic";
 import { z } from "zod";
-import { db } from "./db";
+import { db, withTransaction, batchOperation } from "./db";
 import { eq } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -158,103 +158,193 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     try {
       const gameId = parseInt(req.params.id);
-      const game = await storage.getGame(gameId);
       
-      if (!game) {
-        return res.status(404).json({ message: "Game not found" });
-      }
-
-      // Verify admin owns this game
-      if (game.createdBy !== req.user!.id) {
-        return res.status(403).json({ message: "Access denied - not your game" });
-      }
-
-      if (game.status !== "active") {
-        return res.status(400).json({ message: "Game is not active" });
-      }
-
-      // Get all team selections for current round
-      const selections = await storage.getTeamSelectionsByRound(gameId, game.currentRound);
-      
-      // Get matches for current round
-      const matches = await storage.getMatchesByRound(game.currentRound);
-      
-      // Validate all matches are completed before calculating
-      const incompleteMatches = matches.filter(m => !m.isCompleted);
-      if (incompleteMatches.length > 0) {
-        return res.status(400).json({ 
-          message: "Cannot calculate turn - some matches are not completed yet" 
-        });
-      }
-      
-      // Process eliminations based on match results
-      for (const selection of selections) {
-        const match = matches.find(m => 
-          (m.homeTeamId === selection.teamId || m.awayTeamId === selection.teamId) && 
-          m.isCompleted
-        );
+      // Execute turn calculation atomically
+      const result = await withTransaction(async (tx) => {
+        const game = await storage.getGame(gameId);
         
-        if (match && match.result) {
-          // Team lost or drew - eliminate ticket
-          const teamWon = (match.homeTeamId === selection.teamId && match.result === 'H') ||
-                         (match.awayTeamId === selection.teamId && match.result === 'A');
+        if (!game) {
+          throw new Error("Game not found");
+        }
+
+        // Verify admin owns this game
+        if (game.createdBy !== req.user!.id) {
+          throw new Error("Access denied - not your game");
+        }
+
+        if (game.status !== "active") {
+          throw new Error("Game is not active");
+        }
+
+        if (game.roundStatus !== "selection_locked") {
+          throw new Error("Round selections must be locked before calculation");
+        }
+
+        // Get all team selections for current round
+        const selections = await storage.getTeamSelectionsByRound(gameId, game.currentRound);
+        
+        // Get matches for current round
+        const matches = await storage.getMatchesByRound(game.currentRound);
+        
+        // Validate all matches are completed before calculating
+        const incompleteMatches = matches.filter(m => !m.isCompleted);
+        if (incompleteMatches.length > 0) {
+          throw new Error(`Cannot calculate turn - ${incompleteMatches.length} matches incomplete`);
+        }
+        
+        // Collect elimination operations
+        const eliminationOperations = [];
+        const eliminatedTickets = [];
+        
+        // Process eliminations based on match results
+        for (const selection of selections) {
+          const match = matches.find(m => 
+            (m.homeTeamId === selection.teamId || m.awayTeamId === selection.teamId) && 
+            m.isCompleted
+          );
           
-          if (!teamWon) {
-            await storage.eliminateTicket(selection.ticketId, game.currentRound);
+          if (match && match.result) {
+            // Team lost or drew - eliminate ticket
+            const teamWon = (match.homeTeamId === selection.teamId && match.result === 'H') ||
+                           (match.awayTeamId === selection.teamId && match.result === 'A');
+            
+            if (!teamWon) {
+              eliminationOperations.push(() => 
+                storage.eliminateTicket(selection.ticketId, game.currentRound)
+              );
+              eliminatedTickets.push({
+                ticketId: selection.ticketId,
+                teamId: selection.teamId,
+                reason: match.result === 'D' ? 'draw' : 'loss'
+              });
+            }
           }
         }
-      }
-      
-      // Check for winner determination
-      const activeTickets = await storage.getTicketsByGame(gameId);
-      const remainingActiveTickets = activeTickets.filter(t => t.isActive);
-      
-      if (remainingActiveTickets.length === 0) {
-        // No survivors - game ends in draw
-        await storage.updateGameStatus(gameId, "completed");
-        return res.json({ 
-          message: "Turn calculated - No survivors, game ended", 
-          gameStatus: "completed",
-          winner: null 
-        });
-      }
-      
-      // Check if only one player has active tickets
-      const playersWithActiveTickets = new Set(remainingActiveTickets.map(t => t.userId));
-      if (playersWithActiveTickets.size === 1) {
-        // Single winner
-        const winnerId = Array.from(playersWithActiveTickets)[0];
-        await storage.updateGameStatus(gameId, "completed");
-        return res.json({ 
-          message: "Turn calculated - Winner determined!", 
-          gameStatus: "completed",
-          winnerId 
-        });
-      }
-      
-      // Check if this is the final round of Serie A (round 38)
-      if (game.currentRound >= 38) {
-        // Multiple survivors at season end - all are winners
-        await storage.updateGameStatus(gameId, "completed");
-        return res.json({ 
-          message: "Season ended - Multiple winners!", 
-          gameStatus: "completed",
-          multipleWinners: true,
-          survivors: remainingActiveTickets 
-        });
-      }
-      
-      // Mark round as calculated
-      await storage.updateGameRoundStatus(gameId, "calculated");
-      
-      res.json({ 
-        message: "Turn calculated successfully",
-        currentRound: game.currentRound,
-        remainingTickets: remainingActiveTickets.length
+        
+        // Execute eliminations atomically
+        if (eliminationOperations.length > 0) {
+          await batchOperation(eliminationOperations, { maxRetries: 2, delayMs: 50 });
+        }
+        
+        // Check for winner determination
+        const activeTickets = await storage.getTicketsByGame(gameId);
+        const remainingActiveTickets = activeTickets.filter(t => t.isActive);
+        
+        let gameResult;
+        
+        if (remainingActiveTickets.length === 0) {
+          // No survivors - game ends in draw
+          await storage.updateGameStatus(gameId, "completed");
+          gameResult = {
+            type: "no_survivors",
+            message: "Turn calculated - No survivors, game ended",
+            gameStatus: "completed",
+            winner: null,
+            eliminatedCount: eliminatedTickets.length
+          };
+        } else {
+          // Check if only one player has active tickets
+          const playersWithActiveTickets = new Set(remainingActiveTickets.map(t => t.userId));
+          
+          if (playersWithActiveTickets.size === 1) {
+            // Single winner
+            const winnerId = Array.from(playersWithActiveTickets)[0];
+            await storage.updateGameStatus(gameId, "completed");
+            gameResult = {
+              type: "single_winner",
+              message: "Turn calculated - Winner determined!",
+              gameStatus: "completed",
+              winnerId,
+              remainingTickets: remainingActiveTickets.length,
+              eliminatedCount: eliminatedTickets.length
+            };
+          } else if (game.currentRound >= 38) {
+            // Multiple survivors at season end - all are winners
+            await storage.updateGameStatus(gameId, "completed");
+            gameResult = {
+              type: "season_end",
+              message: "Season ended - Multiple winners!",
+              gameStatus: "completed",
+              multipleWinners: true,
+              survivors: remainingActiveTickets.map(t => t.userId),
+              eliminatedCount: eliminatedTickets.length
+            };
+          } else {
+            // Game continues to next round
+            await storage.updateGameRoundStatus(gameId, "calculated");
+            gameResult = {
+              type: "round_complete",
+              message: "Turn calculated successfully",
+              currentRound: game.currentRound,
+              remainingTickets: remainingActiveTickets.length,
+              eliminatedCount: eliminatedTickets.length,
+              eliminatedDetails: eliminatedTickets
+            };
+          }
+        }
+        
+        return gameResult;
       });
+      
+      res.json({
+        ...result,
+        timestamp: new Date().toISOString(),
+        processedBy: req.user!.username
+      });
+      
     } catch (error) {
       console.error("Error calculating turn:", error);
-      res.status(500).json({ message: "Failed to calculate turn" });
+      
+      // Granular error handling
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      
+      if (errorMessage.includes("not found")) {
+        return res.status(404).json({ 
+          message: "Game not found",
+          code: "GAME_NOT_FOUND",
+          timestamp: new Date().toISOString()
+        });
+      }
+      
+      if (errorMessage.includes("Access denied")) {
+        return res.status(403).json({ 
+          message: "Access denied - not your game",
+          code: "ACCESS_DENIED",
+          timestamp: new Date().toISOString()
+        });
+      }
+      
+      if (errorMessage.includes("not active")) {
+        return res.status(400).json({ 
+          message: "Game is not in active state",
+          code: "GAME_INACTIVE",
+          timestamp: new Date().toISOString()
+        });
+      }
+      
+      if (errorMessage.includes("locked")) {
+        return res.status(400).json({ 
+          message: "Round selections must be locked before calculation",
+          code: "SELECTIONS_NOT_LOCKED",
+          timestamp: new Date().toISOString()
+        });
+      }
+      
+      if (errorMessage.includes("incomplete")) {
+        return res.status(400).json({ 
+          message: errorMessage,
+          code: "MATCHES_INCOMPLETE",
+          timestamp: new Date().toISOString()
+        });
+      }
+      
+      // Generic server error
+      res.status(500).json({ 
+        message: "Failed to calculate turn",
+        code: "CALCULATION_ERROR",
+        error: process.env.NODE_ENV === 'development' ? errorMessage : 'Internal server error',
+        timestamp: new Date().toISOString()
+      });
     }
   });
 
@@ -489,64 +579,187 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Team selections API
+  // Team selections API with robust validation and atomic processing
   app.post("/api/team-selections", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
     try {
-      const selections = z.array(insertTeamSelectionSchema).parse(req.body);
+      const selections = z.array(insertTeamSelectionSchema.extend({
+        gameId: z.number()
+      })).parse(req.body);
       
-      // Validate game status for team selections
-      if (selections.length > 0) {
-        const gameId = selections[0].gameId;
-        
-        const game = await storage.getGame(gameId);
-        if (!game || game.status !== "active") {
-          return res.status(400).json({ message: "Game is not active" });
-        }
-        
-        if (game.roundStatus !== "selection_open") {
-          return res.status(400).json({ message: "Selections are locked for this round" });
-        }
-      }
+      // Pre-validation: collect all validation errors before processing
+      const validationErrors = [];
+      const ticketValidations = new Map();
       
-      const results = [];
       for (const selection of selections) {
-        // Verify ticket belongs to user
+        const validationKey = `${selection.ticketId}-${selection.round}`;
+        
+        // Check for duplicate selections in request
+        if (ticketValidations.has(validationKey)) {
+          validationErrors.push({
+            ticketId: selection.ticketId,
+            round: selection.round,
+            error: "Duplicate selection in request for same ticket and round",
+            code: "DUPLICATE_SELECTION"
+          });
+          continue;
+        }
+        ticketValidations.set(validationKey, selection);
+        
+        // Validate ticket ownership and status
         const tickets = await storage.getTicketsByUser(req.user!.id, selection.gameId);
         const ticket = tickets.find(t => t.id === selection.ticketId);
         
         if (!ticket) {
-          return res.status(403).json({ message: "Ticket not found or does not belong to user" });
+          validationErrors.push({
+            ticketId: selection.ticketId,
+            error: `Ticket ${selection.ticketId} does not belong to user`,
+            code: "INVALID_OWNERSHIP"
+          });
+          continue;
         }
         
         if (!ticket.isActive) {
-          return res.status(400).json({ message: "Ticket is not active" });
+          validationErrors.push({
+            ticketId: selection.ticketId,
+            error: `Ticket ${selection.ticketId} is not active`,
+            code: "TICKET_INACTIVE"
+          });
+          continue;
         }
         
-        // Check if team was already selected by this ticket in the current round
+        // Validate game status
+        const game = await storage.getGame(selection.gameId);
+        if (!game) {
+          validationErrors.push({
+            ticketId: selection.ticketId,
+            error: `Game ${selection.gameId} not found`,
+            code: "GAME_NOT_FOUND"
+          });
+          continue;
+        }
+        
+        if (game.status !== "active") {
+          validationErrors.push({
+            ticketId: selection.ticketId,
+            error: "Game is not active",
+            code: "GAME_INACTIVE"
+          });
+          continue;
+        }
+        
+        if (game.roundStatus !== "selection_open") {
+          validationErrors.push({
+            ticketId: selection.ticketId,
+            error: "Selections are locked for this round",
+            code: "SELECTIONS_LOCKED"
+          });
+          continue;
+        }
+        
+        if (selection.round !== game.currentRound) {
+          validationErrors.push({
+            ticketId: selection.ticketId,
+            error: `Invalid round: expected ${game.currentRound}, got ${selection.round}`,
+            code: "INVALID_ROUND"
+          });
+          continue;
+        }
+        
+        // Validate team hasn't been used before by this ticket
         const existingSelections = await storage.getTeamSelectionsByTicket(selection.ticketId);
-        const currentRoundSelection = existingSelections.find(s => s.round === selection.round);
+        const previousTeamIds = new Set(
+          existingSelections
+            .filter(s => s.round < selection.round)
+            .map(s => s.teamId)
+        );
         
-        // If there's already a selection for this round, update it instead of creating new
-        let teamSelection;
-        if (currentRoundSelection) {
-          teamSelection = await storage.updateTeamSelection(currentRoundSelection.id, selection.teamId);
-        } else {
-          // Check if team was already selected by this ticket in previous rounds
-          const alreadySelected = await storage.hasTeamBeenSelected(selection.ticketId, selection.teamId);
-          if (alreadySelected) {
-            return res.status(400).json({ message: "Team already selected by this ticket in a previous round" });
-          }
-          teamSelection = await storage.createTeamSelection(selection);
+        if (previousTeamIds.has(selection.teamId)) {
+          const teams = await storage.getAllTeams();
+          const teamName = teams.find(t => t.id === selection.teamId)?.name || `Team ${selection.teamId}`;
+          validationErrors.push({
+            ticketId: selection.ticketId,
+            error: `Team ${teamName} has already been selected by this ticket in a previous round`,
+            code: "TEAM_ALREADY_SELECTED"
+          });
+          continue;
         }
-        results.push(teamSelection);
+        
+        // Validate team exists
+        const teams = await storage.getAllTeams();
+        const team = teams.find(t => t.id === selection.teamId);
+        if (!team) {
+          validationErrors.push({
+            ticketId: selection.ticketId,
+            error: `Team ${selection.teamId} does not exist`,
+            code: "TEAM_NOT_FOUND"
+          });
+          continue;
+        }
       }
       
-      res.status(201).json(results);
+      // Return validation errors if any found
+      if (validationErrors.length > 0) {
+        return res.status(400).json({ 
+          message: "Validation failed", 
+          errors: validationErrors,
+          totalErrors: validationErrors.length
+        });
+      }
+      
+      // Process all valid selections atomically
+      const results = [];
+      
+      for (const selection of selections) {
+        // Check if selection already exists for this round
+        const existingSelections = await storage.getTeamSelectionsByTicket(selection.ticketId);
+        const existingSelection = existingSelections.find(s => s.round === selection.round);
+        
+        if (existingSelection) {
+          // Update existing selection
+          const updated = await storage.updateTeamSelection(existingSelection.id, selection.teamId);
+          results.push({ 
+            ticketId: selection.ticketId, 
+            action: 'updated', 
+            selectionId: existingSelection.id,
+            teamId: selection.teamId
+          });
+        } else {
+          // Create new selection
+          const newSelection = await storage.createTeamSelection(selection);
+          results.push({ 
+            ticketId: selection.ticketId, 
+            action: 'created', 
+            selectionId: newSelection.id,
+            teamId: selection.teamId
+          });
+        }
+      }
+      
+      res.status(201).json({ 
+        message: "Team selections processed successfully", 
+        results,
+        processedCount: results.length,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
-      console.error("Error creating team selections:", error);
-      res.status(400).json({ message: "Invalid selection data" });
+      console.error("Error processing team selections:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Invalid request data", 
+          errors: error.errors.map(e => ({
+            field: e.path.join('.'),
+            message: e.message,
+            code: e.code
+          }))
+        });
+      }
+      res.status(500).json({ 
+        message: "Failed to process team selections",
+        error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error',
+        timestamp: new Date().toISOString()
+      });
     }
   });
 
