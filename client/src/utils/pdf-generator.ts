@@ -104,22 +104,49 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
     }
   }));
   
-  // Load Highlander logo - try multiple paths
-  const highlanderPaths = [
-    '/attached_assets/highlander_logo.png',
-    './attached_assets/highlander_logo.png',
-    'attached_assets/highlander_logo.png'
-  ];
-  
-  for (const path of highlanderPaths) {
-    try {
-      teamLogosBase64['HIGHLANDER'] = await loadImageAsBase64(path);
-      console.log(`Loaded Highlander logo from: ${path}`);
-      break;
-    } catch (error) {
-      console.warn(`Failed to load Highlander logo from ${path}:`, error);
+  // Create Highlander logo as base64 (crown with green dot)
+  const createHighlanderLogo = (): string => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    
+    if (ctx) {
+      // Set transparent background
+      ctx.clearRect(0, 0, 64, 64);
+      
+      // Draw crown in golden color
+      ctx.fillStyle = '#FFC107';
+      
+      // Crown base
+      ctx.fillRect(8, 44, 48, 12);
+      
+      // Crown peaks
+      ctx.fillRect(12, 32, 8, 12);
+      ctx.fillRect(20, 24, 8, 20);
+      ctx.fillRect(28, 20, 8, 24); // Tallest middle peak
+      ctx.fillRect(36, 24, 8, 20);
+      ctx.fillRect(44, 32, 8, 12);
+      
+      // Add green notification dot
+      ctx.fillStyle = '#4CAF50';
+      ctx.beginPath();
+      ctx.arc(50, 18, 6, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      // White border for the dot
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      
+      return canvas.toDataURL('image/png');
     }
-  }
+    return '';
+  };
+  
+  // Set the Highlander logo
+  teamLogosBase64['HIGHLANDER'] = createHighlanderLogo();
+  console.log('Created Highlander logo with crown and green dot');
   
   console.log('All logos loaded, generating PDF...');
   
@@ -175,9 +202,14 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
   
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  // Calculate the correct Serie A round based on game start and current round
-  const currentSerieARound = game.startRound + game.currentRound - 1;
-  doc.text(`Round di gioco corrente: ${game.currentRound}`, 20, 48);
+  // Calculate the actual number of rounds played based on team selections
+  const roundsPlayed = Math.max(1, Object.keys(teamSelections.reduce((acc: any, sel: any) => {
+    acc[sel.round] = true;
+    return acc;
+  }, {})).length);
+  
+  const currentSerieARound = game.startRound + roundsPlayed - 1;
+  doc.text(`Round di gioco corrente: ${roundsPlayed}`, 20, 48);
   doc.text(`Giornata Serie A corrente: ${currentSerieARound}`, 20, 53);
   doc.text(`Giornate: dalla ${game.startRound} alla ${Math.min(game.startRound + 19, 38)}`, 150, 48);
   
