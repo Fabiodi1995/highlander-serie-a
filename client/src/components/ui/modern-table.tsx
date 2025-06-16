@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
-interface ModernTableProps<T = any> {
+interface ModernTableProps<T extends Record<string, any> = Record<string, any>> {
   data: T[];
   columns: TableColumn[];
   renderCell: (item: T, columnKey: string) => ReactNode;
@@ -23,7 +23,7 @@ interface ModernTableProps<T = any> {
   onTabChange?: (tabKey: string) => void;
 }
 
-export function ModernTable<T = any>({
+export function ModernTable<T extends Record<string, any> = Record<string, any>>({
   data,
   columns,
   renderCell,

@@ -755,9 +755,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }))
         });
       }
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       res.status(500).json({ 
         message: "Failed to process team selections",
-        error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error',
+        error: process.env.NODE_ENV === 'development' ? errorMessage : 'Internal server error',
         timestamp: new Date().toISOString()
       });
     }
@@ -1399,7 +1400,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(games);
     } catch (error) {
       console.error("Error fetching user games:", error);
-      res.status(500).json({ error: "Failed to fetch user games" });
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ error: "Failed to fetch user games", details: errorMessage });
     }
   });
 
