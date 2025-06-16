@@ -1403,6 +1403,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Client error reporting endpoint for monitoring
+  app.post("/api/client-errors", async (req, res) => {
+    try {
+      const errorData = req.body;
+      
+      // Log client-side errors for monitoring
+      console.error("Client Error Report:", {
+        errorId: errorData.errorId,
+        message: errorData.message,
+        stack: errorData.stack,
+        url: errorData.url,
+        userAgent: errorData.userAgent,
+        timestamp: errorData.timestamp,
+        userId: req.isAuthenticated() ? req.user!.id : 'anonymous'
+      });
+      
+      // In production, you would send this to an error monitoring service
+      // like Sentry, LogRocket, Bugsnag, etc.
+      
+      res.status(200).json({ 
+        message: "Error reported successfully",
+        errorId: errorData.errorId 
+      });
+    } catch (error) {
+      console.error("Failed to process client error report:", error);
+      res.status(500).json({ message: "Failed to process error report" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

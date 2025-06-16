@@ -15,6 +15,7 @@ import { AchievementsProvider } from "@/hooks/use-achievements";
 import { SocialProvider } from "@/hooks/use-social";
 import { PWAProvider } from "@/hooks/use-pwa";
 import { FeatureFlagsProvider } from "@/lib/feature-flags";
+import { ErrorBoundary } from "@/components/error-boundary";
 import NotFound from "@/pages/not-found-enhanced";
 import AuthPage from "@/pages/auth-page";
 import PlayerDashboard from "@/pages/player-dashboard";
@@ -56,31 +57,37 @@ function HomePage() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <FeatureFlagsProvider>
-        <ThemeProvider defaultTheme="system" storageKey="highlander-ui-theme">
-          <AuthProvider>
-            <NotificationProvider>
-              <PWAProvider>
-                <AnalyticsProvider>
-                  <AchievementsProvider>
-                    <SocialProvider>
-                      <TooltipProvider>
-                        <Layout>
-                          <Router />
-                        </Layout>
-                        <CookieConsentBanner />
-                        <Toaster />
-                      </TooltipProvider>
-                    </SocialProvider>
-                  </AchievementsProvider>
-                </AnalyticsProvider>
-              </PWAProvider>
-            </NotificationProvider>
-          </AuthProvider>
-        </ThemeProvider>
-      </FeatureFlagsProvider>
-    </QueryClientProvider>
+    <ErrorBoundary onError={(error, errorInfo) => {
+      console.error('App-level error:', error, errorInfo);
+    }}>
+      <QueryClientProvider client={queryClient}>
+        <FeatureFlagsProvider>
+          <ThemeProvider defaultTheme="system" storageKey="highlander-ui-theme">
+            <AuthProvider>
+              <NotificationProvider>
+                <PWAProvider>
+                  <AnalyticsProvider>
+                    <AchievementsProvider>
+                      <SocialProvider>
+                        <TooltipProvider>
+                          <Layout>
+                            <ErrorBoundary>
+                              <Router />
+                            </ErrorBoundary>
+                          </Layout>
+                          <CookieConsentBanner />
+                          <Toaster />
+                        </TooltipProvider>
+                      </SocialProvider>
+                    </AchievementsProvider>
+                  </AnalyticsProvider>
+                </PWAProvider>
+              </NotificationProvider>
+            </AuthProvider>
+          </ThemeProvider>
+        </FeatureFlagsProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

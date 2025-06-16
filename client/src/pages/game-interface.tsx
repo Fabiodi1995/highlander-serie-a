@@ -59,28 +59,84 @@ export default function GameInterface() {
   const submitSelectionsMutation = useMutation({
     mutationFn: async (teamSelections: Array<{ ticketId: number; teamId: number; round: number; gameId: number }>) => {
       const res = await apiRequest("POST", "/api/team-selections", teamSelections);
+      
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        
+        // Enhanced error handling with specific error codes
+        const error = new Error(errorData.message || `HTTP ${res.status}: ${res.statusText}`);
+        (error as any).code = errorData.code;
+        (error as any).errors = errorData.errors;
+        (error as any).status = res.status;
+        throw error;
+      }
+      
       return await res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}/tickets`] });
       queryClient.invalidateQueries({ queryKey: ["/api/user/team-selections"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/all-team-selections"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/all-tickets"] });
+      
       toast({
         title: "Successo",
-        description: "Selezioni squadre inviate con successo",
+        description: `Selezioni processate: ${data.processedCount || 'completate'}`,
       });
       setSelections({});
     },
-    onError: (error: Error) => {
-      let errorMessage = error.message;
-      if (error.message.includes("does not belong to user")) {
-        errorMessage = "Non hai i permessi per modificare questo ticket";
-      } else if (error.message.includes("not active")) {
-        errorMessage = "Il ticket non è più attivo";
+    onError: (error: any) => {
+      console.error("Team selection error:", error);
+      
+      let errorTitle = "Errore";
+      let errorMessage = "Si è verificato un errore durante l'invio delle selezioni";
+      
+      // Handle specific error codes from server
+      switch (error.code) {
+        case "INVALID_OWNERSHIP":
+          errorTitle = "Accesso Negato";
+          errorMessage = "Non hai i permessi per modificare questo ticket";
+          break;
+        case "TICKET_INACTIVE":
+          errorTitle = "Ticket Non Attivo";
+          errorMessage = "Il ticket selezionato non è più attivo";
+          break;
+        case "GAME_INACTIVE":
+          errorTitle = "Gioco Non Attivo";
+          errorMessage = "Il gioco non è attualmente attivo";
+          break;
+        case "SELECTIONS_LOCKED":
+          errorTitle = "Selezioni Bloccate";
+          errorMessage = "Le selezioni per questo round sono state bloccate";
+          break;
+        case "TEAM_ALREADY_SELECTED":
+          errorTitle = "Squadra Già Selezionata";
+          errorMessage = "Hai già selezionato questa squadra in un round precedente";
+          break;
+        case "VALIDATION_FAILED":
+          errorTitle = "Dati Non Validi";
+          if (error.errors && error.errors.length > 0) {
+            errorMessage = error.errors[0].error;
+          } else {
+            errorMessage = "I dati inseriti non sono validi";
+          }
+          break;
+        default:
+          if (error.message) {
+            if (error.message.includes("does not belong to user")) {
+              errorMessage = "Non hai i permessi per modificare questo ticket";
+            } else if (error.message.includes("not active")) {
+              errorMessage = "Il ticket non è più attivo";
+            } else if (error.message.includes("locked")) {
+              errorMessage = "Le selezioni sono bloccate per questo round";
+            } else {
+              errorMessage = error.message;
+            }
+          }
       }
+      
       toast({
-        title: "Errore",
+        title: errorTitle,
         description: errorMessage,
         variant: "destructive",
       });
