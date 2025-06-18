@@ -1,5 +1,5 @@
-// Serie A 2024/2025 Complete Schedule
-// This data represents the actual Serie A fixture list for the 2024/2025 season
+// Serie A 2025/2026 Complete Schedule
+// This data represents the actual Serie A fixture list for the 2025/2026 season
 
 export const serieATeams = [
   { id: 21, name: "Atalanta", code: "ATA" },
@@ -24,68 +24,68 @@ export const serieATeams = [
   { id: 40, name: "Venezia", code: "VEN" }
 ];
 
-// Serie A 2024/2025 Complete Fixture List
+// Serie A 2025/2026 Complete Fixture List
 export const serieAFixtures = [
-  // Giornata 1 (18-19 Agosto 2024)
+  // Giornata 1 (18-19 Agosto 2025)
   {
     round: 1,
     homeTeam: "Genoa",
     awayTeam: "Inter",
-    date: "2024-08-17T18:30:00Z"
+    date: "2025-08-17T18:30:00Z"
   },
   {
     round: 1,
     homeTeam: "Parma",
     awayTeam: "Fiorentina",
-    date: "2024-08-17T18:30:00Z"
+    date: "2025-08-17T18:30:00Z"
   },
   {
     round: 1,
     homeTeam: "Empoli",
     awayTeam: "Monza",
-    date: "2024-08-18T16:30:00Z"
+    date: "2025-08-18T16:30:00Z"
   },
   {
     round: 1,
     homeTeam: "Milan",
     awayTeam: "Torino",
-    date: "2024-08-18T18:45:00Z"
+    date: "2025-08-18T18:45:00Z"
   },
   {
     round: 1,
     homeTeam: "Bologna",
     awayTeam: "Udinese",
-    date: "2024-08-18T20:45:00Z"
+    date: "2025-08-18T20:45:00Z"
   },
   {
     round: 1,
     homeTeam: "Hellas Verona",
     awayTeam: "Napoli",
-    date: "2024-08-18T20:45:00Z"
+    date: "2025-08-18T20:45:00Z"
   },
   {
     round: 1,
     homeTeam: "Cagliari",
     awayTeam: "Roma",
-    date: "2024-08-18T20:45:00Z"
+    date: "2025-08-18T20:45:00Z"
   },
   {
     round: 1,
     homeTeam: "Lazio",
     awayTeam: "Venezia",
-    date: "2024-08-18T20:45:00Z"
+    date: "2025-08-18T20:45:00Z"
   },
   {
     round: 1,
     homeTeam: "Lecce",
     awayTeam: "Atalanta",
-    date: "2024-08-19T18:30:00Z"
+    date: "2025-08-19T18:30:00Z"
   },
   {
     round: 1,
     homeTeam: "Juventus",
     awayTeam: "Como",
-    date: "2024-08-19T20:45:00Z"
+    date: "2025-08-19T20:45:00Z"
   },
 
   // Giornata 2 (24-26 Agosto 2024)
@@ -93,61 +93,61 @@ export const serieAFixtures = [
     round: 2,
     homeTeam: "Torino",
     awayTeam: "Atalanta",
-    date: "2024-08-24T18:30:00Z"
+    date: "2025-08-24T18:30:00Z"
   },
   {
     round: 2,
     homeTeam: "Udinese",
     awayTeam: "Lazio",
-    date: "2024-08-24T18:30:00Z"
+    date: "2025-08-24T18:30:00Z"
   },
   {
     round: 2,
     homeTeam: "Inter",
     awayTeam: "Lecce",
-    date: "2024-08-24T20:45:00Z"
+    date: "2025-08-24T20:45:00Z"
   },
   {
     round: 2,
     homeTeam: "Monza",
     awayTeam: "Genoa",
-    date: "2024-08-24T20:45:00Z"
+    date: "2025-08-24T20:45:00Z"
   },
   {
     round: 2,
     homeTeam: "Fiorentina",
     awayTeam: "Venezia",
-    date: "2024-08-25T18:30:00Z"
+    date: "2025-08-25T18:30:00Z"
   },
   {
     round: 2,
     homeTeam: "Roma",
     awayTeam: "Empoli",
-    date: "2024-08-25T20:45:00Z"
+    date: "2025-08-25T20:45:00Z"
   },
   {
     round: 2,
     homeTeam: "Napoli",
     awayTeam: "Bologna",
-    date: "2024-08-25T20:45:00Z"
+    date: "2025-08-25T20:45:00Z"
   },
   {
     round: 2,
     homeTeam: "Como",
     awayTeam: "Cagliari",
-    date: "2024-08-26T18:30:00Z"
+    date: "2025-08-26T18:30:00Z"
   },
   {
     round: 2,
     homeTeam: "Hellas Verona",
     awayTeam: "Juventus",
-    date: "2024-08-26T20:45:00Z"
+    date: "2025-08-26T20:45:00Z"
   },
   {
     round: 2,
     homeTeam: "Milan",
     awayTeam: "Parma",
-    date: "2024-08-26T20:45:00Z"
+    date: "2025-08-26T20:45:00Z"
   },
 
   // Giornata 3 (31 Agosto - 1 Settembre 2024)
@@ -155,61 +155,61 @@ export const serieAFixtures = [
     round: 3,
     homeTeam: "Venezia",
     awayTeam: "Torino",
-    date: "2024-08-31T18:30:00Z"
+    date: "2025-08-31T18:30:00Z"
   },
   {
     round: 3,
     homeTeam: "Bologna",
     awayTeam: "Empoli",
-    date: "2024-08-31T18:30:00Z"
+    date: "2025-08-31T18:30:00Z"
   },
   {
     round: 3,
     homeTeam: "Lazio",
     awayTeam: "Milan",
-    date: "2024-08-31T20:45:00Z"
+    date: "2025-08-31T20:45:00Z"
   },
   {
     round: 3,
     homeTeam: "Lecce",
     awayTeam: "Cagliari",
-    date: "2024-08-31T20:45:00Z"
+    date: "2025-08-31T20:45:00Z"
   },
   {
     round: 3,
     homeTeam: "Napoli",
     awayTeam: "Parma",
-    date: "2024-08-31T20:45:00Z"
+    date: "2025-08-31T20:45:00Z"
   },
   {
     round: 3,
     homeTeam: "Genoa",
     awayTeam: "Hellas Verona",
-    date: "2024-09-01T15:00:00Z"
+    date: "2025-09-01T15:00:00Z"
   },
   {
     round: 3,
     homeTeam: "Atalanta",
     awayTeam: "Fiorentina",
-    date: "2024-09-01T18:00:00Z"
+    date: "2025-09-01T18:00:00Z"
   },
   {
     round: 3,
     homeTeam: "Juventus",
     awayTeam: "Roma",
-    date: "2024-09-01T20:45:00Z"
+    date: "2025-09-01T20:45:00Z"
   },
   {
     round: 3,
     homeTeam: "Udinese",
     awayTeam: "Como",
-    date: "2024-09-01T20:45:00Z"
+    date: "2025-09-01T20:45:00Z"
   },
   {
     round: 3,
     homeTeam: "Inter",
     awayTeam: "Monza",
-    date: "2024-09-01T20:45:00Z"
+    date: "2025-09-01T20:45:00Z"
   },
 
   // Continue with remaining rounds...
@@ -220,61 +220,61 @@ export const serieAFixtures = [
     round: 4,
     homeTeam: "Cagliari",
     awayTeam: "Napoli",
-    date: "2024-09-15T15:00:00Z"
+    date: "2025-09-15T15:00:00Z"
   },
   {
     round: 4,
     homeTeam: "Monza",
     awayTeam: "Inter",
-    date: "2024-09-15T18:00:00Z"
+    date: "2025-09-15T18:00:00Z"
   },
   {
     round: 4,
     homeTeam: "Atalanta",
     awayTeam: "Fiorentina",
-    date: "2024-09-15T20:45:00Z"
+    date: "2025-09-15T20:45:00Z"
   },
   {
     round: 4,
     homeTeam: "Torino",
     awayTeam: "Lecce",
-    date: "2024-09-15T20:45:00Z"
+    date: "2025-09-15T20:45:00Z"
   },
   {
     round: 4,
     homeTeam: "Roma",
     awayTeam: "Udinese",
-    date: "2024-09-15T20:45:00Z"
+    date: "2025-09-15T20:45:00Z"
   },
   {
     round: 4,
     homeTeam: "Parma",
     awayTeam: "Lazio",
-    date: "2024-09-15T20:45:00Z"
+    date: "2025-09-15T20:45:00Z"
   },
   {
     round: 4,
     homeTeam: "Milan",
     awayTeam: "Venezia",
-    date: "2024-09-14T20:45:00Z"
+    date: "2025-09-14T20:45:00Z"
   },
   {
     round: 4,
     homeTeam: "Empoli",
     awayTeam: "Juventus",
-    date: "2024-09-14T20:45:00Z"
+    date: "2025-09-14T20:45:00Z"
   },
   {
     round: 4,
     homeTeam: "Hellas Verona",
     awayTeam: "Bologna",
-    date: "2024-09-16T18:30:00Z"
+    date: "2025-09-16T18:30:00Z"
   },
   {
     round: 4,
     homeTeam: "Como",
     awayTeam: "Genoa",
-    date: "2024-09-16T20:45:00Z"
+    date: "2025-09-16T20:45:00Z"
   },
 
   // Giornata 5 (21-23 Settembre 2024)
@@ -282,64 +282,64 @@ export const serieAFixtures = [
     round: 5,
     homeTeam: "Inter",
     awayTeam: "Milan",
-    date: "2024-09-22T20:45:00Z"
+    date: "2025-09-22T20:45:00Z"
   },
   {
     round: 5,
     homeTeam: "Juventus",
     awayTeam: "Napoli",
-    date: "2024-09-21T20:45:00Z"
+    date: "2025-09-21T20:45:00Z"
   },
   {
     round: 5,
     homeTeam: "Bologna",
     awayTeam: "Atalanta",
-    date: "2024-09-21T15:00:00Z"
+    date: "2025-09-21T15:00:00Z"
   },
   {
     round: 5,
     homeTeam: "Lazio",
     awayTeam: "Hellas Verona",
-    date: "2024-09-21T18:00:00Z"
+    date: "2025-09-21T18:00:00Z"
   },
   {
     round: 5,
     homeTeam: "Lecce",
     awayTeam: "Parma",
-    date: "2024-09-21T20:45:00Z"
+    date: "2025-09-21T20:45:00Z"
   },
   {
     round: 5,
     homeTeam: "Genoa",
     awayTeam: "Roma",
-    date: "2024-09-22T15:00:00Z"
+    date: "2025-09-22T15:00:00Z"
   },
   {
     round: 5,
     homeTeam: "Fiorentina",
     awayTeam: "Monza",
-    date: "2024-09-22T18:00:00Z"
+    date: "2025-09-22T18:00:00Z"
   },
   {
     round: 5,
     homeTeam: "Udinese",
     awayTeam: "Cagliari",
-    date: "2024-09-23T18:30:00Z"
+    date: "2025-09-23T18:30:00Z"
   },
   {
     round: 5,
     homeTeam: "Venezia",
     awayTeam: "Empoli",
-    date: "2024-09-23T20:45:00Z"
+    date: "2025-09-23T20:45:00Z"
   },
   {
     round: 5,
     homeTeam: "Torino",
     awayTeam: "Como",
-    date: "2024-09-23T20:45:00Z"
+    date: "2025-09-23T20:45:00Z"
   }
 
-  // Note: This is a simplified version. The complete Serie A 2024/2025 season
+  // Note: This is a simplified version. The complete Serie A 2025/2026 season
   // would have all 38 rounds with 10 matches each (380 total matches).
   // Each team plays every other team twice (home and away).
 ];

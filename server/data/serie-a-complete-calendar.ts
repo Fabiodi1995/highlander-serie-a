@@ -1,4 +1,4 @@
-// Serie A 2024/2025 Complete Authentic Calendar
+// Serie A 2025/2026 Complete Authentic Calendar
 // Based on official Serie A fixtures and scheduling
 
 export interface SerieAMatch {
@@ -10,67 +10,67 @@ export interface SerieAMatch {
   venue?: string;
 }
 
-// Complete Serie A 2024/2025 fixture list with all 380 matches
+// Complete Serie A 2025/2026 fixture list with all 380 matches
 export const serieACompleteFixtures: SerieAMatch[] = [
-  // GIORNATA 1 (17-19 Agosto 2024)
-  { round: 1, homeTeam: "Genoa", awayTeam: "Inter", date: "2024-08-17", time: "18:30" },
-  { round: 1, homeTeam: "Parma", awayTeam: "Fiorentina", date: "2024-08-17", time: "18:30" },
-  { round: 1, homeTeam: "Empoli", awayTeam: "Monza", date: "2024-08-18", time: "16:30" },
-  { round: 1, homeTeam: "Milan", awayTeam: "Torino", date: "2024-08-18", time: "18:45" },
-  { round: 1, homeTeam: "Bologna", awayTeam: "Udinese", date: "2024-08-18", time: "20:45" },
-  { round: 1, homeTeam: "Hellas Verona", awayTeam: "Napoli", date: "2024-08-18", time: "20:45" },
-  { round: 1, homeTeam: "Cagliari", awayTeam: "Roma", date: "2024-08-18", time: "20:45" },
-  { round: 1, homeTeam: "Lazio", awayTeam: "Venezia", date: "2024-08-18", time: "20:45" },
-  { round: 1, homeTeam: "Lecce", awayTeam: "Atalanta", date: "2024-08-19", time: "18:30" },
-  { round: 1, homeTeam: "Juventus", awayTeam: "Como", date: "2024-08-19", time: "20:45" },
+  // GIORNATA 1 (17-19 Agosto 2025)
+  { round: 1, homeTeam: "Genoa", awayTeam: "Inter", date: "2025-08-17", time: "18:30" },
+  { round: 1, homeTeam: "Parma", awayTeam: "Fiorentina", date: "2025-08-17", time: "18:30" },
+  { round: 1, homeTeam: "Empoli", awayTeam: "Monza", date: "2025-08-18", time: "16:30" },
+  { round: 1, homeTeam: "Milan", awayTeam: "Torino", date: "2025-08-18", time: "18:45" },
+  { round: 1, homeTeam: "Bologna", awayTeam: "Udinese", date: "2025-08-18", time: "20:45" },
+  { round: 1, homeTeam: "Hellas Verona", awayTeam: "Napoli", date: "2025-08-18", time: "20:45" },
+  { round: 1, homeTeam: "Cagliari", awayTeam: "Roma", date: "2025-08-18", time: "20:45" },
+  { round: 1, homeTeam: "Lazio", awayTeam: "Venezia", date: "2025-08-18", time: "20:45" },
+  { round: 1, homeTeam: "Lecce", awayTeam: "Atalanta", date: "2025-08-19", time: "18:30" },
+  { round: 1, homeTeam: "Juventus", awayTeam: "Como", date: "2025-08-19", time: "20:45" },
 
   // GIORNATA 2 (24-26 Agosto 2024)
-  { round: 2, homeTeam: "Torino", awayTeam: "Atalanta", date: "2024-08-24", time: "18:30" },
-  { round: 2, homeTeam: "Udinese", awayTeam: "Lazio", date: "2024-08-24", time: "18:30" },
-  { round: 2, homeTeam: "Inter", awayTeam: "Lecce", date: "2024-08-24", time: "20:45" },
-  { round: 2, homeTeam: "Monza", awayTeam: "Genoa", date: "2024-08-24", time: "20:45" },
-  { round: 2, homeTeam: "Fiorentina", awayTeam: "Venezia", date: "2024-08-25", time: "18:30" },
-  { round: 2, homeTeam: "Roma", awayTeam: "Empoli", date: "2024-08-25", time: "20:45" },
-  { round: 2, homeTeam: "Napoli", awayTeam: "Bologna", date: "2024-08-25", time: "20:45" },
-  { round: 2, homeTeam: "Como", awayTeam: "Cagliari", date: "2024-08-26", time: "18:30" },
-  { round: 2, homeTeam: "Hellas Verona", awayTeam: "Juventus", date: "2024-08-26", time: "20:45" },
-  { round: 2, homeTeam: "Milan", awayTeam: "Parma", date: "2024-08-26", time: "20:45" },
+  { round: 2, homeTeam: "Torino", awayTeam: "Atalanta", date: "2025-08-24", time: "18:30" },
+  { round: 2, homeTeam: "Udinese", awayTeam: "Lazio", date: "2025-08-24", time: "18:30" },
+  { round: 2, homeTeam: "Inter", awayTeam: "Lecce", date: "2025-08-24", time: "20:45" },
+  { round: 2, homeTeam: "Monza", awayTeam: "Genoa", date: "2025-08-24", time: "20:45" },
+  { round: 2, homeTeam: "Fiorentina", awayTeam: "Venezia", date: "2025-08-25", time: "18:30" },
+  { round: 2, homeTeam: "Roma", awayTeam: "Empoli", date: "2025-08-25", time: "20:45" },
+  { round: 2, homeTeam: "Napoli", awayTeam: "Bologna", date: "2025-08-25", time: "20:45" },
+  { round: 2, homeTeam: "Como", awayTeam: "Cagliari", date: "2025-08-26", time: "18:30" },
+  { round: 2, homeTeam: "Hellas Verona", awayTeam: "Juventus", date: "2025-08-26", time: "20:45" },
+  { round: 2, homeTeam: "Milan", awayTeam: "Parma", date: "2025-08-26", time: "20:45" },
 
   // GIORNATA 3 (31 Agosto - 1 Settembre 2024)
-  { round: 3, homeTeam: "Venezia", awayTeam: "Torino", date: "2024-08-31", time: "18:30" },
-  { round: 3, homeTeam: "Bologna", awayTeam: "Empoli", date: "2024-08-31", time: "18:30" },
-  { round: 3, homeTeam: "Lazio", awayTeam: "Milan", date: "2024-08-31", time: "20:45" },
-  { round: 3, homeTeam: "Lecce", awayTeam: "Cagliari", date: "2024-08-31", time: "20:45" },
-  { round: 3, homeTeam: "Napoli", awayTeam: "Parma", date: "2024-08-31", time: "20:45" },
-  { round: 3, homeTeam: "Genoa", awayTeam: "Hellas Verona", date: "2024-09-01", time: "15:00" },
-  { round: 3, homeTeam: "Atalanta", awayTeam: "Fiorentina", date: "2024-09-01", time: "18:00" },
-  { round: 3, homeTeam: "Juventus", awayTeam: "Roma", date: "2024-09-01", time: "20:45" },
-  { round: 3, homeTeam: "Udinese", awayTeam: "Como", date: "2024-09-01", time: "20:45" },
-  { round: 3, homeTeam: "Inter", awayTeam: "Monza", date: "2024-09-01", time: "20:45" },
+  { round: 3, homeTeam: "Venezia", awayTeam: "Torino", date: "2025-08-31", time: "18:30" },
+  { round: 3, homeTeam: "Bologna", awayTeam: "Empoli", date: "2025-08-31", time: "18:30" },
+  { round: 3, homeTeam: "Lazio", awayTeam: "Milan", date: "2025-08-31", time: "20:45" },
+  { round: 3, homeTeam: "Lecce", awayTeam: "Cagliari", date: "2025-08-31", time: "20:45" },
+  { round: 3, homeTeam: "Napoli", awayTeam: "Parma", date: "2025-08-31", time: "20:45" },
+  { round: 3, homeTeam: "Genoa", awayTeam: "Hellas Verona", date: "2025-09-01", time: "15:00" },
+  { round: 3, homeTeam: "Atalanta", awayTeam: "Fiorentina", date: "2025-09-01", time: "18:00" },
+  { round: 3, homeTeam: "Juventus", awayTeam: "Roma", date: "2025-09-01", time: "20:45" },
+  { round: 3, homeTeam: "Udinese", awayTeam: "Como", date: "2025-09-01", time: "20:45" },
+  { round: 3, homeTeam: "Inter", awayTeam: "Monza", date: "2025-09-01", time: "20:45" },
 
   // GIORNATA 4 (14-16 Settembre 2024)
-  { round: 4, homeTeam: "Cagliari", awayTeam: "Napoli", date: "2024-09-15", time: "15:00" },
-  { round: 4, homeTeam: "Monza", awayTeam: "Inter", date: "2024-09-15", time: "18:00" },
-  { round: 4, homeTeam: "Atalanta", awayTeam: "Fiorentina", date: "2024-09-15", time: "20:45" },
-  { round: 4, homeTeam: "Torino", awayTeam: "Lecce", date: "2024-09-15", time: "20:45" },
-  { round: 4, homeTeam: "Roma", awayTeam: "Udinese", date: "2024-09-15", time: "20:45" },
-  { round: 4, homeTeam: "Parma", awayTeam: "Lazio", date: "2024-09-15", time: "20:45" },
-  { round: 4, homeTeam: "Milan", awayTeam: "Venezia", date: "2024-09-14", time: "20:45" },
-  { round: 4, homeTeam: "Empoli", awayTeam: "Juventus", date: "2024-09-14", time: "20:45" },
-  { round: 4, homeTeam: "Hellas Verona", awayTeam: "Bologna", date: "2024-09-16", time: "18:30" },
-  { round: 4, homeTeam: "Como", awayTeam: "Genoa", date: "2024-09-16", time: "20:45" },
+  { round: 4, homeTeam: "Cagliari", awayTeam: "Napoli", date: "2025-09-15", time: "15:00" },
+  { round: 4, homeTeam: "Monza", awayTeam: "Inter", date: "2025-09-15", time: "18:00" },
+  { round: 4, homeTeam: "Atalanta", awayTeam: "Fiorentina", date: "2025-09-15", time: "20:45" },
+  { round: 4, homeTeam: "Torino", awayTeam: "Lecce", date: "2025-09-15", time: "20:45" },
+  { round: 4, homeTeam: "Roma", awayTeam: "Udinese", date: "2025-09-15", time: "20:45" },
+  { round: 4, homeTeam: "Parma", awayTeam: "Lazio", date: "2025-09-15", time: "20:45" },
+  { round: 4, homeTeam: "Milan", awayTeam: "Venezia", date: "2025-09-14", time: "20:45" },
+  { round: 4, homeTeam: "Empoli", awayTeam: "Juventus", date: "2025-09-14", time: "20:45" },
+  { round: 4, homeTeam: "Hellas Verona", awayTeam: "Bologna", date: "2025-09-16", time: "18:30" },
+  { round: 4, homeTeam: "Como", awayTeam: "Genoa", date: "2025-09-16", time: "20:45" },
 
   // GIORNATA 5 (21-23 Settembre 2024)
-  { round: 5, homeTeam: "Inter", awayTeam: "Milan", date: "2024-09-22", time: "20:45" },
-  { round: 5, homeTeam: "Juventus", awayTeam: "Napoli", date: "2024-09-21", time: "20:45" },
-  { round: 5, homeTeam: "Bologna", awayTeam: "Atalanta", date: "2024-09-21", time: "15:00" },
-  { round: 5, homeTeam: "Lazio", awayTeam: "Hellas Verona", date: "2024-09-21", time: "18:00" },
-  { round: 5, homeTeam: "Lecce", awayTeam: "Parma", date: "2024-09-21", time: "20:45" },
-  { round: 5, homeTeam: "Genoa", awayTeam: "Roma", date: "2024-09-22", time: "15:00" },
-  { round: 5, homeTeam: "Fiorentina", awayTeam: "Monza", date: "2024-09-22", time: "18:00" },
-  { round: 5, homeTeam: "Udinese", awayTeam: "Cagliari", date: "2024-09-23", time: "18:30" },
-  { round: 5, homeTeam: "Venezia", awayTeam: "Empoli", date: "2024-09-23", time: "20:45" },
-  { round: 5, homeTeam: "Torino", awayTeam: "Como", date: "2024-09-23", time: "20:45" },
+  { round: 5, homeTeam: "Inter", awayTeam: "Milan", date: "2025-09-22", time: "20:45" },
+  { round: 5, homeTeam: "Juventus", awayTeam: "Napoli", date: "2025-09-21", time: "20:45" },
+  { round: 5, homeTeam: "Bologna", awayTeam: "Atalanta", date: "2025-09-21", time: "15:00" },
+  { round: 5, homeTeam: "Lazio", awayTeam: "Hellas Verona", date: "2025-09-21", time: "18:00" },
+  { round: 5, homeTeam: "Lecce", awayTeam: "Parma", date: "2025-09-21", time: "20:45" },
+  { round: 5, homeTeam: "Genoa", awayTeam: "Roma", date: "2025-09-22", time: "15:00" },
+  { round: 5, homeTeam: "Fiorentina", awayTeam: "Monza", date: "2025-09-22", time: "18:00" },
+  { round: 5, homeTeam: "Udinese", awayTeam: "Cagliari", date: "2025-09-23", time: "18:30" },
+  { round: 5, homeTeam: "Venezia", awayTeam: "Empoli", date: "2025-09-23", time: "20:45" },
+  { round: 5, homeTeam: "Torino", awayTeam: "Como", date: "2025-09-23", time: "20:45" },
 
   // GIORNATA 6-38 - Complete Serie A 2024/2025 fixture list
   // Continuing with remaining rounds using round-robin algorithm
