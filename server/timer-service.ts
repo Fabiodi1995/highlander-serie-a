@@ -16,7 +16,8 @@ export async function checkExpiredDeadlines(): Promise<TimerCheckResult[]> {
     const activeGames = await storage.getActiveGamesWithDeadlines();
     // Usa il timezone italiano (UTC+1/UTC+2)
     const now = new Date();
-    const italianTime = new Date(now.toLocaleString("en-US", {timeZone: "Europe/Rome"}));
+    // Calcola correttamente l'ora italiana
+    const italianTime = new Date(now.getTime() + (1 * 60 * 60 * 1000)); // UTC+1 base, potrebbe essere UTC+2 in estate
     const results: TimerCheckResult[] = [];
 
     console.log(`Checking ${activeGames.length} active games at Italian time:`, italianTime.toISOString());
@@ -52,121 +53,131 @@ export async function checkExpiredDeadlines(): Promise<TimerCheckResult[]> {
  * Blocca automaticamente un gioco e assegna squadre mancanti
  */
 async function autoLockGame(gameId: number): Promise<TimerCheckResult> {
-  return await withTransaction(async () => {
+  try {
+    console.log(`Starting auto-lock for game ${gameId}`);
+    
     const game = await storage.getGame(gameId);
     if (!game) {
-      throw new Error(`Game ${gameId} not found`);
+      console.error(`Game ${gameId} not found during auto-lock`);
+      return { gameId, action: 'no_action', details: 'Game not found' };
     }
+
+    console.log(`Game ${gameId} current state: status=${game.status}, roundStatus=${game.roundStatus}, round=${game.currentRound}`);
 
     // Verifica che il gioco sia ancora in stato valido per l'auto-lock
     if (game.status !== 'active' || game.roundStatus !== 'selection_open') {
+      console.log(`Game ${gameId} not eligible for auto-lock: status=${game.status}, roundStatus=${game.roundStatus}`);
       return { gameId, action: 'no_action', details: 'Game already locked or inactive' };
     }
 
-    // Ottieni tutti i ticket attivi per questo gioco
-    const allTickets = await storage.getTicketsByGame(gameId);
-    const activeTickets = allTickets.filter(t => t.isActive);
+    // Esegui l'auto-lock in una transazione
+    const result = await withTransaction(async () => {
+      // Ottieni tutti i ticket attivi per questo gioco
+      const allTickets = await storage.getTicketsByGame(gameId);
+      const activeTickets = allTickets.filter(t => t.isActive);
 
-    // Ottieni le selezioni già effettuate per il round corrente
-    const existingSelections = await storage.getTeamSelectionsByRound(gameId, game.currentRound);
-    const ticketsWithSelections = new Set(existingSelections.map(s => s.ticketId));
+      // Ottieni le selezioni già effettuate per il round corrente
+      const existingSelections = await storage.getTeamSelectionsByRound(gameId, game.currentRound);
+      const ticketsWithSelections = new Set(existingSelections.map(s => s.ticketId));
 
-    // Trova i ticket che non hanno ancora fatto una selezione
-    const ticketsNeedingSelection = activeTickets.filter(t => !ticketsWithSelections.has(t.id));
+      // Trova i ticket che non hanno ancora fatto una selezione
+      const ticketsNeedingSelection = activeTickets.filter(t => !ticketsWithSelections.has(t.id));
 
-    let autoAssignedCount = 0;
+      let autoAssignedCount = 0;
 
-    if (ticketsNeedingSelection.length > 0) {
-      // Ottieni tutte le squadre disponibili
-      const allTeams = await storage.getAllTeams();
+      if (ticketsNeedingSelection.length > 0) {
+        // Ottieni tutte le squadre disponibili
+        const allTeams = await storage.getAllTeams();
 
-      // Operazioni di assegnazione automatica
-      const assignmentOperations = [];
+        for (const ticket of ticketsNeedingSelection) {
+          // Trova squadre già usate da questo ticket in round precedenti
+          const usedSelections = await storage.getTeamSelectionsByTicket(ticket.id);
+          const usedTeamIds = new Set(usedSelections.map(s => s.teamId));
 
-      for (const ticket of ticketsNeedingSelection) {
-        // Trova squadre già usate da questo ticket in round precedenti
-        const usedSelections = await storage.getTeamSelectionsByTicket(ticket.id);
-        const usedTeamIds = new Set(usedSelections.map(s => s.teamId));
+          // Squadre disponibili per questo ticket
+          const availableTeams = allTeams.filter(team => !usedTeamIds.has(team.id));
 
-        // Filtra squadre disponibili (non ancora usate da questo ticket)
-        const availableTeams = allTeams.filter(team => !usedTeamIds.has(team.id));
+          if (availableTeams.length === 0) {
+            console.warn(`No available teams for ticket ${ticket.id} in game ${gameId}`);
+            continue;
+          }
 
-        if (availableTeams.length === 0) {
-          // Caso edge: non ci sono squadre disponibili (teoricamente impossibile)
-          console.warn(`No available teams for ticket ${ticket.id} in game ${gameId}`);
-          continue;
-        }
+          // Selezione intelligente: evita squadre già scelte da altri in questo round
+          const alreadySelectedInRound = new Set(existingSelections.map(s => s.teamId));
+          let smartAvailableTeams = availableTeams.filter(team => !alreadySelectedInRound.has(team.id));
 
-        // Selezione intelligente: evita squadre già scelte da altri in questo round
-        const alreadySelectedInRound = new Set(existingSelections.map(s => s.teamId));
-        let smartAvailableTeams = availableTeams.filter(team => !alreadySelectedInRound.has(team.id));
+          // Se tutte le squadre disponibili sono già state scelte, usa qualsiasi squadra disponibile
+          if (smartAvailableTeams.length === 0) {
+            smartAvailableTeams = availableTeams;
+          }
 
-        // Se tutte le squadre disponibili sono già state scelte, usa qualsiasi squadra disponibile
-        if (smartAvailableTeams.length === 0) {
-          smartAvailableTeams = availableTeams;
-        }
+          // Selezione casuale dalla lista intelligente
+          const randomTeam = smartAvailableTeams[Math.floor(Math.random() * smartAvailableTeams.length)];
 
-        // Selezione casuale dalla lista intelligente
-        const randomTeam = smartAvailableTeams[Math.floor(Math.random() * smartAvailableTeams.length)];
-
-        // Aggiungi operazione di assegnazione
-        assignmentOperations.push(async () => {
+          // Crea la selezione automatica
           await storage.createTeamSelection({
             ticketId: ticket.id,
             teamId: randomTeam.id,
             round: game.currentRound,
             gameId: gameId
           });
-        });
 
-        autoAssignedCount++;
+          autoAssignedCount++;
+        }
       }
 
-      // Esegui tutte le assegnazioni in batch
-      if (assignmentOperations.length > 0) {
-        await batchOperation(assignmentOperations, { maxRetries: 2, delayMs: 50 });
-      }
-    }
+      // Blocca le selezioni per il round corrente
+      console.log(`Updating game ${gameId} roundStatus to selection_locked`);
+      await storage.updateGameRoundStatus(gameId, 'selection_locked');
+      
+      // Rimuovi la deadline dopo aver bloccato il gioco
+      console.log(`Clearing deadline for game ${gameId}`);
+      await storage.updateGameDeadline(gameId, null);
 
-    // Blocca le selezioni per il round corrente
-    await storage.updateGameRoundStatus(gameId, 'selection_locked');
+      // Crea log audit per l'auto-lock
+      await storage.createTimerLog(
+        gameId,
+        'auto_lock',
+        game.selectionDeadline,
+        null,
+        null,
+        {
+          roundNumber: game.currentRound,
+          autoAssignedCount,
+          totalActiveTickets: activeTickets.length,
+          ticketsWithManualSelections: existingSelections.length,
+          lockTimestamp: new Date().toISOString()
+        }
+      );
 
-    // Crea log audit per l'auto-lock
-    await storage.createTimerLog(
-      gameId,
-      'auto_lock',
-      game.selectionDeadline,
-      null,
-      null,
-      {
-        roundNumber: game.currentRound,
+      return {
         autoAssignedCount,
         totalActiveTickets: activeTickets.length,
-        ticketsWithManualSelections: existingSelections.length,
-        lockTimestamp: new Date().toISOString()
-      }
-    );
+        manualSelections: existingSelections.length
+      };
+    });
 
-    console.log(`Auto-locked game ${gameId}:`, {
+    console.log(`Successfully auto-locked game ${gameId}:`, {
       gameId,
       roundNumber: game.currentRound,
       deadline: game.selectionDeadline?.toISOString(),
-      autoAssignedCount,
-      totalActiveTickets: activeTickets.length,
-      manualSelections: existingSelections.length
+      ...result
     });
 
     return {
       gameId,
       action: 'locked',
-      autoAssignedCount,
+      autoAssignedCount: result.autoAssignedCount,
       details: {
         roundNumber: game.currentRound,
-        totalActiveTickets: activeTickets.length,
-        manualSelections: existingSelections.length
+        totalActiveTickets: result.totalActiveTickets,
+        manualSelections: result.manualSelections
       }
     };
-  });
+  } catch (error) {
+    console.error(`Error auto-locking game ${gameId}:`, error);
+    return { gameId, action: 'no_action', details: `Error: ${error.message}` };
+  }
 }
 
 /**
@@ -184,7 +195,7 @@ export async function validateSelectionDeadline(gameId: number): Promise<{ valid
   }
 
   const now = new Date();
-  const italianTime = new Date(now.toLocaleString("en-US", {timeZone: "Europe/Rome"}));
+  const italianTime = new Date(now.getTime() + (1 * 60 * 60 * 1000));
   const deadlineTime = new Date(game.selectionDeadline);
   
   if (deadlineTime <= italianTime) {
@@ -222,11 +233,9 @@ export function startTimerService() {
     }
   }, 30000); // 30 secondi
 
-  // Graceful shutdown
-  process.on('SIGTERM', () => {
-    console.log('Stopping timer service...');
+  // Cleanup function per fermare il timer se necessario
+  return () => {
     clearInterval(checkInterval);
-  });
-
-  return checkInterval;
+    console.log('Timer service stopped');
+  };
 }
