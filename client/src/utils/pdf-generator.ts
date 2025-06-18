@@ -543,9 +543,11 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
         } else if (selection && round < game.currentRound) {
           data.cell.styles.fillColor = [212, 237, 218];
         } else if (round === game.currentRound && ticket.isActive && selection) {
-          data.cell.styles.fillColor = [255, 255, 255];
-        } else if (round === game.currentRound && ticket.isActive && !selection) {
+          // Round corrente con selezione - sfondo giallo
           data.cell.styles.fillColor = [255, 243, 205];
+        } else if (round === game.currentRound && ticket.isActive && !selection) {
+          // Round corrente senza selezione - sfondo giallo chiaro
+          data.cell.styles.fillColor = [255, 250, 230];
         } else if (round > game.currentRound || !ticket.isActive) {
           data.cell.styles.fillColor = [248, 249, 250];
         } else {
