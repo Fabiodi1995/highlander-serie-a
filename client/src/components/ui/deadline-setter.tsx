@@ -31,23 +31,9 @@ export function DeadlineSetter({
   isLoading = false,
   isNewRound = false 
 }: DeadlineSetterProps) {
+  const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
-  const [error, setError] = useState('');
-
-  // Cancella l'errore quando l'utente modifica data o ora
-  React.useEffect(() => {
-    if (selectedDate && selectedTime && error) {
-      setError('');
-    }
-  }, [selectedDate, selectedTime, error]);
-
-  // Cancella l'errore quando si chiude il dialog
-  React.useEffect(() => {
-    if (!isOpen) {
-      setError('');
-    }
-  }, [isOpen]);
 
   React.useEffect(() => {
     if (isOpen) {
@@ -65,13 +51,16 @@ export function DeadlineSetter({
       
       setSelectedDate(dateStr);
       setSelectedTime(timeStr);
-      setError('');
     }
   }, [isOpen, currentDeadline]);
 
   const validateDateTime = () => {
     if (!selectedDate || !selectedTime) {
-      setError('Data e ora sono obbligatorie');
+      toast({
+        title: "Errore",
+        description: "Data e ora sono obbligatorie",
+        variant: "destructive",
+      });
       return false;
     }
 
@@ -84,18 +73,25 @@ export function DeadlineSetter({
 
     // Verifica che la data sia nel futuro
     if (selectedDateTime <= nowPlusBuffer) {
-      setError('La deadline deve essere nel futuro (orario italiano)');
+      toast({
+        title: "Errore",
+        description: "La deadline deve essere nel futuro (orario italiano)",
+        variant: "destructive",
+      });
       return false;
     }
 
     // Verifica che non sia troppo nel futuro
     const maxDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 giorni
     if (selectedDateTime > maxDate) {
-      setError('La deadline non può essere oltre 30 giorni nel futuro');
+      toast({
+        title: "Errore",
+        description: "La deadline non può essere oltre 30 giorni nel futuro",
+        variant: "destructive",
+      });
       return false;
     }
 
-    setError('');
     return true;
   };
 
@@ -104,9 +100,6 @@ export function DeadlineSetter({
 
     const deadlineISO = new Date(`${selectedDate}T${selectedTime}:00`).toISOString();
     onSetDeadline(deadlineISO);
-    
-    // Reset error after successful submission
-    setError('');
   };
 
   const getPreviewMessage = () => {
@@ -177,13 +170,7 @@ export function DeadlineSetter({
             />
           </div>
 
-          {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
-              {error}
-            </div>
-          )}
-
-          {getPreviewMessage() && !error && (
+          {getPreviewMessage() && (
             <Card className="bg-blue-50 border-blue-200">
               <CardContent className="p-3">
                 <div className="text-sm text-blue-700">
@@ -206,7 +193,7 @@ export function DeadlineSetter({
           </Button>
           <Button 
             onClick={handleSubmit} 
-            disabled={isLoading || !!error || !selectedDate || !selectedTime}
+            disabled={isLoading || !selectedDate || !selectedTime}
             className="flex items-center gap-2"
           >
             <Save className="h-4 w-4" />
