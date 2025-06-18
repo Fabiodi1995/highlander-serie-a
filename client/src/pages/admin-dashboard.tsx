@@ -11,7 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, LogOut, Plus, Gamepad2, Play, Users, TicketIcon, Calculator, Settings, Trash2, Trophy, Target, CheckCircle, Shield, Download, Clock } from "lucide-react";
+import { User, LogOut, Plus, Gamepad2, Play, Users, TicketIcon, Calculator, Settings, Trash2, Trophy, Target, CheckCircle, Shield, Download, Clock, Calendar } from "lucide-react";
+import { Link } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertGameSchema } from "@shared/schema";
@@ -1837,6 +1838,30 @@ export default function AdminDashboard() {
           </DialogContent>
         </Dialog>
       </div>
+      
+      {/* Admin Footer */}
+      <footer className="bg-gray-50 border-t mt-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex flex-wrap justify-center items-center gap-6 text-sm text-gray-600">
+            <Link href="/admin">
+              <div className="flex items-center space-x-2 hover:text-blue-600 transition-colors cursor-pointer">
+                <Shield className="h-4 w-4" />
+                <span>Dashboard Admin</span>
+              </div>
+            </Link>
+            <Link href="/calendar">
+              <div className="flex items-center space-x-2 hover:text-blue-600 transition-colors cursor-pointer">
+                <Calendar className="h-4 w-4" />
+                <span>Calendario Serie A</span>
+              </div>
+            </Link>
+            <div className="flex items-center space-x-2 text-gray-400">
+              <Trophy className="h-4 w-4" />
+              <span>Highlander Admin Panel</span>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

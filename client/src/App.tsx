@@ -27,6 +27,7 @@ import PrivacyPolicyPage from "@/pages/privacy-policy";
 import TermsOfServicePage from "@/pages/terms-of-service";
 import CookiePolicyPage from "@/pages/cookie-policy";
 import AnalyticsDashboard from "@/pages/analytics-dashboard";
+import CalendarPage from "@/pages/calendar";
 
 function Router() {
   return (
@@ -39,6 +40,7 @@ function Router() {
       <ProtectedRoute path="/profile" component={ProfilePage} />
       <ProtectedRoute path="/rules" component={RulesPage} />
       <ProtectedRoute path="/analytics" component={AnalyticsDashboard} />
+      <ProtectedRoute path="/calendar" component={CalendarPage} />
       <ProtectedRoute path="/games/:id" component={GameInterface} />
       <Route component={NotFound} />
     </Switch>
