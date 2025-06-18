@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Calendar, Clock, Save, AlertTriangle } from 'lucide-react';
+import { Calendar, Clock, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
   DialogContent,
@@ -17,7 +18,6 @@ interface DeadlineSetterProps {
   isOpen: boolean;
   onClose: () => void;
   onSetDeadline: (deadline: string) => void;
-  errorMessage?: string;
   currentDeadline?: string | null;
   isLoading?: boolean;
   isNewRound?: boolean;
@@ -27,7 +27,6 @@ export function DeadlineSetter({
   isOpen, 
   onClose, 
   onSetDeadline, 
-  errorMessage,
   currentDeadline,
   isLoading = false,
   isNewRound = false 
@@ -105,6 +104,9 @@ export function DeadlineSetter({
 
     const deadlineISO = new Date(`${selectedDate}T${selectedTime}:00`).toISOString();
     onSetDeadline(deadlineISO);
+    
+    // Reset error after successful submission
+    setError('');
   };
 
   const getPreviewMessage = () => {
@@ -175,14 +177,13 @@ export function DeadlineSetter({
             />
           </div>
 
-          {(error || errorMessage) && (
-            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
-              <AlertTriangle className="h-4 w-4" />
-              {error || errorMessage}
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+              {error}
             </div>
           )}
 
-          {getPreviewMessage() && !error && !errorMessage && (
+          {getPreviewMessage() && !error && (
             <Card className="bg-blue-50 border-blue-200">
               <CardContent className="p-3">
                 <div className="text-sm text-blue-700">

@@ -1092,7 +1092,7 @@ export default function AdminDashboard() {
             }
           }
         }}
-        errorMessage={setDeadlineMutation.error?.message || startNewRoundMutation.error?.message}
+
         currentDeadline={selectedGameForDeadline?.selectionDeadline ? new Date(selectedGameForDeadline.selectionDeadline).toISOString() : null}
         isLoading={setDeadlineMutation.isPending || startNewRoundMutation.isPending}
         isNewRound={newRoundWithDeadline}
