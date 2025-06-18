@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 import { storage } from './storage';
-import { serieATeams, serieAFixtures, getTeamIdByName } from './data/serie-a-schedule';
+import { authenticSerieAFixtures2025, authenticSerieATeams2025, generateCompleteSerieACalendar } from './data/authentic-serie-a-2025-26-complete';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
