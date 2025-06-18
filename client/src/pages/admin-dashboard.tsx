@@ -915,15 +915,23 @@ export default function AdminDashboard() {
 
   const lockRoundMutation = useMutation({
     mutationFn: async ({ gameId, forceConfirm }: { gameId: number; forceConfirm?: boolean }) => {
-      const res = await apiRequest("POST", `/api/games/${gameId}/lock-round`, { forceConfirm });
+      const res = await fetch(`/api/games/${gameId}/lock-round`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ forceConfirm }),
+        credentials: "include",
+      });
+      
+      const responseData = await res.json();
+      
       if (!res.ok) {
-        const errorData = await res.json();
-        const error = new Error(errorData.message || 'Failed to lock round');
-        (error as any).requiresConfirmation = errorData.requiresConfirmation;
-        (error as any).missingSelections = errorData.missingSelections;
+        const error = new Error(responseData.message || 'Failed to lock round');
+        (error as any).requiresConfirmation = responseData.requiresConfirmation;
+        (error as any).missingSelections = responseData.missingSelections;
         throw error;
       }
-      return await res.json();
+      
+      return responseData;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/games"] });
