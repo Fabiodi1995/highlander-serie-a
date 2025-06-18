@@ -51,7 +51,7 @@ export default function CalendarPage() {
 
   // Get available matchdays from database
   const availableMatchdays = allMatches 
-    ? [...new Set(allMatches.map(m => m.round))].sort((a, b) => a - b)
+    ? Array.from(new Set(allMatches.map(m => m.round))).sort((a, b) => a - b)
     : [];
   
   // Calculate pagination
@@ -80,8 +80,26 @@ export default function CalendarPage() {
     }).sort((a, b) => a.matchTime.localeCompare(b.matchTime));
   };
 
+  const getMatchTimeFromDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('it-IT', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      timeZone: 'Europe/Rome'
+    });
+  };
+
   const getMatchDate = (matchday: number): string => {
-    const startDate = new Date('2025-08-24'); // Serie A 2025/26 start date
+    if (!allMatches) return '';
+    
+    const matchdayMatches = allMatches.filter(m => m.round === matchday);
+    if (matchdayMatches.length > 0) {
+      const firstMatch = matchdayMatches[0];
+      return new Date(firstMatch.matchDate).toISOString().split('T')[0];
+    }
+    
+    // Fallback per giornate non ancora caricate
+    const startDate = new Date('2025-08-24');
     const matchDate = new Date(startDate);
     matchDate.setDate(startDate.getDate() + (matchday - 1) * 7);
     return matchDate.toISOString().split('T')[0];
@@ -101,22 +119,22 @@ export default function CalendarPage() {
       'Bologna': 'Stadio Renato Dall\'Ara',
       'Cagliari': 'Unipol Domus',
       'Como': 'Stadio Giuseppe Sinigaglia',
-      'Empoli': 'Stadio Carlo Castellani',
+      'Cremonese': 'Stadio Giovanni Zini',
       'Fiorentina': 'Stadio Artemio Franchi',
       'Genoa': 'Stadio Luigi Ferraris',
+      'Hellas Verona': 'Stadio Marcantonio Bentegodi',
       'Inter': 'San Siro',
       'Juventus': 'Allianz Stadium',
       'Lazio': 'Stadio Olimpico',
       'Lecce': 'Stadio Via del Mare',
       'Milan': 'San Siro',
-      'Monza': 'U-Power Stadium',
       'Napoli': 'Stadio Diego Armando Maradona',
       'Parma': 'Stadio Ennio Tardini',
+      'Pisa': 'Arena Garibaldi',
       'Roma': 'Stadio Olimpico',
+      'Sassuolo': 'Mapei Stadium',
       'Torino': 'Stadio Olimpico Grande Torino',
-      'Udinese': 'Bluenergy Stadium',
-      'Venezia': 'Stadio Pier Luigi Penzo',
-      'Verona': 'Stadio Marcantonio Bentegodi'
+      'Udinese': 'Bluenergy Stadium'
     };
     return stadiums[teamName] || 'Stadio TBD';
   };
@@ -189,7 +207,7 @@ export default function CalendarPage() {
               Precedenti
             </Button>
             <div className="text-sm text-gray-600">
-              Giornate {startIndex + 1}-{Math.min(endIndex, allMatchdays.length)} di {allMatchdays.length}
+              Giornate {startIndex + 1}-{Math.min(endIndex, availableMatchdays.length)} di {availableMatchdays.length}
             </div>
             <Button 
               onClick={goToNextPage} 
@@ -219,7 +237,7 @@ export default function CalendarPage() {
         {/* Matchdays Grid */}
         <div className="space-y-8">
           {currentMatchdays.map(matchday => {
-            const matches = generateMatchesForMatchday(matchday);
+            const matches = getMatchesForMatchday(matchday);
             const matchDate = getMatchDate(matchday);
             
             return (
@@ -245,7 +263,7 @@ export default function CalendarPage() {
                 
                 <CardContent className="p-0">
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
-                    {matches.map((match, index) => (
+                    {matches.map((match: DisplayMatch, index: number) => (
                       <div key={match.id} className={`p-4 border-b ${index % 2 === 0 ? 'lg:border-r' : ''} last:border-b-0`}>
                         <div className="flex items-center justify-between">
                           {/* Home Team */}
