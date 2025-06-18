@@ -809,12 +809,49 @@ export default function AdminDashboard() {
       queryClient.invalidateQueries({ queryKey: ["/api/games"] });
       setDeadlineDialogOpen(false);
       setSelectedGameForDeadline(null);
+      setNewRoundWithDeadline(false);
       toast({
         title: "Successo",
         description: "Deadline impostata con successo",
       });
     },
     onError: (error: Error) => {
+      toast({
+        title: "Errore",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const startNewRoundMutation = useMutation({
+    mutationFn: async (gameId: number) => {
+      const res = await apiRequest("POST", `/api/games/${gameId}/start-new-round`);
+      return await res.json();
+    },
+    onSuccess: (data, gameId) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/games"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/all-team-selections"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/all-tickets"] });
+      
+      // Se stiamo impostando una deadline per il nuovo round, non chiudere il dialog
+      if (newRoundWithDeadline && selectedGameForDeadline) {
+        toast({
+          title: "Successo",
+          description: "Nuovo round iniziato - ora imposta la deadline",
+        });
+        return;
+      }
+      
+      toast({
+        title: "Successo",
+        description: "Nuovo round iniziato",
+      });
+    },
+    onError: (error: Error) => {
+      setNewRoundWithDeadline(false);
+      setSelectedGameForDeadline(null);
+      setDeadlineDialogOpen(false);
       toast({
         title: "Errore",
         description: error.message,
@@ -909,29 +946,7 @@ export default function AdminDashboard() {
     },
   });
 
-  const startNewRoundMutation = useMutation({
-    mutationFn: async (gameId: number) => {
-      const res = await apiRequest("POST", `/api/games/${gameId}/start-new-round`);
-      return await res.json();
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/games"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/all-team-selections"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/all-tickets"] });
-      
-      toast({
-        title: "Nuovo Round Iniziato",
-        description: data.message,
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Errore",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
+
 
   const deleteGameMutation = useMutation({
     mutationFn: async (gameId: number) => {
@@ -1044,7 +1059,7 @@ export default function AdminDashboard() {
         onSetDeadline={(deadline) => {
           if (selectedGameForDeadline) {
             if (newRoundWithDeadline) {
-              // Avvia nuovo round con deadline
+              // Per il nuovo round, prima avvia il round poi imposta la deadline
               startNewRoundMutation.mutate(selectedGameForDeadline.id, {
                 onSuccess: () => {
                   // Dopo aver avviato il nuovo round, imposta la deadline
