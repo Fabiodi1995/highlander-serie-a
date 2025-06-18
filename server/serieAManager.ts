@@ -117,8 +117,8 @@ export class SerieAManager {
     return allMatches;
   }
 
-  private generateRoundRobinMatches(round: number, teams: any[]) {
-    const matches = [];
+  private generateRoundRobinMatches(round: number, teams: any[]): any[] {
+    const matches: any[] = [];
     const teamList = [...teams];
     
     // Standard round-robin algorithm for 20 teams
@@ -194,8 +194,8 @@ export class SerieAManager {
   }
 
   private getMatchDate(round: number): string {
-    // Calculate date based on Serie A 2024/2025 schedule
-    const startDate = new Date('2024-08-17');
+    // Calculate date based on Serie A 2025/2026 schedule
+    const startDate = new Date('2025-08-17');
     const daysToAdd = (round - 1) * 7; // Roughly one week between rounds
     const matchDate = new Date(startDate.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
     return matchDate.toISOString().split('T')[0];
