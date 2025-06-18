@@ -14,10 +14,9 @@ interface TimerCheckResult {
 export async function checkExpiredDeadlines(): Promise<TimerCheckResult[]> {
   try {
     const activeGames = await storage.getActiveGamesWithDeadlines();
-    // Usa il timezone italiano corretto (UTC+1 in inverno, UTC+2 in estate)
+    // Usa il timezone italiano corretto
     const now = new Date();
-    // Giugno è estate, quindi UTC+2
-    const italianTime = new Date(now.getTime() + (2 * 60 * 60 * 1000));
+    const italianTime = new Date(now.toLocaleString("en-US", {timeZone: "Europe/Rome"}));
     const results: TimerCheckResult[] = [];
 
     console.log(`Checking ${activeGames.length} active games at Italian time:`, italianTime.toISOString());
@@ -196,7 +195,7 @@ export async function validateSelectionDeadline(gameId: number): Promise<{ valid
   }
 
   const now = new Date();
-  const italianTime = new Date(now.getTime() + (2 * 60 * 60 * 1000));
+  const italianTime = new Date(now.toLocaleString("en-US", {timeZone: "Europe/Rome"}));
   const deadlineTime = new Date(game.selectionDeadline);
   
   if (deadlineTime <= italianTime) {
