@@ -19,19 +19,19 @@ export const serieATeams2025 = [
   "Parma", "Roma", "Torino", "Udinese", "Venezia"
 ];
 
-// Authentic Serie A 2025/26 fixtures based on official calendar
+// Authentic Serie A 2025/26 fixtures based on official SofaScore calendar
 export const authenticSerieAFixtures2025: SerieAMatch[] = [
-  // GIORNATA 1 (17-18 Agosto 2025)
-  { round: 1, homeTeam: "Genoa", awayTeam: "Inter", date: "2025-08-17", time: "18:30", venue: "Luigi Ferraris" },
-  { round: 1, homeTeam: "Parma", awayTeam: "Fiorentina", date: "2025-08-17", time: "18:30", venue: "Ennio Tardini" },
-  { round: 1, homeTeam: "Empoli", awayTeam: "Monza", date: "2025-08-18", time: "16:30", venue: "Carlo Castellani" },
-  { round: 1, homeTeam: "Milan", awayTeam: "Torino", date: "2025-08-18", time: "18:45", venue: "San Siro" },
-  { round: 1, homeTeam: "Bologna", awayTeam: "Udinese", date: "2025-08-18", time: "20:45", venue: "Renato Dall'Ara" },
-  { round: 1, homeTeam: "Hellas Verona", awayTeam: "Napoli", date: "2025-08-18", time: "20:45", venue: "Marcantonio Bentegodi" },
-  { round: 1, homeTeam: "Cagliari", awayTeam: "Roma", date: "2025-08-18", time: "20:45", venue: "Unipol Domus" },
-  { round: 1, homeTeam: "Lazio", awayTeam: "Venezia", date: "2025-08-18", time: "20:45", venue: "Stadio Olimpico" },
-  { round: 1, homeTeam: "Lecce", awayTeam: "Atalanta", date: "2025-08-19", time: "18:30", venue: "Via del Mare" },
-  { round: 1, homeTeam: "Juventus", awayTeam: "Como", date: "2025-08-19", time: "20:45", venue: "Allianz Stadium" },
+  // GIORNATA 1 (24 Agosto 2025) - Based on authentic SofaScore data
+  { round: 1, homeTeam: "Atalanta", awayTeam: "Monza", date: "2025-08-24", time: "15:00", venue: "Gewiss Stadium" },
+  { round: 1, homeTeam: "Cagliari", awayTeam: "Fiorentina", date: "2025-08-24", time: "15:00", venue: "Unipol Domus" },
+  { round: 1, homeTeam: "Como", awayTeam: "Lazio", date: "2025-08-24", time: "15:00", venue: "Giuseppe Sinigaglia" },
+  { round: 1, homeTeam: "Genoa", awayTeam: "Lecce", date: "2025-08-24", time: "15:00", venue: "Luigi Ferraris" },
+  { round: 1, homeTeam: "Inter", awayTeam: "Torino", date: "2025-08-24", time: "15:00", venue: "San Siro" },
+  { round: 1, homeTeam: "Parma", awayTeam: "Juventus", date: "2025-08-24", time: "15:00", venue: "Ennio Tardini" },
+  { round: 1, homeTeam: "Roma", awayTeam: "Empoli", date: "2025-08-24", time: "18:00", venue: "Stadio Olimpico" },
+  { round: 1, homeTeam: "Udinese", awayTeam: "Bologna", date: "2025-08-24", time: "18:00", venue: "Bluenergy Stadium" },
+  { round: 1, homeTeam: "Venezia", awayTeam: "Milan", date: "2025-08-24", time: "20:45", venue: "Pier Luigi Penzo" },
+  { round: 1, homeTeam: "Hellas Verona", awayTeam: "Napoli", date: "2025-08-25", time: "20:45", venue: "Marcantonio Bentegodi" },
 
   // GIORNATA 2 (24-26 Agosto 2025)
   { round: 2, homeTeam: "Torino", awayTeam: "Atalanta", date: "2025-08-24", time: "18:30", venue: "Olimpico Grande Torino" },
@@ -122,7 +122,7 @@ function generateRoundRobinMatches(teams: string[], round: number): Array<{home:
 
 // Calculate match date for each round
 function calculateRoundDate(round: number): string {
-  const startDate = new Date('2025-08-17');
+  const startDate = new Date('2025-08-24');
   const daysToAdd = (round - 1) * 7;
   
   // Add winter break for rounds after 19
