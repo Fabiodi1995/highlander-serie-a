@@ -20,6 +20,7 @@ interface DeadlineSetterProps {
   errorMessage?: string;
   currentDeadline?: string | null;
   isLoading?: boolean;
+  isNewRound?: boolean;
 }
 
 export function DeadlineSetter({ 
@@ -28,7 +29,8 @@ export function DeadlineSetter({
   onSetDeadline, 
   errorMessage,
   currentDeadline,
-  isLoading = false 
+  isLoading = false,
+  isNewRound = false 
 }: DeadlineSetterProps) {
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
@@ -40,6 +42,13 @@ export function DeadlineSetter({
       setError('');
     }
   }, [selectedDate, selectedTime, error]);
+
+  // Cancella l'errore quando si chiude il dialog
+  React.useEffect(() => {
+    if (!isOpen) {
+      setError('');
+    }
+  }, [isOpen]);
 
   React.useEffect(() => {
     if (isOpen) {
@@ -126,11 +135,14 @@ export function DeadlineSetter({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Clock className="h-5 w-5" />
-            {currentDeadline ? 'Modifica Deadline' : 'Imposta Deadline'}
+            {isNewRound ? 'Nuovo Round - Imposta Deadline' : (currentDeadline ? 'Modifica Deadline' : 'Imposta Deadline')}
           </DialogTitle>
           <DialogDescription>
-            Imposta la scadenza per le selezioni del round corrente.
-            {currentDeadline && ' Puoi modificare la deadline anche se ci sono già selezioni effettuate.'}
+            {isNewRound ? 
+              'Stai per iniziare un nuovo round. Imposta la scadenza per le selezioni del nuovo round.' :
+              'Imposta la scadenza per le selezioni del round corrente.'
+            }
+            {currentDeadline && !isNewRound && ' Puoi modificare la deadline anche se ci sono già selezioni effettuate.'}
           </DialogDescription>
         </DialogHeader>
 
