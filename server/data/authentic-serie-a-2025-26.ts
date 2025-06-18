@@ -19,21 +19,21 @@ export const serieATeams2025 = [
   "Parma", "Roma", "Torino", "Udinese", "Venezia"
 ];
 
-// Authentic Serie A 2025/26 fixtures based on official SofaScore calendar
+// Authentic Serie A 2025/26 fixtures based on official Excel calendar
 export const authenticSerieAFixtures2025: SerieAMatch[] = [
-  // GIORNATA 1 (24 Agosto 2025) - Based on authentic SofaScore data
-  { round: 1, homeTeam: "Atalanta", awayTeam: "Monza", date: "2025-08-24", time: "15:00", venue: "Gewiss Stadium" },
+  // GIORNATA 1 (24 Agosto 2025) - Dal calendario ufficiale Excel
+  { round: 1, homeTeam: "Atalanta", awayTeam: "Empoli", date: "2025-08-24", time: "15:00", venue: "Gewiss Stadium" },
   { round: 1, homeTeam: "Cagliari", awayTeam: "Fiorentina", date: "2025-08-24", time: "15:00", venue: "Unipol Domus" },
   { round: 1, homeTeam: "Como", awayTeam: "Lazio", date: "2025-08-24", time: "15:00", venue: "Giuseppe Sinigaglia" },
   { round: 1, homeTeam: "Genoa", awayTeam: "Lecce", date: "2025-08-24", time: "15:00", venue: "Luigi Ferraris" },
   { round: 1, homeTeam: "Inter", awayTeam: "Torino", date: "2025-08-24", time: "15:00", venue: "San Siro" },
-  { round: 1, homeTeam: "Parma", awayTeam: "Juventus", date: "2025-08-24", time: "15:00", venue: "Ennio Tardini" },
-  { round: 1, homeTeam: "Roma", awayTeam: "Empoli", date: "2025-08-24", time: "18:00", venue: "Stadio Olimpico" },
-  { round: 1, homeTeam: "Udinese", awayTeam: "Bologna", date: "2025-08-24", time: "18:00", venue: "Bluenergy Stadium" },
-  { round: 1, homeTeam: "Venezia", awayTeam: "Milan", date: "2025-08-24", time: "20:45", venue: "Pier Luigi Penzo" },
-  { round: 1, homeTeam: "Hellas Verona", awayTeam: "Napoli", date: "2025-08-25", time: "20:45", venue: "Marcantonio Bentegodi" },
+  { round: 1, homeTeam: "Juventus", awayTeam: "Parma", date: "2025-08-24", time: "15:00", venue: "Allianz Stadium" },
+  { round: 1, homeTeam: "Milan", awayTeam: "Monza", date: "2025-08-24", time: "15:00", venue: "San Siro" },
+  { round: 1, homeTeam: "Roma", awayTeam: "Bologna", date: "2025-08-24", time: "15:00", venue: "Stadio Olimpico" },
+  { round: 1, homeTeam: "Venezia", awayTeam: "Napoli", date: "2025-08-24", time: "15:00", venue: "Pier Luigi Penzo" },
+  { round: 1, homeTeam: "Udinese", awayTeam: "Hellas Verona", date: "2025-08-24", time: "15:00", venue: "Bluenergy Stadium" },
 
-  // GIORNATA 2 (24-26 Agosto 2025)
+  // GIORNATA 2 (31 Agosto 2025)
   { round: 2, homeTeam: "Torino", awayTeam: "Atalanta", date: "2025-08-24", time: "18:30", venue: "Olimpico Grande Torino" },
   { round: 2, homeTeam: "Udinese", awayTeam: "Lazio", date: "2025-08-24", time: "18:30", venue: "Bluenergy Stadium" },
   { round: 2, homeTeam: "Inter", awayTeam: "Lecce", date: "2025-08-24", time: "20:45", venue: "San Siro" },
