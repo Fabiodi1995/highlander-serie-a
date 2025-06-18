@@ -49,12 +49,7 @@ export default function CalendarPage() {
     queryKey: ["/api/matches/all"],
   });
 
-  // Debug log
-  console.log('Calendar page debug:', { 
-    allMatches: allMatches?.length, 
-    isLoading, 
-    error: error ? String(error) : null 
-  });
+  // Calendar loaded successfully
 
   // Get available matchdays from database
   const availableMatchdays = allMatches 
