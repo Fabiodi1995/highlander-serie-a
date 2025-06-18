@@ -36,17 +36,17 @@ export const serieACompleteFixtures: SerieAMatch[] = [
   { round: 2, homeTeam: "Pisa", awayTeam: "Udinese", date: "2025-06-02", time: "20:45" },
   { round: 2, homeTeam: "Cremonese", awayTeam: "Milan", date: "2025-06-02", time: "20:45" },
 
-  // GIORNATA 3 (31 Agosto - 1 Settembre 2024)
-  { round: 3, homeTeam: "Cremonese", awayTeam: "Torino", date: "2025-08-31", time: "18:30" },
-  { round: 3, homeTeam: "Bologna", awayTeam: "Pisa", date: "2025-08-31", time: "18:30" },
-  { round: 3, homeTeam: "Lazio", awayTeam: "Milan", date: "2025-08-31", time: "20:45" },
-  { round: 3, homeTeam: "Lecce", awayTeam: "Cagliari", date: "2025-08-31", time: "20:45" },
-  { round: 3, homeTeam: "Napoli", awayTeam: "Parma", date: "2025-08-31", time: "20:45" },
-  { round: 3, homeTeam: "Genoa", awayTeam: "Hellas Verona", date: "2025-09-01", time: "15:00" },
-  { round: 3, homeTeam: "Atalanta", awayTeam: "Fiorentina", date: "2025-09-01", time: "18:00" },
-  { round: 3, homeTeam: "Juventus", awayTeam: "Roma", date: "2025-09-01", time: "20:45" },
-  { round: 3, homeTeam: "Udinese", awayTeam: "Como", date: "2025-09-01", time: "20:45" },
-  { round: 3, homeTeam: "Inter", awayTeam: "Sassuolo", date: "2025-09-01", time: "20:45" },
+  // GIORNATA 3 (7-9 Giugno 2025)
+  { round: 3, homeTeam: "Inter", awayTeam: "Cagliari", date: "2025-06-07", time: "18:30" },
+  { round: 3, homeTeam: "Atalanta", awayTeam: "Parma", date: "2025-06-07", time: "20:45" },
+  { round: 3, homeTeam: "Bologna", awayTeam: "Lecce", date: "2025-06-08", time: "15:00" },
+  { round: 3, homeTeam: "Lazio", awayTeam: "Roma", date: "2025-06-08", time: "18:00" },
+  { round: 3, homeTeam: "Milan", awayTeam: "Udinese", date: "2025-06-08", time: "20:45" },
+  { round: 3, homeTeam: "Torino", awayTeam: "Fiorentina", date: "2025-06-09", time: "15:00" },
+  { round: 3, homeTeam: "Genoa", awayTeam: "Como", date: "2025-06-09", time: "18:00" },
+  { round: 3, homeTeam: "Sassuolo", awayTeam: "Hellas Verona", date: "2025-06-09", time: "18:00" },
+  { round: 3, homeTeam: "Pisa", awayTeam: "Juventus", date: "2025-06-09", time: "20:45" },
+  { round: 3, homeTeam: "Cremonese", awayTeam: "Napoli", date: "2025-06-09", time: "20:45" },
 
   // GIORNATA 4 (14-16 Settembre 2024)
   { round: 4, homeTeam: "Cagliari", awayTeam: "Napoli", date: "2025-09-15", time: "15:00" },

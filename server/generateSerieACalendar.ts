@@ -164,7 +164,7 @@ export async function createCompleteSerieAExcel() {
     { Statistica: 'Giornate', Valore: 38 },
     { Statistica: 'Partite Totali', Valore: allMatches.length },
     { Statistica: 'Partite per Giornata', Valore: 10 },
-    { Statistica: 'Data Inizio', Valore: '17 Agosto 2025' },
+    { Statistica: 'Data Inizio', Valore: '24 Maggio 2025' },
     { Statistica: 'Data Fine', Valore: 'Maggio 2026' }
   ];
   

@@ -174,12 +174,12 @@ export class SerieAManager {
       'Torino': 'Grande Torino',
       'Genoa': 'Luigi Ferraris',
       'Cagliari': 'Unipol Domus',
-      'Empoli': 'Carlo Castellani',
+      'Pisa': 'Arena Garibaldi-Romeo Anconetani',
       'Lecce': 'Via del Mare',
-      'Monza': 'U-Power Stadium',
+      'Sassuolo': 'Mapei Stadium - Città del Tricolore',
       'Parma': 'Ennio Tardini',
       'Udinese': 'Bluenergy Stadium',
-      'Venezia': 'Pier Luigi Penzo',
+      'Cremonese': 'Stadio Giovanni Zini',
       'Hellas Verona': 'Marcantonio Bentegodi',
       'Como': 'Giuseppe Sinigaglia'
     };
@@ -194,8 +194,8 @@ export class SerieAManager {
   }
 
   private getMatchDate(round: number): string {
-    // Calculate date based on Serie A 2025/2026 schedule
-    const startDate = new Date('2025-08-17');
+    // Calculate date based on Serie A 2025/2026 schedule starting May 24, 2025
+    const startDate = new Date('2025-05-24');
     const daysToAdd = (round - 1) * 7; // Roughly one week between rounds
     const matchDate = new Date(startDate.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
     return matchDate.toISOString().split('T')[0];
