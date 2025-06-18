@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, LogOut, Plus, Gamepad2, Play, Users, TicketIcon, Calculator, Settings, Trash2, Trophy, Target, CheckCircle, Shield, Download } from "lucide-react";
+import { User, LogOut, Plus, Gamepad2, Play, Users, TicketIcon, Calculator, Settings, Trash2, Trophy, Target, CheckCircle, Shield, Download, Clock } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertGameSchema } from "@shared/schema";
@@ -1269,6 +1269,7 @@ export default function AdminDashboard() {
                       { key: 'name', label: 'Nome Gioco', sortable: true },
                       { key: 'status', label: 'Stato', sortable: true, align: 'center' },
                       { key: 'currentRound', label: 'Giornata', sortable: true, align: 'center' },
+                      { key: 'deadline', label: 'Deadline', sortable: false, align: 'center' },
                       { key: 'createdAt', label: 'Creato', sortable: true, align: 'center' },
                       { key: 'actions', label: 'Azioni', sortable: false }
                     ]}
@@ -1289,6 +1290,17 @@ export default function AdminDashboard() {
                           return game.status === "registration" ? 
                             <span className="text-gray-500">Non Iniziato</span> : 
                             <span className="font-mono">Giornata {game.currentRound}</span>;
+                        case 'deadline':
+                          return game.selectionDeadline && game.status === "active" && game.roundStatus === "selection_open" ? (
+                            <CountdownTimer 
+                              targetDate={new Date(game.selectionDeadline)}
+                              onExpired={() => {
+                                queryClient.invalidateQueries({ queryKey: ["/api/games"] });
+                              }}
+                            />
+                          ) : (
+                            <span className="text-gray-500 text-xs">Nessuna deadline</span>
+                          );
                         case 'createdAt':
                           return <span className="text-sm">{new Date(game.createdAt).toLocaleDateString('it-IT')}</span>;
                         case 'actions':
