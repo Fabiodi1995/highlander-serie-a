@@ -1,6 +1,6 @@
-const XLSX = require('xlsx');
-const { db } = require('./server/db');
-const { matches } = require('./shared/schema');
+import XLSX from 'xlsx';
+import { db } from './server/db.js';
+import { matches } from './shared/schema.js';
 
 async function loadAllMatchesFromExcel() {
   try {
@@ -66,11 +66,9 @@ async function loadAllMatchesFromExcel() {
   }
 }
 
-// Esegui se chiamato direttamente
-if (require.main === module) {
-  loadAllMatchesFromExcel()
-    .then(() => process.exit(0))
-    .catch(() => process.exit(1));
-}
+// Esegui automaticamente
+loadAllMatchesFromExcel()
+  .then(() => process.exit(0))
+  .catch(() => process.exit(1));
 
-module.exports = { loadAllMatchesFromExcel };
+export { loadAllMatchesFromExcel };
