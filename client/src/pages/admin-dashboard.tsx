@@ -1336,6 +1336,7 @@ export default function AdminDashboard() {
                     columns={[
                       { key: 'name', label: 'Nome Gioco', sortable: true },
                       { key: 'status', label: 'Stato', sortable: true, align: 'center' },
+                      { key: 'gameRound', label: 'Round', sortable: true, align: 'center' },
                       { key: 'currentRound', label: 'Giornata', sortable: true, align: 'center' },
                       { key: 'countdown', label: 'Tempo Rimasto', sortable: false, align: 'center' },
                       { key: 'createdAt', label: 'Creato', sortable: true, align: 'center' },
@@ -1354,6 +1355,10 @@ export default function AdminDashboard() {
                           );
                         case 'status':
                           return <StatusBadge status={game.status} />;
+                        case 'gameRound':
+                          return game.status === "registration" ? 
+                            <span className="text-gray-500">-</span> : 
+                            <span className="font-mono font-semibold text-blue-600">Round {game.currentRound - game.startRound + 1}</span>;
                         case 'currentRound':
                           return game.status === "registration" ? 
                             <span className="text-gray-500">Non Iniziato</span> : 
