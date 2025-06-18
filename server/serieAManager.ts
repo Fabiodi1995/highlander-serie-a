@@ -194,8 +194,8 @@ export class SerieAManager {
   }
 
   private getMatchDate(round: number): string {
-    // Calculate date based on Serie A 2025/2026 schedule starting May 24, 2025
-    const startDate = new Date('2025-05-24');
+    // Calculate date based on Serie A 2025/2026 schedule starting August 17, 2025
+    const startDate = new Date('2025-08-17');
     const daysToAdd = (round - 1) * 7; // Roughly one week between rounds
     const matchDate = new Date(startDate.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
     return matchDate.toISOString().split('T')[0];

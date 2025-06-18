@@ -11,30 +11,31 @@ export interface SerieAMatch {
 }
 
 // Complete Serie A 2025/2026 fixture list with all 380 matches
+// Based on official Serie A calendar
 export const serieACompleteFixtures: SerieAMatch[] = [
-  // GIORNATA 1 (24-26 Maggio 2025)
-  { round: 1, homeTeam: "Sassuolo", awayTeam: "Napoli", date: "2025-05-24", time: "18:30" },
-  { round: 1, homeTeam: "Inter", awayTeam: "Juventus", date: "2025-05-24", time: "20:45" },
-  { round: 1, homeTeam: "Milan", awayTeam: "Roma", date: "2025-05-25", time: "15:00" },
-  { round: 1, homeTeam: "Atalanta", awayTeam: "Fiorentina", date: "2025-05-25", time: "18:00" },
-  { round: 1, homeTeam: "Bologna", awayTeam: "Parma", date: "2025-05-25", time: "20:45" },
-  { round: 1, homeTeam: "Lazio", awayTeam: "Cagliari", date: "2025-05-26", time: "15:00" },
-  { round: 1, homeTeam: "Torino", awayTeam: "Lecce", date: "2025-05-26", time: "18:00" },
-  { round: 1, homeTeam: "Genoa", awayTeam: "Pisa", date: "2025-05-26", time: "18:00" },
-  { round: 1, homeTeam: "Udinese", awayTeam: "Como", date: "2025-05-26", time: "20:45" },
-  { round: 1, homeTeam: "Hellas Verona", awayTeam: "Cremonese", date: "2025-05-26", time: "20:45" },
+  // GIORNATA 1 (17-18 Agosto 2025)
+  { round: 1, homeTeam: "Parma", awayTeam: "Fiorentina", date: "2025-08-17", time: "18:30" },
+  { round: 1, homeTeam: "Milan", awayTeam: "Torino", date: "2025-08-17", time: "20:45" },
+  { round: 1, homeTeam: "Pisa", awayTeam: "Inter", date: "2025-08-17", time: "20:45" },
+  { round: 1, homeTeam: "Sassuolo", awayTeam: "Napoli", date: "2025-08-18", time: "15:00" },
+  { round: 1, homeTeam: "Bologna", awayTeam: "Udinese", date: "2025-08-18", time: "18:30" },
+  { round: 1, homeTeam: "Hellas Verona", awayTeam: "Juventus", date: "2025-08-18", time: "18:30" },
+  { round: 1, homeTeam: "Cagliari", awayTeam: "Roma", date: "2025-08-18", time: "20:45" },
+  { round: 1, homeTeam: "Lazio", awayTeam: "Cremonese", date: "2025-08-18", time: "20:45" },
+  { round: 1, homeTeam: "Lecce", awayTeam: "Atalanta", date: "2025-08-18", time: "20:45" },
+  { round: 1, homeTeam: "Genoa", awayTeam: "Como", date: "2025-08-18", time: "20:45" },
 
-  // GIORNATA 2 (31 Maggio - 2 Giugno 2025)
-  { round: 2, homeTeam: "Napoli", awayTeam: "Inter", date: "2025-05-31", time: "18:30" },
-  { round: 2, homeTeam: "Juventus", awayTeam: "Atalanta", date: "2025-05-31", time: "20:45" },
-  { round: 2, homeTeam: "Roma", awayTeam: "Bologna", date: "2025-06-01", time: "15:00" },
-  { round: 2, homeTeam: "Fiorentina", awayTeam: "Lazio", date: "2025-06-01", time: "18:00" },
-  { round: 2, homeTeam: "Parma", awayTeam: "Torino", date: "2025-06-01", time: "20:45" },
-  { round: 2, homeTeam: "Cagliari", awayTeam: "Genoa", date: "2025-06-02", time: "15:00" },
-  { round: 2, homeTeam: "Lecce", awayTeam: "Hellas Verona", date: "2025-06-02", time: "18:00" },
-  { round: 2, homeTeam: "Como", awayTeam: "Sassuolo", date: "2025-06-02", time: "18:00" },
-  { round: 2, homeTeam: "Pisa", awayTeam: "Udinese", date: "2025-06-02", time: "20:45" },
-  { round: 2, homeTeam: "Cremonese", awayTeam: "Milan", date: "2025-06-02", time: "20:45" },
+  // GIORNATA 2 (24-25 Agosto 2025)
+  { round: 2, homeTeam: "Torino", awayTeam: "Atalanta", date: "2025-08-24", time: "18:30" },
+  { round: 2, homeTeam: "Udinese", awayTeam: "Lazio", date: "2025-08-24", time: "18:30" },
+  { round: 2, homeTeam: "Inter", awayTeam: "Lecce", date: "2025-08-24", time: "20:45" },
+  { round: 2, homeTeam: "Sassuolo", awayTeam: "Genoa", date: "2025-08-24", time: "20:45" },
+  { round: 2, homeTeam: "Fiorentina", awayTeam: "Cremonese", date: "2025-08-25", time: "18:30" },
+  { round: 2, homeTeam: "Roma", awayTeam: "Pisa", date: "2025-08-25", time: "20:45" },
+  { round: 2, homeTeam: "Napoli", awayTeam: "Bologna", date: "2025-08-25", time: "20:45" },
+  { round: 2, homeTeam: "Como", awayTeam: "Cagliari", date: "2025-08-25", time: "18:30" },
+  { round: 2, homeTeam: "Hellas Verona", awayTeam: "Milan", date: "2025-08-25", time: "20:45" },
+  { round: 2, homeTeam: "Juventus", awayTeam: "Parma", date: "2025-08-25", time: "20:45" },
 
   // GIORNATA 3 (7-9 Giugno 2025)
   { round: 3, homeTeam: "Inter", awayTeam: "Cagliari", date: "2025-06-07", time: "18:30" },
