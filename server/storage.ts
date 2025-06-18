@@ -52,6 +52,8 @@ export interface IStorage {
   updateGameStatus(gameId: number, status: string): Promise<void>;
   updateGameRound(gameId: number, round: number): Promise<void>;
   updateGameRoundStatus(gameId: number, roundStatus: string): Promise<void>;
+  updateGameDeadline(gameId: number, deadline: Date | null): Promise<void>;
+  getActiveGamesWithDeadlines(): Promise<Game[]>;
   deleteGame(gameId: number): Promise<void>;
   
   // Game participants
@@ -82,6 +84,9 @@ export interface IStorage {
   getTeamSelectionsByRound(gameId: number, round: number): Promise<TeamSelection[]>;
   hasTeamBeenSelected(ticketId: number, teamId: number): Promise<boolean>;
   deleteTeamSelection(selectionId: number): Promise<void>;
+  
+  // Timer logs
+  createTimerLog(gameId: number, action: string, previousDeadline: Date | null, newDeadline: Date | null, adminId: number | null, details?: any): Promise<void>;
   
   sessionStore: any;
 }

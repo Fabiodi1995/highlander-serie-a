@@ -1,0 +1,82 @@
+La mia comprensione del flusso:
+
+Admin clicca "Nuovo Round" → appare popup per impostare deadline
+Timer parte e viene mostrato su tutte le dashboard 
+	-->visualizzazione con giorni, ore, minuti mancanti
+Giocatori vedono countdown e possono fare selezioni
+Allo scadere: sistema blocca automaticamente + assegna squadre casuali ai mancanti
+	--> la scelta automatica deve ovviamente rispettare le regole di gioco (ESEMPIO: non si può assegnare una squadra già scelta per quel ticket in round passati)
+
+Suggerimenti e miglioramenti:
+
+Notifiche progressive: avvisi a 24h, 1h, 15min dalla scadenza
+	--> non implementare al momento
+Assegnazione intelligente: invece di casuale, evitare squadre già usate dal giocatore
+	--> già risposto sopra per l'assegnazione delle squadre
+Estensione deadline: possibilità admin di prolungare se necessario
+	--> implementa la funzionalità per modificare la deadline nel passato e nel futuro
+Stato visivo: colori diversi del timer (verde→giallo→rosso) in base al tempo rimasto
+	--> implementa la funzionalità
+Persistenza: timer continua anche se utente ricarica la pagina
+	--> implementa la funzionalità
+
+Corner cases da considerare:
+
+Fuso orario: gestire timezone dell'admin vs giocatori
+	--> impostare timezone in UTC su DB e visualizzare l'orario nelle dashboard (giocatore e admin) in base al fuso orario impostato sul loro sistema in uso
+Server offline: cosa succede se il server va giù durante countdown
+	--> appena il server sarà di nuovo su completerà le azioni pending se ci saranno quindi bloccherà la scelta appena possibile per esempio
+Selezioni simultanee: se un giocatore seleziona proprio mentre scade il timer
+	--> se un giocatore clicca sul pulsante per selezionare la squadra nel momento esatto in cui scade il timer o dopo appare un messaggio di errore in una finestra di pop-up in cui il sistema avvisa che la scelta non è stata possibile perché è scaduto il tempo per poter scegliere le squadre
+Admin assente: meccanismo di backup se admin non imposta deadline
+	--> un nuovo round viene attivato solo dall'admin, quindi l'admin deve essere presente per il gioco e la deadline deve essere impostata altrimenti non è possibile avviare il nuovo round
+Round già avviato: impedire di cambiare deadline se ci sono già selezioni
+	-->la deadline può essere cambiata dall'admin anche se ci sono state scelte già effettuate dai giocatori
+Validazione date: non permettere date nel passato o troppo lontane
+	--> implementa questa funzionalità
+
+Miglioramenti tecnici:
+
+WebSocket real-time: aggiornamento timer in tempo reale senza refresh
+	--> si deve essere sempre un countdown aggiornato senza dover necessariamente refreshare la pagina
+Graceful degradation: se WebSocket fallisce, fallback a polling ogni 30 secondi
+	--> non sono competente nel risponderti, se ritieni che sia una scelta saggia applicala, considera che se potrebbe aumentare i costi di gestione del 1% non applicarla
+Batch operations: processare tutte le assegnazioni automatiche in una singola transazione
+	--> implementa ed aggiungila nei log
+Audit log: tracciare modifiche deadline e assegnazioni automatiche
+	--> traccia nei log
+
+UX Miglioramenti:
+
+Conferma deadline: mostrare preview "Scadenza: [data] [ora]" prima di salvare
+	--> mostra
+Indicatore urgenza: oltre ai colori, aggiungere icone (⏰ normale, ⚠️ urgente, 🔴 critico)
+	--> aggiungi
+Sound alert: opzionale, suono negli ultimi 60 secondi
+	--> non aggiungere questa opzione
+Progress bar: barra visiva che si svuota col tempo
+	--> aggiungi
+
+Corner cases aggiuntivi:
+
+Ticket eliminati: cosa fare se rimangono solo ticket eliminati quando scade timer
+	--> alloscadere del timer non c'è possibilità che rimangano solo ticket eliminati, se l'admin blocca manualmente il round corrente il timer si azzera
+Cambio stato gioco: se admin cambia stato gioco durante countdown attivo
+	--> il timer si azzera come risposto prima
+Squadre esaurite: se un giocatore ha già usato troppe squadre e non ce ne sono di disponibili
+	--> il giocatore avendo un ventaglio di 20 squadre da poter scegliere ed un numero massimo di 20 round per completare il gioco non può trovarsi in una situazione del genere
+Double submission: prevenire doppio invio se utente clicca velocemente
+	--> implementa
+Timer precision: gestire millisecondi per evitare conflitti di timing
+	--> implementa ma non mostrare i millisecondi a frontend
+Database locks: evitare race conditions durante assegnazioni massive
+	--> non so cosa significhi, se ritieni che sia una scelta saggia applicala, considera che se potrebbe aumentare i costi di gestione del 1% non applicarla
+
+Validazioni aggiuntive:
+
+Deadline minima: almeno 1 ora dal momento attuale
+	--> non implementare
+Deadline massima: non oltre 7 giorni
+	--> non implementare
+Conflitti round: verificare che il round precedente sia concluso
+	--> implementa

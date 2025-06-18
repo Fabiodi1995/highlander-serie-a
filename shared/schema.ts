@@ -33,6 +33,7 @@ export const games = pgTable("games", {
   currentRound: integer("current_round").notNull(),
   status: varchar("status", { length: 20 }).notNull().default("registration"), // registration, active, completed
   roundStatus: varchar("round_status", { length: 20 }).notNull().default("selection_open"), // selection_open, selection_locked, calculated
+  selectionDeadline: timestamp("selection_deadline"), // UTC timestamp per deadline selezioni
   createdBy: integer("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -93,6 +94,17 @@ export const userAchievements = pgTable("user_achievements", {
   unlockedAt: timestamp("unlocked_at").defaultNow().notNull(),
   gameId: integer("game_id").references(() => games.id), // optional, for game-specific achievements
   progress: json("progress"), // track progress towards achievement
+});
+
+export const timerLogs = pgTable("timer_logs", {
+  id: serial("id").primaryKey(),
+  gameId: integer("game_id").notNull().references(() => games.id),
+  action: varchar("action", { length: 50 }).notNull(), // deadline_set, deadline_updated, auto_lock, manual_lock
+  previousDeadline: timestamp("previous_deadline"),
+  newDeadline: timestamp("new_deadline"),
+  adminId: integer("admin_id").references(() => users.id),
+  details: json("details"), // additional context
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const userStats = pgTable("user_stats", {
