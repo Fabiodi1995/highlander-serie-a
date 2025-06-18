@@ -14,16 +14,29 @@ interface TimerCheckResult {
 export async function checkExpiredDeadlines(): Promise<TimerCheckResult[]> {
   try {
     const activeGames = await storage.getActiveGamesWithDeadlines();
+    // Usa il timezone italiano (UTC+1/UTC+2)
     const now = new Date();
+    const italianTime = new Date(now.toLocaleString("en-US", {timeZone: "Europe/Rome"}));
     const results: TimerCheckResult[] = [];
 
+    console.log(`Checking ${activeGames.length} active games at Italian time:`, italianTime.toISOString());
+
     for (const game of activeGames) {
-      if (!game.selectionDeadline || game.selectionDeadline > now) {
-        results.push({ gameId: game.id, action: 'no_action' });
+      if (!game.selectionDeadline) {
+        results.push({ gameId: game.id, action: 'no_action', details: 'No deadline set' });
+        continue;
+      }
+
+      const deadlineTime = new Date(game.selectionDeadline);
+      console.log(`Game ${game.id} deadline: ${deadlineTime.toISOString()}, Current Italian time: ${italianTime.toISOString()}`);
+
+      if (deadlineTime > italianTime) {
+        results.push({ gameId: game.id, action: 'no_action', details: 'Deadline not yet expired' });
         continue;
       }
 
       // Deadline scaduta - procedi con auto-lock
+      console.log(`Auto-locking game ${game.id} due to expired deadline`);
       const result = await autoLockGame(game.id);
       results.push(result);
     }

@@ -720,6 +720,7 @@ export default function AdminDashboard() {
   const [showMatchResults, setShowMatchResults] = useState(false);
   const [deadlineDialogOpen, setDeadlineDialogOpen] = useState(false);
   const [selectedGameForDeadline, setSelectedGameForDeadline] = useState<Game | null>(null);
+  const [newRoundWithDeadline, setNewRoundWithDeadline] = useState(false);
 
   const createGameForm = useForm<CreateGameData>({
     resolver: zodResolver(insertGameSchema),
@@ -1038,13 +1039,28 @@ export default function AdminDashboard() {
         onClose={() => {
           setDeadlineDialogOpen(false);
           setSelectedGameForDeadline(null);
+          setNewRoundWithDeadline(false);
         }}
         onSetDeadline={(deadline) => {
           if (selectedGameForDeadline) {
-            setDeadlineMutation.mutate({
-              gameId: selectedGameForDeadline.id,
-              deadline
-            });
+            if (newRoundWithDeadline) {
+              // Avvia nuovo round con deadline
+              startNewRoundMutation.mutate(selectedGameForDeadline.id, {
+                onSuccess: () => {
+                  // Dopo aver avviato il nuovo round, imposta la deadline
+                  setDeadlineMutation.mutate({
+                    gameId: selectedGameForDeadline.id,
+                    deadline
+                  });
+                }
+              });
+            } else {
+              // Solo imposta la deadline
+              setDeadlineMutation.mutate({
+                gameId: selectedGameForDeadline.id,
+                deadline
+              });
+            }
           }
         }}
         currentDeadline={selectedGameForDeadline?.selectionDeadline ? new Date(selectedGameForDeadline.selectionDeadline).toISOString() : null}
@@ -1269,7 +1285,6 @@ export default function AdminDashboard() {
                       { key: 'name', label: 'Nome Gioco', sortable: true },
                       { key: 'status', label: 'Stato', sortable: true, align: 'center' },
                       { key: 'currentRound', label: 'Giornata', sortable: true, align: 'center' },
-                      { key: 'deadline', label: 'Deadline', sortable: false, align: 'center' },
                       { key: 'createdAt', label: 'Creato', sortable: true, align: 'center' },
                       { key: 'actions', label: 'Azioni', sortable: false }
                     ]}
@@ -1290,17 +1305,6 @@ export default function AdminDashboard() {
                           return game.status === "registration" ? 
                             <span className="text-gray-500">Non Iniziato</span> : 
                             <span className="font-mono">Giornata {game.currentRound}</span>;
-                        case 'deadline':
-                          return game.selectionDeadline && game.status === "active" && game.roundStatus === "selection_open" ? (
-                            <CountdownTimer 
-                              targetDate={new Date(game.selectionDeadline)}
-                              onExpired={() => {
-                                queryClient.invalidateQueries({ queryKey: ["/api/games"] });
-                              }}
-                            />
-                          ) : (
-                            <span className="text-gray-500 text-xs">Nessuna deadline</span>
-                          );
                         case 'createdAt':
                           return <span className="text-sm">{new Date(game.createdAt).toLocaleDateString('it-IT')}</span>;
                         case 'actions':
@@ -1371,7 +1375,11 @@ export default function AdminDashboard() {
                                     <Button
                                       size="sm"
                                       variant="default"
-                                      onClick={() => startNewRoundMutation.mutate(game.id)}
+                                      onClick={() => {
+                                        setSelectedGameForDeadline(game);
+                                        setNewRoundWithDeadline(true);
+                                        setDeadlineDialogOpen(true);
+                                      }}
                                       disabled={startNewRoundMutation.isPending}
                                       className="text-xs"
                                     >

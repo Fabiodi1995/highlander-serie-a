@@ -34,12 +34,17 @@ export function DeadlineSetter({
 
   React.useEffect(() => {
     if (isOpen) {
-      // Initialize with current deadline if exists, otherwise 2 hours from now
+      // Initialize with current deadline if exists, otherwise 2 hours from now in Italian timezone
       const now = new Date();
-      const defaultDeadline = currentDeadline ? new Date(currentDeadline) : new Date(now.getTime() + 2 * 60 * 60 * 1000);
+      const italianTime = new Date(now.toLocaleString("en-US", {timeZone: "Europe/Rome"}));
+      const defaultDeadline = currentDeadline ? 
+        new Date(currentDeadline) : 
+        new Date(italianTime.getTime() + 2 * 60 * 60 * 1000);
       
-      const dateStr = defaultDeadline.toISOString().split('T')[0];
-      const timeStr = defaultDeadline.toTimeString().slice(0, 5);
+      // Format for Italian timezone
+      const italianDeadline = new Date(defaultDeadline.toLocaleString("en-US", {timeZone: "Europe/Rome"}));
+      const dateStr = italianDeadline.toISOString().split('T')[0];
+      const timeStr = italianDeadline.toTimeString().slice(0, 5);
       
       setSelectedDate(dateStr);
       setSelectedTime(timeStr);
