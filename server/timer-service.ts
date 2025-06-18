@@ -14,12 +14,11 @@ interface TimerCheckResult {
 export async function checkExpiredDeadlines(): Promise<TimerCheckResult[]> {
   try {
     const activeGames = await storage.getActiveGamesWithDeadlines();
-    // Usa il timezone italiano corretto (UTC+2 per l'ora legale)
+    // Usa UTC per confronti diretti con le deadline salvate nel database
     const now = new Date();
-    const italianTime = new Date(now.getTime() + (2 * 60 * 60 * 1000));
     const results: TimerCheckResult[] = [];
 
-    console.log(`Checking ${activeGames.length} active games at Italian time:`, italianTime.toISOString());
+    console.log(`Checking ${activeGames.length} active games at UTC time:`, now.toISOString());
 
     for (const game of activeGames) {
       if (!game.selectionDeadline) {
@@ -28,9 +27,9 @@ export async function checkExpiredDeadlines(): Promise<TimerCheckResult[]> {
       }
 
       const deadlineTime = new Date(game.selectionDeadline);
-      console.log(`Game ${game.id} deadline: ${deadlineTime.toISOString()}, Current Italian time: ${italianTime.toISOString()}`);
+      console.log(`Game ${game.id} deadline: ${deadlineTime.toISOString()}, Current UTC time: ${now.toISOString()}`);
 
-      if (deadlineTime > italianTime) {
+      if (deadlineTime > now) {
         results.push({ gameId: game.id, action: 'no_action', details: 'Deadline not yet expired' });
         continue;
       }
@@ -195,10 +194,9 @@ export async function validateSelectionDeadline(gameId: number): Promise<{ valid
   }
 
   const now = new Date();
-  const italianTime = new Date(now.getTime() + (2 * 60 * 60 * 1000));
   const deadlineTime = new Date(game.selectionDeadline);
   
-  if (deadlineTime <= italianTime) {
+  if (deadlineTime <= now) {
     return { 
       valid: false, 
       reason: 'Deadline expired - selections are locked' 
