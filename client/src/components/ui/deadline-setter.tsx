@@ -26,6 +26,7 @@ export function DeadlineSetter({
   isOpen, 
   onClose, 
   onSetDeadline, 
+  errorMessage,
   currentDeadline,
   isLoading = false 
 }: DeadlineSetterProps) {
@@ -169,7 +170,7 @@ export function DeadlineSetter({
             </div>
           )}
 
-          {getPreviewMessage() && !error && (
+          {getPreviewMessage() && !error && !errorMessage && (
             <Card className="bg-blue-50 border-blue-200">
               <CardContent className="p-3">
                 <div className="text-sm text-blue-700">
