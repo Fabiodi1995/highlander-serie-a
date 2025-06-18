@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { 
   Calendar, 
   ChevronLeft, 
@@ -17,11 +16,24 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import { TeamLogo } from "@/components/team-logo";
-import type { Match, Team } from "@shared/schema";
+import type { Team } from "@shared/schema";
 
-interface CalendarPageProps {}
+interface DisplayMatch {
+  id: number;
+  round: number;
+  homeTeamId: number;
+  awayTeamId: number;
+  homeTeam: string;
+  awayTeam: string;
+  stadium: string;
+  matchDate: string;
+  matchTime: string;
+  homeScore: number | null;
+  awayScore: number | null;
+  isCompleted: boolean;
+}
 
-export default function CalendarPage({}: CalendarPageProps) {
+export default function CalendarPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const matchdaysPerPage = 5;
   
@@ -39,10 +51,10 @@ export default function CalendarPage({}: CalendarPageProps) {
   const currentMatchdays = allMatchdays.slice(startIndex, endIndex);
 
   // Generate matches for a specific matchday
-  const generateMatchesForMatchday = (matchday: number): Match[] => {
+  const generateMatchesForMatchday = (matchday: number): DisplayMatch[] => {
     if (!teams || teams.length < 20) return [];
     
-    const matches: Match[] = [];
+    const matches: DisplayMatch[] = [];
     const shuffledTeams = [...teams].sort(() => Math.random() - 0.5);
     
     // Create 10 matches per matchday (20 teams = 10 matches)
@@ -63,9 +75,7 @@ export default function CalendarPage({}: CalendarPageProps) {
           matchTime: getMatchTime(matchday, i / 2),
           homeScore: null,
           awayScore: null,
-          isCompleted: false,
-          createdAt: new Date(),
-          updatedAt: new Date()
+          isCompleted: false
         });
       }
     }
