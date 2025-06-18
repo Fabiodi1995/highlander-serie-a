@@ -799,6 +799,29 @@ export default function AdminDashboard() {
     },
   });
 
+  const setDeadlineMutation = useMutation({
+    mutationFn: async ({ gameId, deadline }: { gameId: number; deadline: string }) => {
+      const res = await apiRequest("POST", `/api/games/${gameId}/set-deadline`, { deadline });
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/games"] });
+      setDeadlineDialogOpen(false);
+      setSelectedGameForDeadline(null);
+      toast({
+        title: "Successo",
+        description: "Deadline impostata con successo",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Errore",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const assignTicketMutation = useMutation({
     mutationFn: async ({ gameId, userId, count }: { gameId: number; userId: number; count: number }) => {
       console.log(`Attempting to assign ${count} tickets to user ${userId} for game ${gameId}`);
@@ -1009,6 +1032,25 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {/* Deadline Setting Dialog */}
+      <DeadlineSetter
+        isOpen={deadlineDialogOpen}
+        onClose={() => {
+          setDeadlineDialogOpen(false);
+          setSelectedGameForDeadline(null);
+        }}
+        onSetDeadline={(deadline) => {
+          if (selectedGameForDeadline) {
+            setDeadlineMutation.mutate({
+              gameId: selectedGameForDeadline.id,
+              deadline
+            });
+          }
+        }}
+        currentDeadline={selectedGameForDeadline?.selectionDeadline ? new Date(selectedGameForDeadline.selectionDeadline).toISOString() : null}
+        isLoading={setDeadlineMutation.isPending}
+      />
+
       {/* Match Results Dialog */}
       <Dialog open={showMatchResults} onOpenChange={setShowMatchResults}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
@@ -1277,16 +1319,30 @@ export default function AdminDashboard() {
                               {game.status === "active" && (
                                 <>
                                   {game.roundStatus === "selection_open" && (
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => lockRoundMutation.mutate({ gameId: game.id })}
-                                      disabled={lockRoundMutation.isPending}
-                                      className="text-xs"
-                                    >
-                                      <Shield className="h-3 w-3 mr-1" />
-                                      Blocca
-                                    </Button>
+                                    <>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => {
+                                          setSelectedGameForDeadline(game);
+                                          setDeadlineDialogOpen(true);
+                                        }}
+                                        className="text-xs"
+                                      >
+                                        <Clock className="h-3 w-3 mr-1" />
+                                        Deadline
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => lockRoundMutation.mutate({ gameId: game.id })}
+                                        disabled={lockRoundMutation.isPending}
+                                        className="text-xs"
+                                      >
+                                        <Shield className="h-3 w-3 mr-1" />
+                                        Blocca
+                                      </Button>
+                                    </>
                                   )}
                                   {game.roundStatus === "selection_locked" && (
                                     <Button
