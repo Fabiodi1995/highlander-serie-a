@@ -181,7 +181,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate deadline is in the future (Italian timezone)
       const deadlineDate = new Date(deadline);
       const now = new Date();
-      const italianNow = new Date(now.toLocaleString("en-US", {timeZone: "Europe/Rome"}));
+      const italianNow = new Date(now.getTime() + (2 * 60 * 60 * 1000));
       
       if (deadlineDate <= italianNow) {
         return res.status(400).json({ message: "Deadline must be in the future (Italian time)" });

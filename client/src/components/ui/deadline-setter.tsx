@@ -62,8 +62,8 @@ export function DeadlineSetter({
     const selectedDateTime = new Date(`${selectedDate}T${selectedTime}:00`);
     const now = new Date();
     
-    // Ottieni l'orario italiano usando il metodo corretto
-    const italianNow = new Date(now.toLocaleString("en-US", {timeZone: "Europe/Rome"}));
+    // Calcola l'orario italiano direttamente (UTC+2 per l'ora legale)
+    const italianNow = new Date(now.getTime() + (2 * 60 * 60 * 1000));
 
     // Verifica che la data sia nel futuro (timezone italiano)
     if (selectedDateTime <= italianNow) {
