@@ -184,7 +184,10 @@ export async function validateSelectionDeadline(gameId: number): Promise<{ valid
   }
 
   const now = new Date();
-  if (game.selectionDeadline <= now) {
+  const italianTime = new Date(now.toLocaleString("en-US", {timeZone: "Europe/Rome"}));
+  const deadlineTime = new Date(game.selectionDeadline);
+  
+  if (deadlineTime <= italianTime) {
     return { 
       valid: false, 
       reason: 'Deadline expired - selections are locked' 

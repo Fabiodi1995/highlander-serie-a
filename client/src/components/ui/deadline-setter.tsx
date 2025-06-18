@@ -58,15 +58,19 @@ export function DeadlineSetter({
       return false;
     }
 
+    // Crea la data considerando il timezone italiano
     const selectedDateTime = new Date(`${selectedDate}T${selectedTime}:00`);
     const now = new Date();
+    const italianNow = new Date(now.toLocaleString("en-US", {timeZone: "Europe/Rome"}));
 
-    if (selectedDateTime <= now) {
-      setError('La deadline deve essere nel futuro');
+    // Verifica che la data sia nel futuro (timezone italiano)
+    if (selectedDateTime <= italianNow) {
+      setError('La deadline deve essere nel futuro (orario italiano)');
       return false;
     }
 
-    const maxDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 giorni
+    // Verifica che non sia troppo nel futuro
+    const maxDate = new Date(italianNow.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 giorni
     if (selectedDateTime > maxDate) {
       setError('La deadline non può essere oltre 30 giorni nel futuro');
       return false;

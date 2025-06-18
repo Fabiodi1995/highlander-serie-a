@@ -4,6 +4,7 @@ import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { insertGameSchema, insertTeamSelectionSchema, tickets } from "@shared/schema";
 import { checkGameEndConditions, finalizeGame } from "./game-logic";
+import { checkExpiredDeadlines, validateSelectionDeadline } from "./timer-service";
 import { z } from "zod";
 import { db, withTransaction, batchOperation } from "./db";
 import { eq } from "drizzle-orm";
@@ -654,6 +655,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ticketId: selection.ticketId,
             error: "Selections are locked for this round",
             code: "SELECTIONS_LOCKED"
+          });
+          continue;
+        }
+
+        // Validate deadline hasn't expired
+        const deadlineCheck = await validateSelectionDeadline(selection.gameId);
+        if (!deadlineCheck.valid) {
+          validationErrors.push({
+            ticketId: selection.ticketId,
+            error: deadlineCheck.reason || "Deadline expired",
+            code: "DEADLINE_EXPIRED"
           });
           continue;
         }
