@@ -1148,6 +1148,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all matches for calendar view
+  app.get("/api/matches/all", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const { db } = await import('./db');
+      const { matches } = await import('../shared/schema');
+      
+      const allMatches = await db.select().from(matches).orderBy(matches.round, matches.id);
+      
+      console.log(`API returning ${allMatches.length} total matches`);
+      res.json(allMatches);
+    } catch (error) {
+      console.error("Error fetching all matches:", error);
+      res.status(500).json({ message: "Failed to fetch all matches" });
+    }
+  });
+
   // Load authentic Serie A matches for a specific round from Excel calendar
   async function loadSerieAMatchesForRound(round: number) {
     try {

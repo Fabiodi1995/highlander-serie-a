@@ -18,19 +18,22 @@ import { Link } from "wouter";
 import { TeamLogo } from "@/components/team-logo";
 import type { Team } from "@shared/schema";
 
-interface DisplayMatch {
+interface Match {
   id: number;
   round: number;
   homeTeamId: number;
   awayTeamId: number;
+  homeScore: number;
+  awayScore: number;
+  matchDate: string;
+  isCompleted: boolean;
+}
+
+interface DisplayMatch extends Match {
   homeTeam: string;
   awayTeam: string;
   stadium: string;
-  matchDate: string;
   matchTime: string;
-  homeScore: number | null;
-  awayScore: number | null;
-  isCompleted: boolean;
 }
 
 export default function CalendarPage() {
@@ -41,46 +44,40 @@ export default function CalendarPage() {
     queryKey: ["/api/teams"],
   });
 
-  // Generate matchdays 1-38 for Serie A 2025/26
-  const allMatchdays = Array.from({ length: 38 }, (_, i) => i + 1);
+  // Load all matches from database
+  const { data: allMatches } = useQuery<Match[]>({
+    queryKey: ["/api/matches/all"],
+  });
+
+  // Get available matchdays from database
+  const availableMatchdays = allMatches 
+    ? [...new Set(allMatches.map(m => m.round))].sort((a, b) => a - b)
+    : [];
   
   // Calculate pagination
-  const totalPages = Math.ceil(allMatchdays.length / matchdaysPerPage);
+  const totalPages = Math.ceil(availableMatchdays.length / matchdaysPerPage);
   const startIndex = (currentPage - 1) * matchdaysPerPage;
   const endIndex = startIndex + matchdaysPerPage;
-  const currentMatchdays = allMatchdays.slice(startIndex, endIndex);
+  const currentMatchdays = availableMatchdays.slice(startIndex, endIndex);
 
-  // Generate matches for a specific matchday
-  const generateMatchesForMatchday = (matchday: number): DisplayMatch[] => {
-    if (!teams || teams.length < 20) return [];
+  // Get matches for a specific matchday from database
+  const getMatchesForMatchday = (matchday: number): DisplayMatch[] => {
+    if (!allMatches || !teams) return [];
     
-    const matches: DisplayMatch[] = [];
-    const shuffledTeams = [...teams].sort(() => Math.random() - 0.5);
+    const matchdayMatches = allMatches.filter(m => m.round === matchday);
     
-    // Create 10 matches per matchday (20 teams = 10 matches)
-    for (let i = 0; i < shuffledTeams.length; i += 2) {
-      if (i + 1 < shuffledTeams.length) {
-        const homeTeam = shuffledTeams[i];
-        const awayTeam = shuffledTeams[i + 1];
-        
-        matches.push({
-          id: matchday * 100 + (i / 2) + 1,
-          round: matchday,
-          homeTeamId: homeTeam.id,
-          awayTeamId: awayTeam.id,
-          homeTeam: homeTeam.name,
-          awayTeam: awayTeam.name,
-          stadium: getStadiumByTeam(homeTeam.name),
-          matchDate: getMatchDate(matchday),
-          matchTime: getMatchTime(matchday, i / 2),
-          homeScore: null,
-          awayScore: null,
-          isCompleted: false
-        });
-      }
-    }
-    
-    return matches.sort((a, b) => a.matchTime.localeCompare(b.matchTime));
+    return matchdayMatches.map(match => {
+      const homeTeam = teams.find(t => t.id === match.homeTeamId);
+      const awayTeam = teams.find(t => t.id === match.awayTeamId);
+      
+      return {
+        ...match,
+        homeTeam: homeTeam?.name || 'Unknown',
+        awayTeam: awayTeam?.name || 'Unknown',
+        stadium: getStadiumByTeam(homeTeam?.name || ''),
+        matchTime: getMatchTimeFromDate(match.matchDate)
+      };
+    }).sort((a, b) => a.matchTime.localeCompare(b.matchTime));
   };
 
   const getMatchDate = (matchday: number): string => {
