@@ -1302,6 +1302,7 @@ export default function AdminDashboard() {
                       { key: 'name', label: 'Nome Gioco', sortable: true },
                       { key: 'status', label: 'Stato', sortable: true, align: 'center' },
                       { key: 'currentRound', label: 'Giornata', sortable: true, align: 'center' },
+                      { key: 'countdown', label: 'Tempo Rimasto', sortable: false, align: 'center' },
                       { key: 'createdAt', label: 'Creato', sortable: true, align: 'center' },
                       { key: 'actions', label: 'Azioni', sortable: false }
                     ]}
@@ -1322,6 +1323,16 @@ export default function AdminDashboard() {
                           return game.status === "registration" ? 
                             <span className="text-gray-500">Non Iniziato</span> : 
                             <span className="font-mono">Giornata {game.currentRound}</span>;
+                        case 'countdown':
+                          return game.selectionDeadline ? (
+                            <CountdownDisplay 
+                              deadline={game.selectionDeadline} 
+                              size="sm" 
+                              showIcon={true}
+                            />
+                          ) : (
+                            <span className="text-gray-400 text-xs">Nessuna deadline</span>
+                          );
                         case 'createdAt':
                           return <span className="text-sm">{new Date(game.createdAt).toLocaleDateString('it-IT')}</span>;
                         case 'actions':

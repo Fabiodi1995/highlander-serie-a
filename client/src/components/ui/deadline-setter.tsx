@@ -17,6 +17,7 @@ interface DeadlineSetterProps {
   isOpen: boolean;
   onClose: () => void;
   onSetDeadline: (deadline: string) => void;
+  errorMessage?: string;
   currentDeadline?: string | null;
   isLoading?: boolean;
 }
