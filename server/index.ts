@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { startTimerService } from "./timer-service";
 // import { serieAManager } from "./serieAManager";
 
 const app = express();
@@ -67,5 +68,9 @@ app.use((req, res, next) => {
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
+    
+    // Start timer service for deadline monitoring
+    startTimerService();
+    log("Timer service started for deadline monitoring");
   });
 })();

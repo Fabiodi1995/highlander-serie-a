@@ -22,6 +22,8 @@ import { TeamLogo } from "@/components/team-logo";
 import { ModernTable, StatusBadge } from "@/components/ui/modern-table";
 import { enhanceTicketsWithStatus, getStatusSortOrder, type TicketWithStatus } from "@/utils/ticket-status";
 import { generateGameHistoryPDF, type GameHistoryData } from "@/utils/pdf-generator";
+import { CountdownTimer } from "@/components/ui/countdown-timer";
+import { DeadlineSetter } from "@/components/ui/deadline-setter";
 import type { Game, User as UserType, Team, TeamSelection, Ticket, Match } from "@shared/schema";
 import { z } from "zod";
 
@@ -716,6 +718,8 @@ export default function AdminDashboard() {
 
   const [selectedGameForCalculation, setSelectedGameForCalculation] = useState<Game | null>(null);
   const [showMatchResults, setShowMatchResults] = useState(false);
+  const [deadlineDialogOpen, setDeadlineDialogOpen] = useState(false);
+  const [selectedGameForDeadline, setSelectedGameForDeadline] = useState<Game | null>(null);
 
   const createGameForm = useForm<CreateGameData>({
     resolver: zodResolver(insertGameSchema),
