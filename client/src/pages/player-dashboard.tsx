@@ -9,6 +9,7 @@ import { User, LogOut, Calendar, Trophy, Target, ArrowLeft, Eye } from "lucide-r
 import { Link } from "wouter";
 import { TeamLogo } from "@/components/team-logo";
 import { ModernTable, StatusBadge } from "@/components/ui/modern-table";
+import { CountdownDisplay } from "@/components/ui/countdown-display";
 import { enhanceTicketsWithStatus } from "@/utils/ticket-status";
 import type { Game, Ticket, Team, TeamSelection, User as UserType } from "@shared/schema";
 
@@ -632,6 +633,7 @@ function GameOverviewTable({
       gameName: game.name,
       status: game.status,
       currentRound: game.currentRound,
+      selectionDeadline: game.selectionDeadline,
       totalTickets: userTickets.length,
       activeTickets: activeTickets.length,
       eliminatedTickets: eliminatedTickets.length,
@@ -644,6 +646,7 @@ function GameOverviewTable({
     { key: 'gameName', label: 'Gioco', sortable: true },
     { key: 'status', label: 'Stato', sortable: true, align: 'center' as const },
     { key: 'currentRound', label: 'Giornata', sortable: true, align: 'center' as const },
+    { key: 'countdown', label: 'Tempo Rimasto', sortable: false, align: 'center' as const },
     { key: 'totalTickets', label: 'Ticket Totali', sortable: true, align: 'center' as const },
     { key: 'activeTickets', label: 'Ticket Attivi', sortable: true, align: 'center' as const },
     { key: 'bestPerformance', label: 'Miglior Performance', sortable: true, align: 'center' as const },
@@ -662,6 +665,16 @@ function GameOverviewTable({
             return <StatusBadge status={item.status} />;
           case 'currentRound':
             return <span className="font-mono">Giornata {item.currentRound}</span>;
+          case 'countdown':
+            return item.selectionDeadline ? (
+              <CountdownDisplay 
+                deadline={item.selectionDeadline ? String(item.selectionDeadline) : null} 
+                size="sm" 
+                showIcon={true}
+              />
+            ) : (
+              <span className="text-gray-400 text-xs">Nessuna deadline</span>
+            );
           case 'totalTickets':
             return <span className="font-semibold">{item.totalTickets}</span>;
           case 'activeTickets':

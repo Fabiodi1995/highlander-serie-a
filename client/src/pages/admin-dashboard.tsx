@@ -1326,7 +1326,7 @@ export default function AdminDashboard() {
                         case 'countdown':
                           return game.selectionDeadline ? (
                             <CountdownDisplay 
-                              deadline={game.selectionDeadline} 
+                              deadline={game.selectionDeadline ? String(game.selectionDeadline) : null} 
                               size="sm" 
                               showIcon={true}
                             />

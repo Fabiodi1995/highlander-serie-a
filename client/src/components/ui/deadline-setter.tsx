@@ -162,10 +162,10 @@ export function DeadlineSetter({
             />
           </div>
 
-          {error && (
+          {(error || errorMessage) && (
             <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
               <AlertTriangle className="h-4 w-4" />
-              {error}
+              {error || errorMessage}
             </div>
           )}
 
