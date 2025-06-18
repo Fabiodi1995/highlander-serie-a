@@ -23,6 +23,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { icon: Home, label: "Dashboard", href: "/" },
+  { icon: Trophy, label: "Calendario", href: "/calendar" },
   { icon: BarChart3, label: "Analytics", href: "/analytics" },
   { icon: BookOpen, label: "Regolamento", href: "/rules" },
   { icon: Users, label: "Admin", href: "/admin", adminOnly: true },

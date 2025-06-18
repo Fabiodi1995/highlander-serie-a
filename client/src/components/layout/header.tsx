@@ -22,7 +22,8 @@ import {
   Menu, 
   X,
   Target,
-  Shield
+  Shield,
+  Calendar
 } from "lucide-react";
 import highlanderLogo from "@assets/highlander_logo.png";
 
@@ -77,6 +78,12 @@ export function Header() {
       label: "Dashboard",
       icon: Trophy,
       active: location === "/"
+    },
+    {
+      href: "/calendar",
+      label: "Calendario",
+      icon: Target,
+      active: location === "/calendar"
     },
     {
       href: "/rules",
