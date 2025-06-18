@@ -84,7 +84,7 @@ export default function CalendarPage() {
   };
 
   const getMatchDate = (matchday: number): string => {
-    const startDate = new Date('2025-08-16'); // Serie A 2025/26 start date
+    const startDate = new Date('2025-08-24'); // Serie A 2025/26 start date
     const matchDate = new Date(startDate);
     matchDate.setDate(startDate.getDate() + (matchday - 1) * 7);
     return matchDate.toISOString().split('T')[0];
