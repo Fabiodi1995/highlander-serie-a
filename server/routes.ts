@@ -178,12 +178,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied - not your game" });
       }
       
-      // Validate deadline is in the future (Italian timezone)
+      // Validate deadline is in the future with 1 minute buffer
       const deadlineDate = new Date(deadline);
       const now = new Date();
-      const italianNow = new Date(now.getTime() + (2 * 60 * 60 * 1000));
+      const nowPlusBuffer = new Date(now.getTime() + 60000); // +1 minuto buffer
       
-      if (deadlineDate <= italianNow) {
+      if (deadlineDate <= nowPlusBuffer) {
         return res.status(400).json({ message: "Deadline must be in the future (Italian time)" });
       }
       
