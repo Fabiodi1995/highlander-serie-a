@@ -45,8 +45,15 @@ export default function CalendarPage() {
   });
 
   // Load all matches from database
-  const { data: allMatches } = useQuery<Match[]>({
+  const { data: allMatches, isLoading, error } = useQuery<Match[]>({
     queryKey: ["/api/matches/all"],
+  });
+
+  // Debug log
+  console.log('Calendar page debug:', { 
+    allMatches: allMatches?.length, 
+    isLoading, 
+    error: error ? String(error) : null 
   });
 
   // Get available matchdays from database
