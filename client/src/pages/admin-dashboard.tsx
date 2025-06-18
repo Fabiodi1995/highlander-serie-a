@@ -804,20 +804,20 @@ export default function AdminDashboard() {
   const setDeadlineMutation = useMutation({
     mutationFn: async ({ gameId, deadline }: { gameId: number; deadline: string }) => {
       const res = await apiRequest("POST", `/api/games/${gameId}/set-deadline`, { deadline });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Failed to set deadline');
+      }
       return await res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/games"] });
-      setDeadlineDialogOpen(false);
-      setSelectedGameForDeadline(null);
-      setNewRoundWithDeadline(false);
       toast({
         title: "Successo",
         description: "Deadline impostata con successo",
       });
     },
     onError: (error: Error) => {
-      // Non chiudere la finestra quando c'è un errore
       toast({
         title: "Errore",
         description: error.message,
@@ -1068,6 +1068,12 @@ export default function AdminDashboard() {
                   setDeadlineMutation.mutate({
                     gameId: selectedGameForDeadline.id,
                     deadline
+                  }, {
+                    onSuccess: () => {
+                      setDeadlineDialogOpen(false);
+                      setSelectedGameForDeadline(null);
+                      setNewRoundWithDeadline(false);
+                    }
                   });
                 }
               });
@@ -1076,12 +1082,19 @@ export default function AdminDashboard() {
               setDeadlineMutation.mutate({
                 gameId: selectedGameForDeadline.id,
                 deadline
+              }, {
+                onSuccess: () => {
+                  setDeadlineDialogOpen(false);
+                  setSelectedGameForDeadline(null);
+                  setNewRoundWithDeadline(false);
+                }
               });
             }
           }
         }}
+        errorMessage={setDeadlineMutation.error?.message}
         currentDeadline={selectedGameForDeadline?.selectionDeadline ? new Date(selectedGameForDeadline.selectionDeadline).toISOString() : null}
-        isLoading={setDeadlineMutation.isPending}
+        isLoading={setDeadlineMutation.isPending || startNewRoundMutation.isPending}
       />
 
       {/* Match Results Dialog */}
