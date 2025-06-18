@@ -9,10 +9,10 @@ export interface SerieAMatch {
 }
 
 export const authenticSerieATeams2025 = [
-  "Atalanta", "Bologna", "Cagliari", "Como", "Empoli",
+  "Atalanta", "Bologna", "Cagliari", "Como", "Cremonese",
   "Fiorentina", "Genoa", "Hellas Verona", "Inter", "Juventus",
-  "Lazio", "Lecce", "Milan", "Monza", "Napoli",
-  "Parma", "Roma", "Torino", "Udinese", "Venezia"
+  "Lazio", "Lecce", "Milan", "Napoli", "Parma",
+  "Pisa", "Roma", "Sassuolo", "Torino", "Udinese"
 ];
 
 export const authenticSerieAFixtures2025: SerieAMatch[] = [
@@ -100,7 +100,7 @@ export function generateCompleteSerieACalendar(): SerieAMatch[] {
     "Bologna": "Renato Dall'Ara",
     "Cagliari": "Unipol Domus",
     "Como": "Giuseppe Sinigaglia",
-    "Empoli": "Carlo Castellani",
+    "Cremonese": "Giovanni Zini",
     "Fiorentina": "Artemio Franchi",
     "Genoa": "Luigi Ferraris",
     "Hellas Verona": "Marcantonio Bentegodi",
@@ -109,17 +109,38 @@ export function generateCompleteSerieACalendar(): SerieAMatch[] {
     "Lazio": "Stadio Olimpico",
     "Lecce": "Via del Mare",
     "Milan": "San Siro",
-    "Monza": "U-Power Stadium",
     "Napoli": "Diego Armando Maradona",
     "Parma": "Ennio Tardini",
+    "Pisa": "Arena Garibaldi",
     "Roma": "Stadio Olimpico",
+    "Sassuolo": "Mapei Stadium",
     "Torino": "Olimpico Grande Torino",
-    "Udinese": "Bluenergy Stadium",
-    "Venezia": "Pier Luigi Penzo"
+    "Udinese": "Bluenergy Stadium"
   };
 
-  // Prima usa le partite specifiche dal file Excel per le prime giornate
-  const specificMatches = authenticSerieAFixtures2025.slice(0, 50);
+  // Usa le partite autentiche dal file Excel - prime 20 partite (giornate 1-2)
+  const specificMatches = [
+    { round: 1, homeTeam: "Atalanta", awayTeam: "Pisa", date: "2025-08-24", time: "15:00", venue: stadiums["Atalanta"] },
+    { round: 1, homeTeam: "Cagliari", awayTeam: "Fiorentina", date: "2025-08-24", time: "15:00", venue: stadiums["Cagliari"] },
+    { round: 1, homeTeam: "Como", awayTeam: "Lazio", date: "2025-08-24", time: "15:00", venue: stadiums["Como"] },
+    { round: 1, homeTeam: "Genoa", awayTeam: "Lecce", date: "2025-08-24", time: "15:00", venue: stadiums["Genoa"] },
+    { round: 1, homeTeam: "Inter", awayTeam: "Torino", date: "2025-08-24", time: "15:00", venue: stadiums["Inter"] },
+    { round: 1, homeTeam: "Juventus", awayTeam: "Parma", date: "2025-08-24", time: "15:00", venue: stadiums["Juventus"] },
+    { round: 1, homeTeam: "Milan", awayTeam: "Cremonese", date: "2025-08-24", time: "15:00", venue: stadiums["Milan"] },
+    { round: 1, homeTeam: "Roma", awayTeam: "Bologna", date: "2025-08-24", time: "15:00", venue: stadiums["Roma"] },
+    { round: 1, homeTeam: "Sassuolo", awayTeam: "Napoli", date: "2025-08-24", time: "15:00", venue: stadiums["Sassuolo"] },
+    { round: 1, homeTeam: "Udinese", awayTeam: "Hellas Verona", date: "2025-08-24", time: "15:00", venue: stadiums["Udinese"] },
+    { round: 2, homeTeam: "Bologna", awayTeam: "Como", date: "2025-08-31", time: "15:00", venue: stadiums["Bologna"] },
+    { round: 2, homeTeam: "Cremonese", awayTeam: "Sassuolo", date: "2025-08-31", time: "15:00", venue: stadiums["Cremonese"] },
+    { round: 2, homeTeam: "Fiorentina", awayTeam: "Torino", date: "2025-08-31", time: "15:00", venue: stadiums["Fiorentina"] },
+    { round: 2, homeTeam: "Genoa", awayTeam: "Juventus", date: "2025-08-31", time: "15:00", venue: stadiums["Genoa"] },
+    { round: 2, homeTeam: "Inter", awayTeam: "Udinese", date: "2025-08-31", time: "15:00", venue: stadiums["Inter"] },
+    { round: 2, homeTeam: "Lazio", awayTeam: "Hellas Verona", date: "2025-08-31", time: "15:00", venue: stadiums["Lazio"] },
+    { round: 2, homeTeam: "Lecce", awayTeam: "Milan", date: "2025-08-31", time: "15:00", venue: stadiums["Lecce"] },
+    { round: 2, homeTeam: "Napoli", awayTeam: "Cagliari", date: "2025-08-31", time: "15:00", venue: stadiums["Napoli"] },
+    { round: 2, homeTeam: "Parma", awayTeam: "Atalanta", date: "2025-08-31", time: "15:00", venue: stadiums["Parma"] },
+    { round: 2, homeTeam: "Pisa", awayTeam: "Roma", date: "2025-08-31", time: "15:00", venue: stadiums["Pisa"] }
+  ];
   matches.push(...specificMatches);
   
   // Per le giornate rimanenti, genera usando round-robin
