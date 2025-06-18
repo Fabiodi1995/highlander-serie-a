@@ -39,10 +39,10 @@ export class SerieAManager {
     console.log('Creating complete Serie A 2025/2026 Excel calendar...');
     
     const workbook = XLSX.utils.book_new();
-    const { serieATeams2024, serieACompleteFixtures } = await import('./data/serie-a-complete-calendar');
+    const { serieATeams2025, serieACompleteFixtures } = await import('./data/serie-a-complete-calendar');
     
     // Create teams sheet with authentic Serie A teams
-    const teamsData = serieATeams2024.map(team => ({
+    const teamsData = serieATeams2025.map((team: any) => ({
       ID: team.id,
       Nome: team.name,
       Codice: team.code,
@@ -80,12 +80,12 @@ export class SerieAManager {
     
     // Write the Excel file
     XLSX.writeFile(workbook, this.excelFilePath);
-    console.log(`Complete Serie A 2024/2025 Excel calendar created: ${this.excelFilePath}`);
+    console.log(`Complete Serie A 2025/2026 Excel calendar created: ${this.excelFilePath}`);
     console.log(`Total matches generated: ${allMatches.length}`);
   }
 
   private async generateCompleteSerieACalendar() {
-    const { serieACompleteFixtures, serieATeams2024, getMatchesByRound } = await import('./data/serie-a-complete-calendar');
+    const { serieACompleteFixtures, serieATeams2025, getMatchesByRound } = await import('./data/serie-a-complete-calendar');
     const allMatches = [];
     
     // Generate all 38 rounds with authentic Serie A fixtures
@@ -109,7 +109,7 @@ export class SerieAManager {
         });
       } else {
         // Generate matches using round-robin algorithm for missing rounds
-        const roundMatches = this.generateRoundRobinMatches(round, serieATeams2024);
+        const roundMatches = this.generateRoundRobinMatches(round, serieATeams2025);
         allMatches.push(...roundMatches);
       }
     }

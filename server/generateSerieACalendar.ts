@@ -136,7 +136,7 @@ function getMatchTime(round: number, matchIndex: number): string {
 }
 
 export async function createCompleteSerieAExcel() {
-  console.log('Generating complete Serie A 2024/2025 calendar...');
+  console.log('Generating complete Serie A 2025/2026 calendar...');
   
   const workbook = XLSX.utils.book_new();
   
@@ -159,13 +159,13 @@ export async function createCompleteSerieAExcel() {
   
   // Create summary sheet
   const summaryData = [
-    { Statistica: 'Stagione', Valore: '2024/2025' },
+    { Statistica: 'Stagione', Valore: '2025/2026' },
     { Statistica: 'Squadre', Valore: 20 },
     { Statistica: 'Giornate', Valore: 38 },
     { Statistica: 'Partite Totali', Valore: allMatches.length },
     { Statistica: 'Partite per Giornata', Valore: 10 },
-    { Statistica: 'Data Inizio', Valore: '17 Agosto 2024' },
-    { Statistica: 'Data Fine', Valore: 'Maggio 2025' }
+    { Statistica: 'Data Inizio', Valore: '17 Agosto 2025' },
+    { Statistica: 'Data Fine', Valore: 'Maggio 2026' }
   ];
   
   const summarySheet = XLSX.utils.json_to_sheet(summaryData);

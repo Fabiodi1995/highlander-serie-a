@@ -72,7 +72,7 @@ export const serieACompleteFixtures: SerieAMatch[] = [
   { round: 5, homeTeam: "Venezia", awayTeam: "Empoli", date: "2025-09-23", time: "20:45" },
   { round: 5, homeTeam: "Torino", awayTeam: "Como", date: "2025-09-23", time: "20:45" },
 
-  // GIORNATA 6-38 - Complete Serie A 2024/2025 fixture list
+  // GIORNATA 6-38 - Complete Serie A 2025/2026 fixture list
   // Continuing with remaining rounds using round-robin algorithm
 ];
 
@@ -91,8 +91,8 @@ export function getTotalMatches(): number {
   return serieACompleteFixtures.length;
 }
 
-// Serie A 2024/2025 Teams
-export const serieATeams2024 = [
+// Serie A 2025/2026 Teams
+export const serieATeams2025 = [
   { id: 21, name: "Atalanta", code: "ATA", city: "Bergamo" },
   { id: 22, name: "Bologna", code: "BOL", city: "Bologna" },
   { id: 23, name: "Cagliari", code: "CAG", city: "Cagliari" },
