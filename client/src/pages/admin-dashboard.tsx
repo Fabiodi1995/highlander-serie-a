@@ -23,6 +23,7 @@ import { ModernTable, StatusBadge } from "@/components/ui/modern-table";
 import { enhanceTicketsWithStatus, getStatusSortOrder, type TicketWithStatus } from "@/utils/ticket-status";
 import { generateGameHistoryPDF, type GameHistoryData } from "@/utils/pdf-generator";
 import { CountdownTimer } from "@/components/ui/countdown-timer";
+import { CountdownDisplay } from "@/components/ui/countdown-display";
 import { DeadlineSetter } from "@/components/ui/deadline-setter";
 import type { Game, User as UserType, Team, TeamSelection, Ticket, Match } from "@shared/schema";
 import { z } from "zod";
@@ -816,6 +817,7 @@ export default function AdminDashboard() {
       });
     },
     onError: (error: Error) => {
+      // Non chiudere la finestra quando c'è un errore
       toast({
         title: "Errore",
         description: error.message,
