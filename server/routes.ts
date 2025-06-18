@@ -992,11 +992,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Clear any active deadline when manually locking
+      await storage.updateGameDeadline(gameId, null);
       await storage.updateGameRoundStatus(gameId, "selection_locked");
+      
+      // Log the manual lock action
+      await storage.createTimerLog(
+        gameId,
+        'manual_lock',
+        game.selectionDeadline,
+        null,
+        req.user!.id,
+        { autoAssigned: missingSelections.length }
+      );
       
       res.json({ 
         message: "Round locked successfully",
-        autoAssigned: missingSelections.length
+        autoAssigned: missingSelections.length,
+        deadlineCleared: !!game.selectionDeadline
       });
     } catch (error) {
       console.error("Error locking round:", error);

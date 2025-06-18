@@ -916,6 +916,13 @@ export default function AdminDashboard() {
   const lockRoundMutation = useMutation({
     mutationFn: async ({ gameId, forceConfirm }: { gameId: number; forceConfirm?: boolean }) => {
       const res = await apiRequest("POST", `/api/games/${gameId}/lock-round`, { forceConfirm });
+      if (!res.ok) {
+        const errorData = await res.json();
+        const error = new Error(errorData.message || 'Failed to lock round');
+        (error as any).requiresConfirmation = errorData.requiresConfirmation;
+        (error as any).missingSelections = errorData.missingSelections;
+        throw error;
+      }
       return await res.json();
     },
     onSuccess: (data) => {
@@ -923,15 +930,21 @@ export default function AdminDashboard() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/all-team-selections"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/all-tickets"] });
       
+      let description = data.autoAssigned > 0 ? 
+        `Round bloccato. ${data.autoAssigned} selezioni assegnate automaticamente.` :
+        "Round bloccato con successo";
+      
+      if (data.deadlineCleared) {
+        description += " Deadline cancellata.";
+      }
+      
       toast({
         title: "Round Bloccato",
-        description: data.autoAssigned > 0 ? 
-          `Round bloccato. ${data.autoAssigned} selezioni assegnate automaticamente.` :
-          "Round bloccato con successo",
+        description,
       });
     },
-    onError: (error: Error, variables) => {
-      if (error.message.includes("requiresConfirmation")) {
+    onError: (error: any, variables) => {
+      if (error.requiresConfirmation) {
         const confirmResult = window.confirm(
           "Alcuni giocatori non hanno fatto le selezioni. Vuoi continuare? Le squadre mancanti verranno assegnate automaticamente."
         );
