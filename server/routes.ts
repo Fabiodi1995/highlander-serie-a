@@ -147,10 +147,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       await storage.updateGameStatus(gameId, "active");
+      await storage.updateGameRound(gameId, 1);
+      await storage.updateGameRoundStatus(gameId, "selection_open");
       res.json({ message: "Registration closed, game started" });
     } catch (error) {
       console.error("Error closing registration:", error);
       res.status(500).json({ message: "Failed to close registration" });
+    }
+  });
+
+  // Set deadline for game
+  app.post("/api/games/:id/set-deadline", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user!.isAdmin) return res.sendStatus(403);
+    
+    try {
+      const gameId = parseInt(req.params.id);
+      const { deadline } = req.body;
+      
+      if (!deadline) {
+        return res.status(400).json({ message: "Deadline is required" });
+      }
+      
+      const game = await storage.getGame(gameId);
+      if (!game) {
+        return res.status(404).json({ message: "Game not found" });
+      }
+      
+      // Verify admin owns this game
+      if (game.createdBy !== req.user!.id) {
+        return res.status(403).json({ message: "Access denied - not your game" });
+      }
+      
+      // Validate deadline is in the future (Italian timezone)
+      const deadlineDate = new Date(deadline);
+      const now = new Date();
+      const italianNow = new Date(now.toLocaleString("en-US", {timeZone: "Europe/Rome"}));
+      
+      if (deadlineDate <= italianNow) {
+        return res.status(400).json({ message: "Deadline must be in the future (Italian time)" });
+      }
+      
+      await storage.updateGameDeadline(gameId, deadlineDate);
+      
+      // Log the deadline setting
+      await storage.createTimerLog(
+        gameId,
+        'deadline_set',
+        game.selectionDeadline,
+        deadlineDate,
+        req.user!.id,
+        { timezone: 'Europe/Rome' }
+      );
+      
+      res.json({ 
+        message: "Deadline set successfully",
+        deadline: deadlineDate.toISOString()
+      });
+    } catch (error) {
+      console.error("Error setting deadline:", error);
+      res.status(500).json({ message: "Failed to set deadline" });
+    }
+  });
+
+  // Test endpoint for timer system (admin only)
+  app.post("/api/admin/test-timer", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user!.isAdmin) return res.sendStatus(403);
+    
+    try {
+      const results = await checkExpiredDeadlines();
+      res.json({
+        message: "Timer check completed",
+        results,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Error testing timer:", error);
+      res.status(500).json({ message: "Failed to test timer system" });
     }
   });
 
