@@ -1405,6 +1405,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Timer and deadline management APIs
+  app.post("/api/games/:id/set-deadline", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user!.isAdmin) return res.sendStatus(403);
+    
+    try {
+      const gameId = parseInt(req.params.id);
+      const { deadline } = req.body;
+      
+      if (!deadline) {
+        return res.status(400).json({ message: "Deadline is required" });
+      }
+      
+      const game = await storage.getGame(gameId);
+      if (!game) {
+        return res.status(404).json({ message: "Game not found" });
+      }
+      
+      if (game.createdBy !== req.user!.id) {
+        return res.status(403).json({ message: "Access denied - not your game" });
+      }
+      
+      if (game.status !== "active") {
+        return res.status(400).json({ message: "Game is not active" });
+      }
+      
+      // Validate deadline is in the future
+      const deadlineDate = new Date(deadline);
+      const now = new Date();
+      
+      if (deadlineDate <= now) {
+        return res.status(400).json({ message: "Deadline must be in the future" });
+      }
+      
+      // Check if previous round is completed
+      if (game.roundStatus === "calculated") {
+        return res.status(400).json({ 
+          message: "Previous round must be completed before setting new deadline" 
+        });
+      }
+      
+      const previousDeadline = game.selectionDeadline;
+      
+      // Update deadline in database
+      await storage.updateGameDeadline(gameId, deadlineDate);
+      
+      // Create audit log
+      await storage.createTimerLog(
+        gameId,
+        previousDeadline ? 'deadline_updated' : 'deadline_set',
+        previousDeadline,
+        deadlineDate,
+        req.user!.id,
+        {
+          roundNumber: game.currentRound,
+          previousStatus: game.roundStatus
+        }
+      );
+      
+      console.log(`Timer deadline ${previousDeadline ? 'updated' : 'set'} for game ${gameId}:`, {
+        gameId,
+        adminId: req.user!.id,
+        previousDeadline: previousDeadline?.toISOString(),
+        newDeadline: deadlineDate.toISOString(),
+        roundNumber: game.currentRound
+      });
+      
+      res.json({
+        message: `Deadline ${previousDeadline ? 'updated' : 'set'} successfully`,
+        deadline: deadlineDate.toISOString(),
+        timeRemaining: deadlineDate.getTime() - now.getTime()
+      });
+      
+    } catch (error) {
+      console.error("Error setting deadline:", error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ 
+        message: "Failed to set deadline",
+        error: process.env.NODE_ENV === 'development' ? errorMessage : 'Internal server error'
+      });
+    }
+  });
+
   // Client error reporting endpoint for monitoring
   app.post("/api/client-errors", async (req, res) => {
     try {

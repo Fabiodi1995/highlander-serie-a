@@ -1,11 +1,11 @@
 import { 
-  users, games, teams, tickets, matches, teamSelections, gameParticipants, userStats,
+  users, games, teams, tickets, matches, teamSelections, gameParticipants, userStats, timerLogs,
   type User, type InsertUser, type Game, type InsertGame, type Team, 
   type Ticket, type Match, type TeamSelection, type InsertTeamSelection,
   type GameParticipant
 } from "@shared/schema";
 import { db, safeDbQuery } from "./db";
-import { eq, and, desc, asc, sql, inArray } from "drizzle-orm";
+import { eq, and, desc, asc, sql, inArray, isNotNull } from "drizzle-orm";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 
@@ -262,6 +262,7 @@ export class DatabaseStorage implements IStorage {
         currentRound: games.currentRound,
         status: games.status,
         roundStatus: games.roundStatus,
+        selectionDeadline: games.selectionDeadline,
         createdBy: games.createdBy,
         createdAt: games.createdAt,
       })
@@ -295,6 +296,26 @@ export class DatabaseStorage implements IStorage {
       .update(games)
       .set({ roundStatus })
       .where(eq(games.id, gameId));
+  }
+
+  async updateGameDeadline(gameId: number, deadline: Date | null): Promise<void> {
+    await db
+      .update(games)
+      .set({ selectionDeadline: deadline })
+      .where(eq(games.id, gameId));
+  }
+
+  async getActiveGamesWithDeadlines(): Promise<Game[]> {
+    return await db
+      .select()
+      .from(games)
+      .where(
+        and(
+          eq(games.status, 'active'),
+          eq(games.roundStatus, 'selection_open'),
+          isNotNull(games.selectionDeadline)
+        )
+      );
   }
 
   async deleteGame(gameId: number): Promise<void> {
@@ -502,6 +523,18 @@ export class DatabaseStorage implements IStorage {
 
   async deleteTeamSelection(selectionId: number): Promise<void> {
     await db.delete(teamSelections).where(eq(teamSelections.id, selectionId));
+  }
+
+  // Timer logs
+  async createTimerLog(gameId: number, action: string, previousDeadline: Date | null, newDeadline: Date | null, adminId: number | null, details?: any): Promise<void> {
+    await db.insert(timerLogs).values({
+      gameId,
+      action,
+      previousDeadline,
+      newDeadline,
+      adminId,
+      details
+    });
   }
 }
 
