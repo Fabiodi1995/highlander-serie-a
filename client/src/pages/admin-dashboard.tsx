@@ -644,14 +644,14 @@ function PlayerHistoryTable({
             return rowData;
           })}
           columns={[
-            { key: 'player', label: 'Giocatore', sortable: true },
-            { key: 'ticketName', label: 'Ticket', sortable: true },
-            { key: 'status', label: 'Stato', sortable: true, align: 'center' as const },
+            { key: 'player', header: 'Giocatore', sortable: true },
+            { key: 'ticketName', header: 'Ticket', sortable: true },
+            { key: 'status', header: 'Stato', sortable: true, className: 'text-center' },
             ...gameRounds.map((round, index) => ({
               key: `round_${round}`,
-              label: `Giornata ${round}`,
+              header: `Giornata ${round}`,
               sortable: false,
-              align: 'center' as const,
+              className: 'text-center',
               width: '120px'
             }))
           ]}
@@ -1300,51 +1300,51 @@ export default function AdminDashboard() {
                 <div className="p-2 sm:p-3 rounded-full bg-primary/10">
                   <Gamepad2 className="h-6 w-6 text-primary" />
                 </div>
-                <div className="ml-4">
-                  <div className="text-2xl font-bold text-gray-900">{totalGames}</div>
-                  <div className="text-sm text-gray-600">Giochi Totali</div>
+                <div className="ml-3 sm:ml-4">
+                  <div className="text-xl sm:text-2xl font-bold text-gray-900">{totalGames}</div>
+                  <div className="text-xs sm:text-sm text-gray-600">Giochi Totali</div>
                 </div>
               </div>
             </CardContent>
           </Card>
           
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center">
-                <div className="p-3 rounded-full bg-secondary/10">
-                  <Play className="h-6 w-6 text-secondary" />
+                <div className="p-2 sm:p-3 rounded-full bg-secondary/10">
+                  <Play className="h-5 w-5 sm:h-6 sm:w-6 text-secondary" />
                 </div>
-                <div className="ml-4">
-                  <div className="text-2xl font-bold text-gray-900">{activeGames}</div>
-                  <div className="text-sm text-gray-600">Giochi Attivi</div>
+                <div className="ml-3 sm:ml-4">
+                  <div className="text-xl sm:text-2xl font-bold text-gray-900">{activeGames}</div>
+                  <div className="text-xs sm:text-sm text-gray-600">Giochi Attivi</div>
                 </div>
               </div>
             </CardContent>
           </Card>
           
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center">
-                <div className="p-3 rounded-full bg-warning/10">
-                  <Users className="h-6 w-6 text-warning" />
+                <div className="p-2 sm:p-3 rounded-full bg-warning/10">
+                  <Users className="h-5 w-5 sm:h-6 sm:w-6 text-warning" />
                 </div>
-                <div className="ml-4">
-                  <div className="text-2xl font-bold text-gray-900">{registrationGames}</div>
-                  <div className="text-sm text-gray-600">In Registrazione</div>
+                <div className="ml-3 sm:ml-4">
+                  <div className="text-xl sm:text-2xl font-bold text-gray-900">{registrationGames}</div>
+                  <div className="text-xs sm:text-sm text-gray-600">In Registrazione</div>
                 </div>
               </div>
             </CardContent>
           </Card>
           
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center">
-                <div className="p-3 rounded-full bg-accent/10">
-                  <TicketIcon className="h-6 w-6 text-accent" />
+                <div className="p-2 sm:p-3 rounded-full bg-accent/10">
+                  <TicketIcon className="h-5 w-5 sm:h-6 sm:w-6 text-accent" />
                 </div>
-                <div className="ml-4">
-                  <div className="text-2xl font-bold text-gray-900">{users?.filter(u => !u.isAdmin).length || 0}</div>
-                  <div className="text-sm text-gray-600">Giocatori Registrati</div>
+                <div className="ml-3 sm:ml-4">
+                  <div className="text-xl sm:text-2xl font-bold text-gray-900">{users?.filter(u => !u.isAdmin).length || 0}</div>
+                  <div className="text-xs sm:text-sm text-gray-600">Giocatori Registrati</div>
                 </div>
               </div>
             </CardContent>
@@ -1381,13 +1381,13 @@ export default function AdminDashboard() {
                   <ModernTable
                     data={games}
                     columns={[
-                      { key: 'name', label: 'Nome Gioco', sortable: true },
-                      { key: 'status', label: 'Stato', sortable: true, align: 'center' },
-                      { key: 'gameRound', label: 'Round', sortable: true, align: 'center' },
-                      { key: 'currentRound', label: 'Giornata', sortable: true, align: 'center' },
-                      { key: 'countdown', label: 'Tempo Rimasto', sortable: false, align: 'center' },
-                      { key: 'createdAt', label: 'Creato', sortable: true, align: 'center' },
-                      { key: 'actions', label: 'Azioni', sortable: false }
+                      { key: 'name', header: 'Nome Gioco', sortable: true },
+                      { key: 'status', header: 'Stato', sortable: true, className: 'text-center' },
+                      { key: 'gameRound', header: 'Round', sortable: true, className: 'text-center' },
+                      { key: 'currentRound', header: 'Giornata', sortable: true, className: 'text-center' },
+                      { key: 'countdown', header: 'Tempo Rimasto', sortable: false, className: 'text-center' },
+                      { key: 'createdAt', header: 'Creato', sortable: true, className: 'text-center' },
+                      { key: 'actions', header: 'Azioni', sortable: false }
                     ]}
                     renderCell={(game, columnKey) => {
                       switch (columnKey) {
@@ -1641,11 +1641,11 @@ export default function AdminDashboard() {
                           <ModernTable
                             data={tableData}
                             columns={[
-                              { key: 'username', label: 'Giocatore', sortable: true },
-                              { key: 'ticketDisplay', label: 'Ticket', sortable: true },
-                              { key: 'round', label: 'Giornata', sortable: true, align: 'center' as const },
-                              { key: 'teamName', label: 'Squadra Scelta', sortable: true },
-                              { key: 'status', label: 'Stato Ticket', sortable: true, align: 'center' as const }
+                              { key: 'username', header: 'Giocatore', sortable: true },
+                              { key: 'ticketDisplay', header: 'Ticket', sortable: true },
+                              { key: 'round', header: 'Giornata', sortable: true, className: 'text-center' },
+                              { key: 'teamName', header: 'Squadra Scelta', sortable: true },
+                              { key: 'status', header: 'Stato Ticket', sortable: true, className: 'text-center' }
                             ]}
                             renderCell={(item, columnKey) => {
                               switch (columnKey) {
@@ -1716,12 +1716,12 @@ export default function AdminDashboard() {
                       };
                     })}
                     columns={[
-                      { key: 'id', label: 'ID Ticket', sortable: true, width: '100px' },
-                      { key: 'username', label: 'Giocatore', sortable: true },
-                      { key: 'gameName', label: 'Gioco', sortable: true },
-                      { key: 'status', label: 'Stato', sortable: true, align: 'center' },
-                      { key: 'eliminatedInRound', label: 'Giornata Eliminazione', sortable: true, align: 'center' },
-                      { key: 'actions', label: 'Azioni', sortable: false, align: 'center', width: '100px' }
+                      { key: 'id', header: 'ID Ticket', sortable: true, width: '100px' },
+                      { key: 'username', header: 'Giocatore', sortable: true },
+                      { key: 'gameName', header: 'Gioco', sortable: true },
+                      { key: 'status', header: 'Stato', sortable: true, className: 'text-center' },
+                      { key: 'eliminatedInRound', header: 'Giornata Eliminazione', sortable: true, className: 'text-center' },
+                      { key: 'actions', header: 'Azioni', sortable: false, className: 'text-center', width: '100px' }
                     ]}
                     renderCell={(ticket, columnKey) => {
                       switch (columnKey) {
@@ -1846,9 +1846,9 @@ export default function AdminDashboard() {
                     <ModernTable
                       data={users}
                       columns={[
-                        { key: 'username', label: 'Username', sortable: true },
-                        { key: 'id', label: 'ID', sortable: true, width: '80px', align: 'center' },
-                        { key: 'isAdmin', label: 'Ruolo', sortable: true, align: 'center' }
+                        { key: 'username', header: 'Username', sortable: true },
+                        { key: 'id', header: 'ID', sortable: true, width: '80px', className: 'text-center' },
+                        { key: 'isAdmin', header: 'Ruolo', sortable: true, className: 'text-center' }
                       ]}
                       renderCell={(user, columnKey) => {
                         switch (columnKey) {
