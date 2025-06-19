@@ -52,6 +52,7 @@ function PlayerHistoryTableWrapper({
       allTeamSelections={[]}
       teams={teams}
       users={users}
+      selectionsByTicket={gameHistory.selections}
     />
   );
 }
@@ -100,6 +101,7 @@ function UserSelectionsTableWrapper({
       allTeamSelections={[]}
       teams={teams}
       users={users}
+      selectionsByTicket={gameHistory.selections}
     />
   );
 }
@@ -148,7 +150,7 @@ function PlayerHistoryTable({
 
   // Get cell style based on ticket status and round
   const getCellStyle = (ticket: any, round: number) => {
-    const selection = ticket.selections?.[round.toString()];
+    const selection = selectionsByTicket?.[ticket.id]?.[round];
     
     // If ticket was eliminated before this round - show red
     if (ticket.eliminatedInRound && ticket.eliminatedInRound < round) {
@@ -191,7 +193,7 @@ function PlayerHistoryTable({
 
   // Get cell content with privacy logic
   const getCellContent = (ticket: any, round: number) => {
-    const selection = ticket.selections?.[round.toString()];
+    const selection = selectionsByTicket?.[ticket.id]?.[round];
     
     // If ticket was eliminated before this round
     if (ticket.eliminatedInRound && ticket.eliminatedInRound < round) {
