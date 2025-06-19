@@ -463,9 +463,9 @@ function DetailedGameView({
   });
 
   const columns = [
-    { key: 'player', label: 'Giocatore', sortable: true },
-    { key: 'ticketName', label: 'Ticket', sortable: true },
-    { key: 'status', label: 'Stato', sortable: true, align: 'center' as const },
+    { key: 'player', header: 'Giocatore', sortable: true },
+    { key: 'ticketName', header: 'Ticket', sortable: true },
+    { key: 'status', header: 'Stato', sortable: true, className: 'text-center' },
     ...gameRounds.map((round, index) => ({
       key: `round_${round}`,
       label: `R${index + 1} (G${round})`,
@@ -839,20 +839,20 @@ export default function PlayerDashboard() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+        <div className="mobile-container">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 py-4">
+            <div className="flex items-center space-x-3 sm:space-x-4">
               <div className="p-2 bg-blue-100 rounded-full">
-                <User className="h-6 w-6 text-blue-600" />
+                <User className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Dashboard Giocatore</h1>
-                <p className="text-gray-600">Benvenuto, {user?.username}!</p>
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Dashboard Giocatore</h1>
+                <p className="text-sm sm:text-base text-gray-600">Benvenuto, {user?.username}!</p>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="button-group">
               <Link href="/profile">
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="w-full sm:w-auto">
                   <User className="h-4 w-4 mr-2" />
                   Profilo
                 </Button>
@@ -862,6 +862,7 @@ export default function PlayerDashboard() {
                 size="sm"
                 onClick={() => logoutMutation.mutate()}
                 disabled={logoutMutation.isPending}
+                className="w-full sm:w-auto"
               >
                 <LogOut className="h-4 w-4 mr-2" />
                 Logout
@@ -872,14 +873,24 @@ export default function PlayerDashboard() {
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
+      <div className="mobile-container">
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview">Panoramica</TabsTrigger>
-            <TabsTrigger value="history">Storico Giocatori</TabsTrigger>
-            <TabsTrigger value="selections">Scelte Squadre</TabsTrigger>
-            <TabsTrigger value="games">Giochi Disponibili</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto scrollbar-hide mb-6">
+            <TabsList className="nav-tabs flex w-max min-w-full h-12 bg-muted p-1 text-muted-foreground rounded-lg">
+              <TabsTrigger value="overview" className="flex-shrink-0 px-4 py-2 text-sm font-medium whitespace-nowrap">
+                Panoramica
+              </TabsTrigger>
+              <TabsTrigger value="history" className="flex-shrink-0 px-4 py-2 text-sm font-medium whitespace-nowrap">
+                Storico Giocatori
+              </TabsTrigger>
+              <TabsTrigger value="selections" className="flex-shrink-0 px-4 py-2 text-sm font-medium whitespace-nowrap">
+                Scelte Squadre
+              </TabsTrigger>
+              <TabsTrigger value="games" className="flex-shrink-0 px-4 py-2 text-sm font-medium whitespace-nowrap">
+                Giochi Disponibili
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="overview" className="space-y-6">
             <Card>

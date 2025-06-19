@@ -1353,13 +1353,25 @@ export default function AdminDashboard() {
 
         {/* Admin Dashboard with Tabs */}
         <Tabs defaultValue="games" className="w-full">
-          <TabsList className="nav-tabs grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1">
-            <TabsTrigger value="games" className="text-xs sm:text-sm">Gestione Giochi</TabsTrigger>
-            <TabsTrigger value="history" className="text-xs sm:text-sm">Storico Giocatori</TabsTrigger>
-            <TabsTrigger value="selections" className="text-xs sm:text-sm">Scelte Squadre</TabsTrigger>
-            <TabsTrigger value="tickets" className="text-xs sm:text-sm">Ticket Giocatori</TabsTrigger>
-            <TabsTrigger value="overview" className="text-xs sm:text-sm">Panoramica</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto scrollbar-hide mb-6">
+            <TabsList className="nav-tabs flex w-max min-w-full h-12 bg-muted p-1 text-muted-foreground rounded-lg">
+              <TabsTrigger value="games" className="flex-shrink-0 px-4 py-2 text-sm font-medium whitespace-nowrap">
+                Gestione Giochi
+              </TabsTrigger>
+              <TabsTrigger value="history" className="flex-shrink-0 px-4 py-2 text-sm font-medium whitespace-nowrap">
+                Storico Giocatori
+              </TabsTrigger>
+              <TabsTrigger value="selections" className="flex-shrink-0 px-4 py-2 text-sm font-medium whitespace-nowrap">
+                Scelte Squadre
+              </TabsTrigger>
+              <TabsTrigger value="tickets" className="flex-shrink-0 px-4 py-2 text-sm font-medium whitespace-nowrap">
+                Ticket Giocatori
+              </TabsTrigger>
+              <TabsTrigger value="overview" className="flex-shrink-0 px-4 py-2 text-sm font-medium whitespace-nowrap">
+                Panoramica
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="games" className="space-y-4">
             <Card>
