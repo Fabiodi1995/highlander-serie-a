@@ -37,7 +37,7 @@ const DEFAULT_FLAGS: FeatureFlags = {
   pwa: true,
   tutorial: true,
   darkMode: true,
-  emailConfirmation: false,
+  emailConfirmation: true,
   twoFactorAuth: false,
   realTimeChat: true,
   adminPanel: true,

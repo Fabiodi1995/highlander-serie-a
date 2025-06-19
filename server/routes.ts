@@ -1205,6 +1205,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ success: true });
   });
 
+  // Validation endpoints
+  app.get("/api/validate/username/:username", async (req, res) => {
+    try {
+      const { username } = req.params;
+      
+      if (!username || username.length < 3) {
+        return res.json({ available: false, message: "Username deve essere almeno 3 caratteri" });
+      }
+      
+      const existingUser = await storage.getUserByUsername(username);
+      const available = !existingUser;
+      
+      res.json({ 
+        available, 
+        message: available ? "Username disponibile" : "Username già utilizzato" 
+      });
+    } catch (error) {
+      console.error("Error validating username:", error);
+      res.status(500).json({ available: false, message: "Errore durante la validazione" });
+    }
+  });
+
+  app.get("/api/validate/email/:email", async (req, res) => {
+    try {
+      const { email } = req.params;
+      const decodedEmail = decodeURIComponent(email);
+      
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(decodedEmail)) {
+        return res.json({ available: false, message: "Email non valida" });
+      }
+      
+      const existingUser = await storage.getUserByEmail(decodedEmail);
+      const available = !existingUser;
+      
+      res.json({ 
+        available, 
+        message: available ? "Email disponibile" : "Email già utilizzata" 
+      });
+    } catch (error) {
+      console.error("Error validating email:", error);
+      res.status(500).json({ available: false, message: "Errore durante la validazione" });
+    }
+  });
+
   // Email verification and password reset endpoints
   
   // Send password reset email
