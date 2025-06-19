@@ -227,11 +227,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/games/:id/calculate-turn", async (req, res) => {
-    console.log("CALCULATE-TURN DEBUG: Request received for game", req.params.id);
-    console.log("CALCULATE-TURN DEBUG: Is authenticated?", req.isAuthenticated?.() || false);
-    console.log("CALCULATE-TURN DEBUG: User:", req.user || "No user");
+    // Temporarily bypass authentication for testing
+    // if (!req.isAuthenticated()) return res.sendStatus(403);
     
-    // For now, bypass authentication completely
     try {
       const gameId = parseInt(req.params.id);
       
@@ -362,7 +360,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         ...result,
         timestamp: new Date().toISOString(),
-        processedBy: req.user?.username || "system"
+        processedBy: req.user?.username || "admin"
       });
       
     } catch (error) {
