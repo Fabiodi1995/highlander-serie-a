@@ -21,7 +21,16 @@ const loginSchema = z.object({
   password: z.string().min(1, "Password richiesta"),
 });
 
-const registerSchema = insertUserSchema.extend({
+const registerSchema = z.object({
+  username: z.string().min(3, "Username deve essere almeno 3 caratteri"),
+  email: z.string().email("Inserisci un indirizzo email valido"),
+  password: z.string().min(6, "La password deve avere almeno 6 caratteri"),
+  firstName: z.string().min(1, "Nome richiesto"),
+  lastName: z.string().min(1, "Cognome richiesto"),
+  dateOfBirth: z.string().optional(),
+  phoneNumber: z.string().optional(),
+  city: z.string().optional(),
+  country: z.string().optional(),
   acceptTerms: z.boolean().refine(val => val === true, {
     message: "Devi accettare i Termini di Servizio per procedere"
   }),
@@ -61,7 +70,7 @@ export default function AuthPage() {
       password: "",
       firstName: "",
       lastName: "",
-      dateOfBirth: undefined,
+      dateOfBirth: "",
       phoneNumber: "",
       city: "",
       country: "Italia",
@@ -83,7 +92,10 @@ export default function AuthPage() {
   };
 
   const onRegister = (data: RegisterData) => {
-    registerMutation.mutate(data, {
+    // Convert data to match backend expectations
+    const { acceptTerms, acceptPrivacy, acceptMarketing, ...registrationData } = data;
+    
+    registerMutation.mutate(registrationData as any, {
       onSuccess: () => {
         setLocation("/");
       },
@@ -308,7 +320,7 @@ export default function AuthPage() {
                                     type="date" 
                                     {...field} 
                                     value={field.value || ''} 
-                                    onChange={(e) => field.onChange(e.target.value || undefined)}
+                                    onChange={(e) => field.onChange(e.target.value || "")}
                                   />
                                 </FormControl>
                                 <FormMessage />

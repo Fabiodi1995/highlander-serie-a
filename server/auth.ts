@@ -82,10 +82,14 @@ export function setupAuth(app: Express) {
         return res.status(400).send("Email già registrata");
       }
 
-      const user = await storage.createUser({
+      // Prepare user data with proper date conversion
+      const userData = {
         ...req.body,
         password: await hashPassword(req.body.password),
-      });
+        dateOfBirth: req.body.dateOfBirth ? new Date(req.body.dateOfBirth) : undefined,
+      };
+
+      const user = await storage.createUser(userData);
 
       // Send verification email
       if (!user.emailVerified) {
