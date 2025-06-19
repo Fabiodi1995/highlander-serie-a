@@ -1,9 +1,27 @@
-import { ReactNode } from 'react';
-import { ChevronUp, ChevronDown, ChevronsUpDown, Search, X } from 'lucide-react';
-import { useTableState, type TableColumn, type SortDirection } from '@/hooks/use-table-state';
-import { Input } from '@/components/ui/input';
+import { useState, useMemo, ReactNode } from 'react';
+import { ChevronUp, ChevronDown, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+
+type SortDirection = 'asc' | 'desc' | null;
+
+export interface TableColumn {
+  key: string;
+  header: string;
+  sortable?: boolean;
+  width?: string;
+  className?: string;
+}
+
+interface TableState {
+  sortKey: string | null;
+  sortDirection: SortDirection;
+  searchQuery: string;
+  currentPage: number;
+  pageSize: number;
+  filters: Record<string, string[]>;
+}
 
 interface ModernTableProps<T extends Record<string, any> = Record<string, any>> {
   data: T[];
@@ -32,141 +50,141 @@ export function ModernTable<T extends Record<string, any> = Record<string, any>>
   customSortFn,
   className = '',
   emptyMessage = 'Nessun dato disponibile',
-  searchFields,
+  searchFields = [],
   searchPlaceholder = 'Cerca...',
   showSearch = true,
   compact = false,
-  stickyHeader = false,
+  stickyHeader = true,
   tabKey,
   onTabChange
 }: ModernTableProps<T>) {
-  const {
-    tableState,
-    handleSort,
-    handlePageSizeChange,
-    handlePageChange,
-    handleSearch,
-    handleTabChange,
-    getSortIndicator,
-    removeSortConfig,
-    processData
-  } = useTableState({
-    defaultSortKey,
-    defaultSortDirection,
-    defaultPageSize: 20,
-    resetOnTabChange: true,
-    tabKey
+  const [tableState, setTableState] = useState<TableState>({
+    sortKey: defaultSortKey || null,
+    sortDirection: defaultSortDirection,
+    searchQuery: '',
+    currentPage: 0,
+    pageSize: 10,
+    filters: {}
   });
 
-  // Process data with search, sort, and pagination
-  const {
-    data: processedData,
-    totalItems,
-    totalPages,
-    hasNextPage,
-    hasPrevPage
-  } = processData(data, searchFields, customSortFn);
+  // Sort data
+  const sortedData = useMemo(() => {
+    if (!tableState.sortKey) return data;
 
-  const getSortIcon = (columnKey: string) => {
-    const indicator = getSortIndicator(columnKey);
-    if (!indicator) return <ChevronsUpDown className="h-4 w-4 opacity-40" />;
+    return [...data].sort((a, b) => {
+      if (customSortFn) {
+        return customSortFn(a, b, tableState.sortKey!, tableState.sortDirection);
+      }
+
+      const aVal = a[tableState.sortKey!];
+      const bVal = b[tableState.sortKey!];
+      
+      if (aVal === bVal) return 0;
+      if (aVal == null) return 1;
+      if (bVal == null) return -1;
+      
+      const result = aVal < bVal ? -1 : 1;
+      return tableState.sortDirection === 'desc' ? -result : result;
+    });
+  }, [data, tableState.sortKey, tableState.sortDirection, customSortFn]);
+
+  // Filter data based on search
+  const filteredData = useMemo(() => {
+    if (!tableState.searchQuery.trim()) return sortedData;
     
-    const isAsc = indicator.includes('↑');
-    const priority = indicator.replace(/[↑↓]/g, '');
-    
-    return (
-      <div className="flex items-center gap-1">
-        {isAsc ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        {priority && <span className="text-xs font-bold bg-blue-100 text-blue-600 rounded-full w-4 h-4 flex items-center justify-center">{priority}</span>}
-      </div>
-    );
+    const query = tableState.searchQuery.toLowerCase();
+    return sortedData.filter(item => {
+      if (searchFields.length > 0) {
+        return searchFields.some(field => {
+          const value = item[field];
+          return value && String(value).toLowerCase().includes(query);
+        });
+      }
+      
+      return Object.values(item).some(value => 
+        value && String(value).toLowerCase().includes(query)
+      );
+    });
+  }, [sortedData, tableState.searchQuery, searchFields]);
+
+  // Pagination
+  const totalItems = filteredData.length;
+  const totalPages = Math.ceil(totalItems / tableState.pageSize);
+  const paginatedData = filteredData.slice(
+    tableState.currentPage * tableState.pageSize,
+    (tableState.currentPage + 1) * tableState.pageSize
+  );
+
+  const handleSort = (key: string) => {
+    const column = columns.find(col => col.key === key);
+    if (!column?.sortable) return;
+
+    setTableState(prev => ({
+      ...prev,
+      sortKey: key,
+      sortDirection: prev.sortKey === key && prev.sortDirection === 'asc' ? 'desc' : 'asc',
+      currentPage: 0
+    }));
   };
 
-  if (!data || data.length === 0) {
-    return (
-      <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-        <div className="text-4xl mb-4">📊</div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Nessun dato disponibile</h3>
-        <p className="text-gray-500">{emptyMessage}</p>
-      </div>
-    );
-  }
+  const handleSearch = (query: string) => {
+    setTableState(prev => ({
+      ...prev,
+      searchQuery: query,
+      currentPage: 0
+    }));
+  };
 
-  const cellPadding = compact ? 'p-2' : 'p-4';
-  const textSize = compact ? 'text-xs' : 'text-sm';
+  const handlePageChange = (page: number) => {
+    setTableState(prev => ({ ...prev, currentPage: page }));
+  };
+
+  const hasPrevPage = tableState.currentPage > 0;
+  const hasNextPage = tableState.currentPage < totalPages - 1;
 
   return (
-    <div className={`w-full space-y-4 ${className}`}>
-      {/* Search and Controls */}
-      {showSearch && searchFields && (
-        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-          <div className="relative flex-1 max-w-md">
+    <div className={`space-y-4 ${className}`}>
+      {/* Search */}
+      {showSearch && (
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+          <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder={searchPlaceholder}
               value={tableState.searchQuery}
               onChange={(e) => handleSearch(e.target.value)}
-              className="pl-10 pr-10 h-10"
+              className="pl-10"
             />
-            {tableState.searchQuery && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0"
-                onClick={() => handleSearch('')}
-              >
-                <X className="h-3 w-3" />
-              </Button>
-            )}
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-600 whitespace-nowrap">Righe per pagina:</span>
-            <select
-              value={tableState.pageSize}
-              onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-              className="border border-gray-300 rounded-md px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value={10}>10</option>
-              <option value={20}>20</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </select>
           </div>
         </div>
       )}
 
       {/* Table */}
-      <div className="table-container bg-white shadow-sm">
-        <table className="w-full">
-          <thead className={stickyHeader ? 'sticky top-0 z-10' : ''}>
+      <div className="table-container bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className={stickyHeader ? 'sticky top-0 z-10' : ''}>
               <tr className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
                 {columns.map((column) => {
-                  const sortConfig = tableState.sortConfigs.find(config => config.key === column.key);
+                  const isSorted = tableState.sortKey === column.key;
+                  const sortIcon = isSorted ? (
+                    tableState.sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                  ) : null;
+
                   return (
                     <th
                       key={column.key}
-                      className={`
-                        ${cellPadding} font-semibold text-gray-700
-                        ${column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : 'text-left'}
-                        ${column.sortable !== false ? 'cursor-pointer hover:bg-gray-200 select-none transition-all duration-200' : ''}
-                        ${sortConfig ? 'bg-blue-50 text-blue-900' : ''}
-                        ${column.sticky ? 'sticky left-0 z-20' : ''}
-                        group
-                      `}
-                      style={{ width: column.width }}
-                      onClick={() => column.sortable !== false && handleSort(column.key)}
+                      className={`px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider ${
+                        column.sortable ? 'cursor-pointer hover:bg-gray-100 select-none' : ''
+                      } ${column.className || ''}`}
+                      style={column.width ? { width: column.width } : undefined}
+                      onClick={() => column.sortable && handleSort(column.key)}
                     >
-                      <div className={`flex items-center gap-2 ${
-                        column.align === 'center' ? 'justify-center' : 
-                        column.align === 'right' ? 'justify-end' : 'justify-start'
-                      }`}>
-                        <span className={`font-bold ${textSize}`}>{column.label}</span>
-                        {column.sortable !== false && (
-                          <div className={`transition-all duration-200 ${
-                            sortConfig ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'
-                          }`}>
-                            {getSortIcon(column.key)}
+                      <div className="flex items-center gap-2">
+                        <span>{column.header}</span>
+                        {column.sortable && (
+                          <div className="flex flex-col">
+                            {sortIcon || <ChevronUp className="h-3 w-3 text-gray-400" />}
                           </div>
                         )}
                       </div>
@@ -175,38 +193,35 @@ export function ModernTable<T extends Record<string, any> = Record<string, any>>
                 })}
               </tr>
             </thead>
-            <tbody>
-              {processedData.map((item, index) => {
-                // Generate unique key using multiple identifiers to avoid conflicts
-                const uniqueKey = item.id || item.ticketId || item.selectionId || `${tabKey || 'table'}-${index}`;
-                return (
-                  <tr 
-                    key={uniqueKey} 
-                    className="border-b border-gray-100 hover:bg-blue-50/30 transition-all duration-200 group"
-                  >
+            <tbody className="bg-white divide-y divide-gray-200">
+              {paginatedData.length === 0 ? (
+                <tr>
+                  <td colSpan={columns.length} className="px-4 py-8 text-center text-gray-500">
+                    {emptyMessage}
+                  </td>
+                </tr>
+              ) : (
+                paginatedData.map((item, index) => (
+                  <tr key={index} className="hover:bg-gray-50 transition-colors duration-150">
                     {columns.map((column) => (
-                      <td 
-                        key={`${uniqueKey}-${column.key}`} 
-                        className={`
-                          ${cellPadding} ${textSize} text-gray-900
-                          ${column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : 'text-left'}
-                          ${column.sticky ? 'sticky left-0 bg-white group-hover:bg-blue-50/30' : ''}
-                        `}
-                        style={{ width: column.width }}
+                      <td
+                        key={column.key}
+                        className={`px-4 py-3 text-sm ${compact ? 'py-2' : 'py-3'} ${column.className || ''}`}
                       >
                         {renderCell(item, column.key)}
                       </td>
                     ))}
                   </tr>
-                );
-              })}
+                ))
+              )}
             </tbody>
           </table>
+        </div>
       </div>
 
-      {/* Pagination and Info */}
-      <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-        {totalPages > 1 && (
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-sm text-gray-600">
               Mostrando <span className="font-semibold">{(tableState.currentPage * tableState.pageSize) + 1}</span> - <span className="font-semibold">{Math.min((tableState.currentPage + 1) * tableState.pageSize, totalItems)}</span> di <span className="font-semibold">{totalItems}</span> elementi
@@ -257,47 +272,46 @@ export function ModernTable<T extends Record<string, any> = Record<string, any>>
                 disabled={!hasNextPage}
                 className="px-3 py-2"
               >
-                Successiva →
+                Successivo →
               </Button>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Sort Info */}
-        {tableState.sortConfigs.length > 0 && (
-          <div className="mt-3 pt-3 border-t border-gray-200">
-            <div className="text-xs text-gray-600 flex items-center gap-2 flex-wrap">
-              <span className="font-medium">Ordinato per:</span>
-              {tableState.sortConfigs
-                .sort((a, b) => a.priority - b.priority)
-                .map((config, index) => {
-                  const column = columns.find(c => c.key === config.key);
-                  return (
-                    <Badge 
-                      key={config.key} 
-                      variant="secondary" 
-                      className="text-xs flex items-center gap-1 pl-2 pr-1 hover:bg-gray-200 transition-colors"
+      {/* Active Filters */}
+      {Object.keys(tableState.filters).length > 0 && (
+        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm font-medium text-gray-600">Filtri attivi:</span>
+            {Object.entries(tableState.filters).map(([key, values]) => 
+              values.map((value, index) => {
+                return (
+                  <Badge key={`${key}-${index}`} variant="secondary" className="flex items-center gap-1">
+                    <span className="text-xs">{key}: {value}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-4 w-4 p-0 hover:bg-transparent"
+                      onClick={() => {
+                        setTableState(prev => ({
+                          ...prev,
+                          filters: {
+                            ...prev.filters,
+                            [key]: prev.filters[key].filter(v => v !== value)
+                          }
+                        }));
+                      }}
                     >
-                      <span>
-                        {index + 1}. {column?.label} {config.direction === 'asc' ? '↑' : '↓'}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-4 w-4 p-0 hover:bg-gray-300 rounded-full"
-                        onClick={() => removeSortConfig(config.key)}
-                        title={`Rimuovi ordinamento per ${column?.label}`}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </Badge>
-                  );
-                })
-              }
-            </div>
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </Badge>
+                );
+              })
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -309,59 +323,40 @@ interface StatusBadgeProps {
 }
 
 export function StatusBadge({ status, className = '' }: StatusBadgeProps) {
-  const getStatusConfig = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'winner':
-      case 'vincitore':
-        return { 
-          label: 'Vincitore', 
-          className: 'bg-yellow-100 text-yellow-800 border-yellow-200' 
-        };
-      case 'active':
+  const getStatusStyle = (status: string) => {
+    const normalizedStatus = status.toLowerCase();
+    
+    switch (normalizedStatus) {
       case 'attivo':
-        return { 
-          label: 'Attivo', 
-          className: 'bg-green-100 text-green-800 border-green-200' 
-        };
-      case 'passed':
-      case 'superato':
-        return { 
-          label: 'Superato', 
-          className: 'bg-blue-100 text-blue-800 border-blue-200' 
-        };
-      case 'eliminated':
-      case 'eliminato':
-        return { 
-          label: 'Eliminato', 
-          className: 'bg-red-100 text-red-800 border-red-200' 
-        };
-      case 'registration':
-      case 'registrazione':
-        return { 
-          label: 'Registrazione', 
-          className: 'bg-purple-100 text-purple-800 border-purple-200' 
-        };
-      case 'completed':
+      case 'active':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'in_corso':
+      case 'in corso':
+      case 'running':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'completato':
-        return { 
-          label: 'Completato', 
-          className: 'bg-gray-100 text-gray-800 border-gray-200' 
-        };
+      case 'completed':
+      case 'terminato':
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'sospeso':
+      case 'paused':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'eliminato':
+      case 'eliminated':
+        return 'bg-red-100 text-red-800 border-red-200';
+      case 'superato':
+      case 'expired':
+        return 'bg-orange-100 text-orange-800 border-orange-200';
       default:
-        return { 
-          label: status, 
-          className: 'bg-gray-100 text-gray-800 border-gray-200' 
-        };
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
-  const { label, className: statusClassName } = getStatusConfig(status);
+  const statusClassName = getStatusStyle(status);
+  const label = status.charAt(0).toUpperCase() + status.slice(1);
 
   return (
-    <Badge 
-      className={`border font-semibold ${statusClassName} ${className}`}
-      variant="outline"
-    >
+    <Badge className={`border ${statusClassName} ${className}`}>
       {label}
     </Badge>
   );

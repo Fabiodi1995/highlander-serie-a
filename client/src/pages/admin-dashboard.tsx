@@ -1293,11 +1293,11 @@ export default function AdminDashboard() {
 
       <div className="mobile-container">
         {/* Stats Overview */}
-        <div className="stats-grid mb-8">
+        <div className="stats-grid mb-6">
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center">
-                <div className="p-3 rounded-full bg-primary/10">
+                <div className="p-2 sm:p-3 rounded-full bg-primary/10">
                   <Gamepad2 className="h-6 w-6 text-primary" />
                 </div>
                 <div className="ml-4">
