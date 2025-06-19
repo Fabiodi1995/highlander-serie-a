@@ -224,8 +224,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/games/:id/calculate-turn", async (req, res) => {
-    // Temporarily bypass authentication for testing
-    // if (!req.isAuthenticated()) return res.sendStatus(403);
+    console.log("=== CALCULATE TURN ENDPOINT HIT ===");
+    console.log("Game ID:", req.params.id);
+    console.log("Method:", req.method);
+    console.log("Path:", req.path);
     
     try {
       const gameId = parseInt(req.params.id);
