@@ -1298,7 +1298,7 @@ export default function AdminDashboard() {
             <CardContent className="p-4 sm:p-6">
               <div className="flex items-center">
                 <div className="p-2 sm:p-3 rounded-full bg-primary/10">
-                  <Gamepad2 className="h-6 w-6 text-primary" />
+                  <Gamepad2 className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                 </div>
                 <div className="ml-3 sm:ml-4">
                   <div className="text-xl sm:text-2xl font-bold text-gray-900">{totalGames}</div>
