@@ -4,12 +4,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Build outputs
-dist/
-build/
-.next/
-out/
-
 # Environment variables
 .env
 .env.local
@@ -17,15 +11,30 @@ out/
 .env.test.local
 .env.production.local
 
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
 # Logs
 logs
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-lerna-debug.log*
-
-# Runtime data
 pids
 *.pid
 *.seed
@@ -33,20 +42,10 @@ pids
 
 # Coverage directory used by tools like istanbul
 coverage/
-*.lcov
-
-# nyc test coverage
 .nyc_output
 
 # Dependency directories
-node_modules/
 jspm_packages/
-
-# Snowpack dependency directory (https://snowpack.dev/)
-web_modules/
-
-# TypeScript cache
-*.tsbuildinfo
 
 # Optional npm cache directory
 .npm
@@ -69,87 +68,22 @@ web_modules/
 # Yarn Integrity file
 .yarn-integrity
 
-# dotenv environment variables file
-.env
-.env.test
+# Uploads directory
+uploads/*
+!uploads/.gitkeep
 
-# parcel-bundler cache (https://parceljs.org/)
-.cache
-.parcel-cache
+# Backup files
+*.backup
+*.tar.gz
 
-# Next.js build output
-.next
-
-# Nuxt.js build / generate output
-.nuxt
-dist
-
-# Gatsby files
-.cache/
-public
-
-# Vuepress build output
-.vuepress/dist
-
-# Serverless directories
-.serverless/
-
-# FuseBox cache
-.fusebox/
-
-# DynamoDB Local files
-.dynamodb/
-
-# TernJS port file
-.tern-port
-
-# Stores VSCode versions used for testing VSCode extensions
-.vscode-test
-
-# Temporary folders
-tmp/
-temp/
-
-# OS generated files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# IDE files
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
+# Replit specific
+.replit
+replit.nix
 
 # Database files
 *.sqlite
-*.sqlite3
 *.db
 
-# Uploads directory (contains user uploaded files)
-uploads/
-
-# Session store (if using file-based sessions)
-sessions/
-
-# Certificate files
-*.pem
-*.key
-*.crt
-
-# Backup files
-backup/
-
-# Archive files
-*.tar.gz
-*.zip
-*.rar
-
-# Development tools
-.cache/
-.parcel-cache/
+# Temporary files
+tmp/
+temp/
