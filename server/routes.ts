@@ -162,7 +162,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
         
         if (match && match.result) {
-          // Team lost or drew - eliminate ticket
+          // Eliminate tickets for teams that did NOT win (lost or drew)
           const teamWon = (match.homeTeamId === selection.teamId && match.result === 'H') ||
                          (match.awayTeamId === selection.teamId && match.result === 'A');
           
