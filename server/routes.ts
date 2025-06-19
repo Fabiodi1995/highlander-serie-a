@@ -629,6 +629,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Set game deadline
+  app.post("/api/games/:id/set-deadline", async (req, res) => {
+    console.log("SET DEADLINE - Game ID:", req.params.id, "Body:", req.body);
+    
+    try {
+      const gameId = parseInt(req.params.id);
+      const { deadline } = req.body;
+      
+      if (!gameId || isNaN(gameId)) {
+        return res.status(400).json({ message: "Invalid game ID" });
+      }
+      
+      const deadlineDate = deadline ? new Date(deadline) : null;
+      await storage.updateGameDeadline(gameId, deadlineDate);
+      
+      console.log(`Deadline set for game ${gameId}:`, deadlineDate?.toISOString() || 'removed');
+      res.json({ message: "Deadline updated successfully" });
+    } catch (error) {
+      console.error("Error setting deadline:", error);
+      res.status(500).json({ message: "Failed to set deadline" });
+    }
+  });
+
   // Admin-only endpoints for comprehensive data access
   app.get("/api/admin/all-team-selections", async (req, res) => {
     if (!req.isAuthenticated() || !req.user!.isAdmin) return res.sendStatus(403);
