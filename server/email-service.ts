@@ -41,7 +41,7 @@ export class EmailService {
       try {
         const msg = {
           to: data.email,
-          from: process.env.FROM_EMAIL || 'noreply@highlander-app.com',
+          from: process.env.FROM_EMAIL || 'dicostanzo.fabio@yahoo.it',
           subject: 'Conferma il tuo account Highlander',
           html: this.getEmailTemplate(data.username, verificationUrl),
         };
@@ -71,7 +71,7 @@ export class EmailService {
       try {
         const msg = {
           to: data.email,
-          from: process.env.FROM_EMAIL || 'noreply@highlander-app.com',
+          from: process.env.FROM_EMAIL || 'dicostanzo.fabio@yahoo.it',
           subject: 'Reset della Password - Highlander',
           html: this.getPasswordResetTemplate(data.username, resetUrl),
         };
