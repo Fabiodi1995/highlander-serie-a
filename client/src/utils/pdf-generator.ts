@@ -2,27 +2,30 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import type { Game, Ticket, Team, User } from '@shared/schema';
 
-// Import team logos from attached assets
-import atalantaLogo from "@assets/Atalanta_1749734308298.png";
-import bolognaLogo from "@assets/Bologna_1749734308287.png";
-import cagliariLogo from "@assets/Cagliari_1749734308284.png";
-import comoLogo from "@assets/Como_1749734308286.png";
-import empoliLogo from "@assets/Empoli_1749734308299.png";
-import fiorentinaLogo from "@assets/Fiorentina_1749734308290.png";
-import genoaLogo from "@assets/Genoa_1749734308295.png";
-import interLogo from "@assets/Inter_1749734308304.png";
-import juventusLogo from "@assets/Juventus_1749734308303.png";
-import lazioLogo from "@assets/Lazio_1749734308294.png";
-import lecceLogo from "@assets/Lecce_1749734308291.png";
-import milanLogo from "@assets/Milan_1749734308296.png";
-import monzaLogo from "@assets/Monza_1749734308289.png";
-import napoliLogo from "@assets/Napoli_1749734308305.png";
-import parmaLogo from "@assets/Parma_1749734308292.png";
-import romaLogo from "@assets/Roma_1749734308288.png";
-import torinoLogo from "@assets/Torino_1749734308302.png";
-import udineseLogo from "@assets/Udinese_1749734308301.png";
-import veneziaLogo from "@assets/Venezia_1749734308283.png";
-import veronaLogo from "@assets/Verona_1749734308300.png";
+// Import team logos from attached assets - Serie A 2025/26
+import atalantaLogo from "@assets/Atalanta_1750336764083.png";
+import bolognaLogo from "@assets/Bologna_1750336764084.png";
+import cagliariLogo from "@assets/Cagliari_1750336764084.png";
+import comoLogo from "@assets/Como_1750336764084.png";
+import cremoneseLogo from "@assets/Cremonese_1750336764085.png";
+import empoliLogo from "@assets/Empoli_current.png";
+import fiorentinaLogo from "@assets/Fiorentina_1750336764085.png";
+import genoaLogo from "@assets/Genoa_1750336764085.png";
+import interLogo from "@assets/Inter_1750336764086.png";
+import juventusLogo from "@assets/Juventus_1750336764086.png";
+import lazioLogo from "@assets/Lazio_1750336764086.png";
+import lecceLogo from "@assets/Lecce_1750336764087.png";
+import milanLogo from "@assets/Milan_1750336764087.png";
+import monzaLogo from "@assets/Monza_current.png";
+import napoliLogo from "@assets/Napoli_1750336764087.png";
+import parmaLogo from "@assets/Parma_1750336764087.png";
+import pisaLogo from "@assets/Pisa_1750336764088.png";
+import romaLogo from "@assets/Roma_1750336764088.png";
+import sassuoloLogo from "@assets/Sassuolo_1750336764088.png";
+import torinoLogo from "@assets/Torino_1750336764089.png";
+import udineseLogo from "@assets/Udinese_1750336764089.png";
+import veneziaLogo from "@assets/Venezia_current.png";
+import veronaLogo from "@assets/Verona_1750336764089.png";
 
 // Team logo mapping for PDF generation - Complete Serie A 2025/26
 const teamLogoMap: { [key: string]: string } = {
@@ -30,7 +33,7 @@ const teamLogoMap: { [key: string]: string } = {
   "Bologna": bolognaLogo,
   "Cagliari": cagliariLogo,
   "Como": comoLogo,
-  "Empoli": empoliLogo,
+  "Cremonese": cremoneseLogo,
   "Fiorentina": fiorentinaLogo,
   "Genoa": genoaLogo,
   "Hellas Verona": veronaLogo,
@@ -39,13 +42,13 @@ const teamLogoMap: { [key: string]: string } = {
   "Lazio": lazioLogo,
   "Lecce": lecceLogo,
   "Milan": milanLogo,
-  "Monza": monzaLogo,
   "Napoli": napoliLogo,
   "Parma": parmaLogo,
+  "Pisa": pisaLogo,
   "Roma": romaLogo,
+  "Sassuolo": sassuoloLogo,
   "Torino": torinoLogo,
   "Udinese": udineseLogo,
-  "Venezia": veneziaLogo,
   // Additional mappings for database variations
   "Verona": veronaLogo,
   "Hellas": veronaLogo,
