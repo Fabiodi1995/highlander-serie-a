@@ -28,11 +28,17 @@ import TermsOfServicePage from "@/pages/terms-of-service";
 import CookiePolicyPage from "@/pages/cookie-policy";
 import AnalyticsDashboard from "@/pages/analytics-dashboard";
 import CalendarPage from "@/pages/calendar";
+import ForgotPasswordPage from "@/pages/forgot-password";
+import ResetPasswordPage from "@/pages/reset-password";
+import VerifyEmailPage from "@/pages/verify-email";
 
 function Router() {
   return (
     <Switch>
       <Route path="/auth" component={AuthPage} />
+      <Route path="/forgot-password" component={ForgotPasswordPage} />
+      <Route path="/reset-password" component={ResetPasswordPage} />
+      <Route path="/verify-email" component={VerifyEmailPage} />
       <Route path="/privacy-policy" component={PrivacyPolicyPage} />
       <Route path="/terms-of-service" component={TermsOfServicePage} />
       <Route path="/cookie-policy" component={CookiePolicyPage} />
