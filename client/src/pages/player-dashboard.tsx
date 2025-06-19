@@ -468,9 +468,9 @@ function DetailedGameView({
     { key: 'status', header: 'Stato', sortable: true, className: 'text-center' },
     ...gameRounds.map((round, index) => ({
       key: `round_${round}`,
-      label: `R${index + 1} (G${round})`,
+      header: `R${index + 1} (G${round})`,
       sortable: false,
-      align: 'center' as const,
+      className: 'text-center',
       width: '120px'
     }))
   ];
@@ -647,14 +647,14 @@ function GameOverviewTable({
   });
 
   const columns = [
-    { key: 'gameName', label: 'Gioco', sortable: true },
-    { key: 'status', label: 'Stato', sortable: true, align: 'center' as const },
-    { key: 'currentRound', label: 'Giornata', sortable: true, align: 'center' as const },
-    { key: 'countdown', label: 'Tempo Rimasto', sortable: false, align: 'center' as const },
-    { key: 'totalTickets', label: 'Ticket Totali', sortable: true, align: 'center' as const },
-    { key: 'activeTickets', label: 'Ticket Attivi', sortable: true, align: 'center' as const },
-    { key: 'bestPerformance', label: 'Miglior Performance', sortable: true, align: 'center' as const },
-    { key: 'actions', label: 'Azioni', sortable: false, align: 'center' as const }
+    { key: 'gameName', header: 'Gioco', sortable: true },
+    { key: 'status', header: 'Stato', sortable: true, className: 'text-center' },
+    { key: 'currentRound', header: 'Giornata', sortable: true, className: 'text-center' },
+    { key: 'countdown', header: 'Tempo Rimasto', sortable: false, className: 'text-center' },
+    { key: 'totalTickets', header: 'Ticket Totali', sortable: true, className: 'text-center' },
+    { key: 'activeTickets', header: 'Ticket Attivi', sortable: true, className: 'text-center' },
+    { key: 'bestPerformance', header: 'Miglior Performance', sortable: true, className: 'text-center' },
+    { key: 'actions', header: 'Azioni', sortable: false, className: 'text-center' }
   ];
 
   return (
