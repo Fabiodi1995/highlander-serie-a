@@ -99,11 +99,11 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
-      <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
+      <div className="mobile-container">
+        <div className="flex h-16 items-center justify-between min-w-0">
           {/* Logo */}
           <Link href="/">
-            <div className="flex items-center space-x-2 cursor-pointer">
+            <div className="flex items-center space-x-2 cursor-pointer min-w-0 flex-shrink-0">
               <div className="relative">
                 <img 
                   src={highlanderLogo} 
@@ -138,7 +138,7 @@ export function Header() {
 
           {/* User Menu */}
           {user ? (
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
               {/* Notifications */}
               <NotificationCenter
                 notifications={notifications}
@@ -147,10 +147,12 @@ export function Header() {
               />
 
               {/* Theme Toggle */}
-              <ThemeToggle />
+              <div className="hidden sm:block">
+                <ThemeToggle />
+              </div>
 
               {/* User Role Badge */}
-              <Badge variant={user.isAdmin ? "default" : "secondary"} className="hidden sm:flex">
+              <Badge variant={user.isAdmin ? "default" : "secondary"} className="hidden lg:flex">
                 {user.isAdmin ? "Admin" : "Giocatore"}
               </Badge>
 

@@ -14,14 +14,14 @@ export function Layout({ children }: LayoutProps) {
   const { user } = useAuth();
 
   return (
-    <div className="min-h-screen flex flex-col safe-area-top">
+    <div className="min-h-screen flex flex-col safe-area-top overflow-x-hidden">
       <Header />
       {user && (
         <div className="sticky top-16 z-40">
           <EmailVerificationBanner />
         </div>
       )}
-      <main className="flex-1 bg-gray-50 dark:bg-gray-900 pb-20 md:pb-0">
+      <main className="flex-1 bg-gray-50 dark:bg-gray-900 pb-20 md:pb-0 overflow-x-hidden">
         {children}
       </main>
       {user && <Footer />}
