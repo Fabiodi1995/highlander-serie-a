@@ -110,13 +110,15 @@ function PlayerHistoryTable({
   allTickets, 
   allTeamSelections, 
   teams,
-  users 
+  users,
+  selectionsByTicket
 }: { 
   game: Game; 
   allTickets: any[] | undefined; 
-  allTeamSelections: any[] | undefined; 
+  allTeamSelections?: any[] | undefined; 
   teams: Team[] | undefined; 
   users: UserType[] | undefined;
+  selectionsByTicket?: any;
 }) {
   const { user: currentUser } = useAuth();
   
@@ -666,15 +668,31 @@ function GameOverviewTable({
           case 'currentRound':
             return <span className="font-mono">Giornata {item.currentRound}</span>;
           case 'countdown':
-            return item.selectionDeadline ? (
-              <CountdownDisplay 
-                deadline={item.selectionDeadline ? String(item.selectionDeadline) : null} 
-                size="sm" 
-                showIcon={true}
-              />
-            ) : (
-              <span className="text-gray-400 text-xs">Nessuna deadline</span>
-            );
+            // Accedo al gioco originale per controllare il roundStatus
+            const game = item.gameData.game;
+            
+            // Se il round è bloccato, mostra sempre "Scaduto"
+            if (game.roundStatus === "selection_locked") {
+              return (
+                <div className="flex items-center space-x-1 text-red-600 justify-center">
+                  <span className="text-xs font-semibold">Scaduto</span>
+                </div>
+              );
+            }
+            
+            // Se c'è una deadline attiva E il round è aperto, mostra il countdown
+            if (item.selectionDeadline && game.roundStatus === "selection_open") {
+              return (
+                <CountdownDisplay 
+                  deadline={String(item.selectionDeadline)} 
+                  size="sm" 
+                  showIcon={true}
+                />
+              );
+            }
+            
+            // Nessuna deadline impostata o round non in fase di selezione
+            return <span className="text-gray-400 text-xs">Nessuna deadline</span>;
           case 'totalTickets':
             return <span className="font-semibold">{item.totalTickets}</span>;
           case 'activeTickets':

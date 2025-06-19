@@ -244,6 +244,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get player history for a specific game (for player dashboard)
+  app.get("/api/games/:id/player-history", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const gameId = parseInt(req.params.id);
+      
+      // Verify game exists
+      const game = await storage.getGame(gameId);
+      if (!game) {
+        return res.status(404).json({ message: "Game not found" });
+      }
+      
+      // Check if user is participant or admin
+      const participants = await storage.getGameParticipants(gameId);
+      const isParticipant = participants.some(p => p.userId === req.user!.id);
+      const isAdmin = req.user!.isAdmin;
+      
+      if (!isParticipant && !isAdmin) {
+        return res.status(403).json({ message: "Access denied - not a participant" });
+      }
+      
+      // Get all tickets for this game
+      const gameTickets = await storage.getTicketsByGame(gameId);
+      
+      // Get all users who have tickets in this game
+      const userIds = Array.from(new Set(gameTickets.map(ticket => ticket.userId)));
+      const users = await Promise.all(userIds.map(id => storage.getUser(id)));
+      const usersMap = users.reduce((acc: any, user) => {
+        if (user) acc[user.id] = user;
+        return acc;
+      }, {});
+      
+      // Enhance tickets with user data
+      const ticketsWithUsers = gameTickets.map(ticket => ({
+        ...ticket,
+        user: usersMap[ticket.userId]
+      }));
+      
+      // Get all team selections for this game
+      const allSelections = [];
+      for (const ticket of gameTickets) {
+        const selections = await storage.getTeamSelectionsByTicket(ticket.id);
+        allSelections.push(...selections);
+      }
+      
+      // Group selections by ticket and round for easy access
+      const selectionsByTicket = allSelections.reduce((acc: any, selection: any) => {
+        if (!acc[selection.ticketId]) {
+          acc[selection.ticketId] = {};
+        }
+        acc[selection.ticketId][selection.round] = selection;
+        return acc;
+      }, {});
+      
+      res.json({
+        game,
+        tickets: ticketsWithUsers,
+        selections: selectionsByTicket
+      });
+    } catch (error) {
+      console.error("Error fetching player history:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
   // Get all tickets for a game (for detailed view)
   app.get("/api/games/:id/all-tickets", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
@@ -703,6 +769,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching all tickets:", error);
       res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  // Matches API - Get all matches for all rounds (for calendar)
+  app.get("/api/matches/all", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const { db } = await import('./db');
+      const { matches } = await import('../shared/schema');
+      
+      // Get all matches from database
+      const allMatches = await db.select().from(matches).orderBy(matches.round, matches.id);
+      
+      // If no matches in database, load some initial rounds
+      if (!allMatches || allMatches.length === 0) {
+        console.log('No matches found in database, loading initial rounds...');
+        // Load first 5 rounds as a starting point
+        for (let round = 1; round <= 5; round++) {
+          await loadSerieAMatchesForRound(round);
+        }
+        
+        // Fetch matches again
+        const updatedMatches = await db.select().from(matches).orderBy(matches.round, matches.id);
+        res.json(updatedMatches || []);
+      } else {
+        res.json(allMatches);
+      }
+    } catch (error) {
+      console.error("Error fetching all matches:", error);
+      res.status(500).json({ message: "Failed to fetch all matches" });
     }
   });
 
