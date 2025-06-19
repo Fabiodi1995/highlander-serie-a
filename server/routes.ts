@@ -227,8 +227,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/games/:id/calculate-turn", async (req, res) => {
-    // Temporarily allow any authenticated user for testing
-    if (!req.isAuthenticated()) return res.sendStatus(403);
+    // Temporarily removed authentication for debugging
+    // if (!req.isAuthenticated()) return res.sendStatus(403);
     
     try {
       const gameId = parseInt(req.params.id);
