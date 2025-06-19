@@ -450,8 +450,8 @@ function TicketSelectionCard({
           const team = safeTeams.find(t => t && t.id === selection.teamId);
           return team?.name || null;
         })
-        .filter(Boolean)
-        .join(", ")
+        .filter((name): name is string => Boolean(name))
+        .join(", ") || "Nessuna"
     : "Nessuna";
 
   return (
@@ -482,19 +482,16 @@ function TicketSelectionCard({
             </SelectTrigger>
             <SelectContent>
               {availableTeams.length > 0 ? (
-                availableTeams.map((team) => {
-                  if (!team || typeof team.id !== 'number' || !team.name) {
-                    return null;
-                  }
-                  return (
+                availableTeams
+                  .filter((team) => team && typeof team.id === 'number' && team.name)
+                  .map((team) => (
                     <SelectItem key={team.id} value={team.id.toString()}>
                       <div className="flex items-center gap-2">
                         <TeamLogo team={team} size="sm" />
                         <span>{team.name}</span>
                       </div>
                     </SelectItem>
-                  );
-                })
+                  ))
               ) : (
                 <SelectItem value="no-teams" disabled>
                   Nessuna squadra disponibile
