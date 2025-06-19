@@ -5,6 +5,7 @@ import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
+import { emailService } from "./email-service";
 import { User as SelectUser } from "@shared/schema";
 
 declare global {
@@ -85,6 +86,31 @@ export function setupAuth(app: Express) {
         ...req.body,
         password: await hashPassword(req.body.password),
       });
+
+      // Send verification email
+      if (!user.emailVerified) {
+        try {
+          const verificationToken = emailService.generateVerificationToken();
+          const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+          await storage.createEmailVerificationToken({
+            userId: user.id,
+            token: verificationToken,
+            email: user.email,
+            expiresAt
+          });
+
+          await emailService.sendVerificationEmail({
+            userId: user.id,
+            email: user.email,
+            username: user.username,
+            token: verificationToken
+          });
+        } catch (emailError) {
+          console.error('Error sending verification email:', emailError);
+          // Continue with registration even if email fails
+        }
+      }
 
       req.login(user, (err) => {
         if (err) return next(err);

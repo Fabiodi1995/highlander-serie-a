@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { insertGameSchema, insertTeamSelectionSchema, tickets } from "@shared/schema";
+import { insertGameSchema, insertTeamSelectionSchema, tickets, users } from "@shared/schema";
 import { checkGameEndConditions, finalizeGame } from "./game-logic";
 import { checkExpiredDeadlines, validateSelectionDeadline } from "./timer-service";
 import { emailService } from "./email-service";
@@ -1301,7 +1301,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Update user as verified
-      await storage.updateUser(verificationToken.userId, { emailVerified: true });
+      await db.update(users)
+        .set({ emailVerified: true })
+        .where(eq(users.id, verificationToken.userId));
 
       // Delete token
       await storage.deleteEmailVerificationToken(token);
