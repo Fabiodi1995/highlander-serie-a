@@ -1421,8 +1421,8 @@ export default function AdminDashboard() {
                             );
                           }
                           
-                          // Se c'è una deadline attiva, mostra il countdown
-                          if (game.selectionDeadline) {
+                          // Se c'è una deadline attiva E il round è aperto, mostra il countdown
+                          if (game.selectionDeadline && game.roundStatus === "selection_open") {
                             return (
                               <CountdownDisplay 
                                 deadline={String(game.selectionDeadline)} 
@@ -1432,7 +1432,7 @@ export default function AdminDashboard() {
                             );
                           }
                           
-                          // Nessuna deadline impostata
+                          // Nessuna deadline impostata o round non in fase di selezione
                           return <span className="text-gray-400 text-xs">Nessuna deadline</span>;
                         case 'createdAt':
                           return <span className="text-sm">{new Date(game.createdAt).toLocaleDateString('it-IT')}</span>;
