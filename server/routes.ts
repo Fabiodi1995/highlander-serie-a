@@ -223,11 +223,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // TEST ENDPOINT for debugging
+  app.post("/api/test/calculate/:id", async (req, res) => {
+    console.log("TEST ENDPOINT HIT - Game:", req.params.id);
+    res.json({ message: "Test endpoint working", gameId: req.params.id });
+  });
+
   app.post("/api/games/:id/calculate-turn", async (req, res) => {
-    console.log("=== CALCULATE TURN ENDPOINT HIT ===");
-    console.log("Game ID:", req.params.id);
-    console.log("Method:", req.method);
-    console.log("Path:", req.path);
+    console.log("CALCULATE TURN - Game ID:", req.params.id);
+    console.log("Authenticated:", req.isAuthenticated?.());
+    console.log("User:", req.user?.username || "none");
     
     try {
       const gameId = parseInt(req.params.id);
@@ -240,7 +245,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           throw new Error("Game not found");
         }
 
-        // Any admin can calculate turns (removed ownership restriction)
+        console.log("Game found:", game.name, "Status:", game.status, "Round Status:", game.roundStatus);
 
         if (game.status !== "active") {
           throw new Error("Game is not active");
