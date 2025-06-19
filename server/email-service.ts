@@ -19,11 +19,10 @@ export class EmailService {
   private isConfigured: boolean;
 
   constructor() {
-    this.baseUrl = process.env.REPLIT_DOMAINS 
-      ? `https://${process.env.REPLIT_DOMAINS.split(',')[0]}` 
-      : (process.env.NODE_ENV === 'production' 
-          ? 'https://yourdomain.com' 
-          : 'http://localhost:5000');
+    this.baseUrl = process.env.BASE_URL || 
+      (process.env.NODE_ENV === 'production' 
+        ? 'https://tuodominio.com' 
+        : 'http://localhost:5000');
     
     const apiKey = process.env.SENDGRID_API_KEY;
     this.isConfigured = !!apiKey;
