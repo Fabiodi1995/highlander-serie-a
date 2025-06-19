@@ -782,10 +782,21 @@ export default function AdminDashboard() {
 
   const calculateTurnMutation = useMutation({
     mutationFn: async (gameId: number) => {
-      const res = await apiRequest("POST", `/api/games/${gameId}/calculate-turn`);
-      return await res.json();
+      console.log("calculateTurnMutation.mutationFn called with gameId:", gameId);
+      try {
+        console.log("Making API request to:", `/api/games/${gameId}/calculate-turn`);
+        const res = await apiRequest("POST", `/api/games/${gameId}/calculate-turn`);
+        console.log("API response status:", res.status);
+        const data = await res.json();
+        console.log("API response data:", data);
+        return data;
+      } catch (error) {
+        console.error("Error in calculateTurnMutation.mutationFn:", error);
+        throw error;
+      }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("calculateTurnMutation.onSuccess called with data:", data);
       queryClient.invalidateQueries({ queryKey: ["/api/games"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/all-team-selections"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/all-tickets"] });
@@ -797,6 +808,7 @@ export default function AdminDashboard() {
       });
     },
     onError: (error: Error) => {
+      console.error("calculateTurnMutation.onError called with error:", error);
       toast({
         title: "Errore",
         description: error.message,
