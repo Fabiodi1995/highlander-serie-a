@@ -120,7 +120,7 @@ export class EmailService {
             <p>Per completare la registrazione e iniziare a giocare, conferma il tuo indirizzo email cliccando sul pulsante qui sotto:</p>
             
             <div style="text-align: center; margin: 30px 0;">
-              <a href="${verificationUrl}" class="button">Conferma Email</a>
+              <a href="${verificationUrl}" style="display: inline-block; background: #059669; color: white !important; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);">Conferma Email</a>
             </div>
             
             <p><strong>Cosa ti aspetta:</strong></p>
@@ -177,7 +177,7 @@ export class EmailService {
             <p>Per impostare una nuova password, clicca sul pulsante qui sotto:</p>
             
             <div style="text-align: center; margin: 30px 0;">
-              <a href="${resetUrl}" class="button">Reset Password</a>
+              <a href="${resetUrl}" style="display: inline-block; background: #dc2626; color: white !important; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);">Reset Password</a>
             </div>
             
             <p><strong>Importante:</strong></p>
