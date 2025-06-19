@@ -246,7 +246,10 @@ function MatchResultsForm({
             {updateMatchResultMutation.isPending ? "Salvando..." : "Salva Risultati"}
           </Button>
           <Button 
-            onClick={onComplete}
+            onClick={() => {
+              console.log("Conferma e Calcola Round clicked");
+              onComplete();
+            }}
             disabled={!allMatchesCompleted}
             className="bg-green-600 hover:bg-green-700 text-white"
           >
@@ -1132,8 +1135,12 @@ export default function AdminDashboard() {
           <MatchResultsForm 
             game={selectedGameForCalculation} 
             onComplete={() => {
+              console.log("onComplete called for game:", selectedGameForCalculation?.id);
               if (selectedGameForCalculation) {
+                console.log("Calling calculateTurnMutation.mutate with gameId:", selectedGameForCalculation.id);
                 calculateTurnMutation.mutate(selectedGameForCalculation.id);
+              } else {
+                console.error("selectedGameForCalculation is null");
               }
             }}
             onCancel={() => setShowMatchResults(false)}
