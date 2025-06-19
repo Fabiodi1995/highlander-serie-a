@@ -5,10 +5,12 @@ import atalantaLogo from "../assets/team-logos/atalanta.png";
 import bolognaLogo from "../assets/team-logos/bologna.png";
 import cagliariLogo from "../assets/team-logos/cagliari.png";
 import comoLogo from "../assets/team-logos/como.png";
+import cremoneseLogo from "../assets/team-logos/cremonese.png";
 import empoliLogo from "../assets/team-logos/empoli.png";
 import fiorentinaLogo from "../assets/team-logos/fiorentina.png";
 import genoaLogo from "../assets/team-logos/genoa.png";
 import hellasVeronaLogo from "../assets/team-logos/hellas-verona.png";
+import veronaLogo from "../assets/team-logos/verona.png";
 import interLogo from "../assets/team-logos/inter.png";
 import juventusLogo from "../assets/team-logos/juventus.png";
 import lazioLogo from "../assets/team-logos/lazio.png";
@@ -17,7 +19,9 @@ import milanLogo from "../assets/team-logos/milan.png";
 import monzaLogo from "../assets/team-logos/monza.png";
 import napoliLogo from "../assets/team-logos/napoli.png";
 import parmaLogo from "../assets/team-logos/parma.png";
+import pisaLogo from "../assets/team-logos/pisa.png";
 import romaLogo from "../assets/team-logos/roma.png";
+import sassuoloLogo from "../assets/team-logos/sassuolo.png";
 import torinoLogo from "../assets/team-logos/torino.png";
 import udineseLogo from "../assets/team-logos/udinese.png";
 import veneziaLogo from "../assets/team-logos/venezia.png";
@@ -34,12 +38,12 @@ const getTeamLogoPath = (teamName: string): string => {
     "Bologna": bolognaLogo,
     "Cagliari": cagliariLogo,
     "Como": comoLogo,
-    "Cremonese": empoliLogo, // Fallback for now
+    "Cremonese": cremoneseLogo,
     "Empoli": empoliLogo,
     "Fiorentina": fiorentinaLogo,
     "Genoa": genoaLogo,
-    "Hellas Verona": hellasVeronaLogo,
-    "Verona": hellasVeronaLogo, // Alternative name
+    "Hellas Verona": veronaLogo,
+    "Verona": veronaLogo,
     "Inter": interLogo,
     "Juventus": juventusLogo,
     "Lazio": lazioLogo,
@@ -48,9 +52,9 @@ const getTeamLogoPath = (teamName: string): string => {
     "Monza": monzaLogo,
     "Napoli": napoliLogo,
     "Parma": parmaLogo,
-    "Pisa": parmaLogo, // Fallback for now
+    "Pisa": pisaLogo,
     "Roma": romaLogo,
-    "Sassuolo": genoaLogo, // Fallback for now
+    "Sassuolo": sassuoloLogo,
     "Torino": torinoLogo,
     "Udinese": udineseLogo,
     "Venezia": veneziaLogo,
