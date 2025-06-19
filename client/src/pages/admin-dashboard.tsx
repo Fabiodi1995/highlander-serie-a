@@ -126,7 +126,12 @@ function MatchResultsForm({
       });
       
       // Refresh matches to check completion status
-      queryClient.invalidateQueries({ queryKey: ["/api/matches", game?.currentRound] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/matches", game?.currentRound] });
+      
+      // Force refresh to ensure allMatchesCompleted is updated
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["/api/matches", game?.currentRound] });
+      }, 500);
       
     } catch (error) {
       console.error("Error submitting results:", error);
@@ -218,23 +223,7 @@ function MatchResultsForm({
         ))}
       </div>
       
-      <div className="flex justify-between items-center pt-4">
-        <Button 
-          variant="secondary" 
-          onClick={() => {
-            const sampleResults: Record<number, { homeScore: number; awayScore: number }> = {};
-            matches.forEach((match) => {
-              sampleResults[match.id] = {
-                homeScore: Math.floor(Math.random() * 4),
-                awayScore: Math.floor(Math.random() * 4)
-              };
-            });
-            setMatchResults(sampleResults);
-          }}
-        >
-          Risultati di Esempio
-        </Button>
-        
+      <div className="flex justify-end items-center pt-4">
         <div className="flex space-x-2">
           <Button variant="outline" onClick={onCancel}>
             Annulla
