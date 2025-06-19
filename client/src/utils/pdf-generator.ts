@@ -34,6 +34,7 @@ const teamLogoMap: { [key: string]: string } = {
   "Cagliari": cagliariLogo,
   "Como": comoLogo,
   "Cremonese": cremoneseLogo,
+  "Empoli": empoliLogo,
   "Fiorentina": fiorentinaLogo,
   "Genoa": genoaLogo,
   "Hellas Verona": veronaLogo,
@@ -42,6 +43,7 @@ const teamLogoMap: { [key: string]: string } = {
   "Lazio": lazioLogo,
   "Lecce": lecceLogo,
   "Milan": milanLogo,
+  "Monza": monzaLogo,
   "Napoli": napoliLogo,
   "Parma": parmaLogo,
   "Pisa": pisaLogo,
@@ -49,6 +51,7 @@ const teamLogoMap: { [key: string]: string } = {
   "Sassuolo": sassuoloLogo,
   "Torino": torinoLogo,
   "Udinese": udineseLogo,
+  "Venezia": veneziaLogo,
   // Additional mappings for database variations
   "Verona": veronaLogo,
   "Hellas": veronaLogo,
@@ -69,9 +72,12 @@ const teamLogoMap: { [key: string]: string } = {
   "US Lecce": lecceLogo,
   "AC Monza": monzaLogo,
   "Parma Calcio": parmaLogo,
+  "Pisa SC": pisaLogo,
+  "US Sassuolo": sassuoloLogo,
   "Torino FC": torinoLogo,
   "Udinese Calcio": udineseLogo,
-  "Venezia FC": veneziaLogo
+  "Venezia FC": veneziaLogo,
+  "US Cremonese": cremoneseLogo
 };
 
 // Colors for different ticket statuses (light colors to not interfere with logos)
