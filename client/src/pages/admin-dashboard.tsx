@@ -1135,11 +1135,34 @@ export default function AdminDashboard() {
           </DialogHeader>
           <MatchResultsForm 
             game={selectedGameForCalculation} 
-            onComplete={() => {
+            onComplete={async () => {
               console.log("onComplete called for game:", selectedGameForCalculation?.id);
               if (selectedGameForCalculation) {
-                console.log("Calling calculateTurnMutation.mutate with gameId:", selectedGameForCalculation.id);
-                calculateTurnMutation.mutate(selectedGameForCalculation.id);
+                try {
+                  console.log("Making direct API call to calculate turn");
+                  const res = await apiRequest("POST", `/api/games/${selectedGameForCalculation.id}/calculate-turn`);
+                  const data = await res.json();
+                  console.log("Direct API call successful:", data);
+                  
+                  // Update UI state
+                  queryClient.invalidateQueries({ queryKey: ["/api/games"] });
+                  queryClient.invalidateQueries({ queryKey: ["/api/admin/all-team-selections"] });
+                  queryClient.invalidateQueries({ queryKey: ["/api/admin/all-tickets"] });
+                  setShowMatchResults(false);
+                  setSelectedGameForCalculation(null);
+                  
+                  toast({
+                    title: "Successo",
+                    description: "Giornata calcolata con successo",
+                  });
+                } catch (error) {
+                  console.error("Error in direct API call:", error);
+                  toast({
+                    title: "Errore",
+                    description: error instanceof Error ? error.message : "Errore sconosciuto",
+                    variant: "destructive",
+                  });
+                }
               } else {
                 console.error("selectedGameForCalculation is null");
               }
