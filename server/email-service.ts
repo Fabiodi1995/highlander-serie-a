@@ -1,4 +1,5 @@
 import { randomBytes } from 'crypto';
+import sgMail from '@sendgrid/mail';
 
 interface EmailVerificationData {
   userId: number;
@@ -7,14 +8,25 @@ interface EmailVerificationData {
   token: string;
 }
 
-// Mock email service - replace with SendGrid when API key is available
+interface PasswordResetData {
+  email: string;
+  username: string;
+  token: string;
+}
+
 export class EmailService {
   private baseUrl: string;
+  private isConfigured: boolean;
 
   constructor() {
     this.baseUrl = process.env.NODE_ENV === 'production' 
-      ? 'https://highlander.replit.app' 
+      ? 'https://yourdomain.com' 
       : 'http://localhost:5000';
+    
+    this.isConfigured = !!process.env.SENDGRID_API_KEY;
+    if (this.isConfigured && process.env.SENDGRID_API_KEY) {
+      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+    }
   }
 
   generateVerificationToken(): string {
@@ -22,22 +34,18 @@ export class EmailService {
   }
 
   async sendVerificationEmail(data: EmailVerificationData): Promise<boolean> {
-    const verificationUrl = `${this.baseUrl}/api/verify-email/${data.token}`;
+    const verificationUrl = `${this.baseUrl}/verify-email?token=${data.token}`;
     
-    // If SendGrid API key is available, send real email
-    if (process.env.SENDGRID_API_KEY) {
+    if (this.isConfigured) {
       try {
-        const sgMail = await import('@sendgrid/mail');
-        sgMail.default.setApiKey(process.env.SENDGRID_API_KEY);
-
         const msg = {
           to: data.email,
-          from: 'noreply@highlander-app.com',
+          from: process.env.FROM_EMAIL || 'noreply@highlander-app.com',
           subject: 'Conferma il tuo account Highlander',
           html: this.getEmailTemplate(data.username, verificationUrl),
         };
 
-        await sgMail.default.send(msg);
+        await sgMail.send(msg);
         console.log(`Verification email sent to ${data.email}`);
         return true;
       } catch (error) {
