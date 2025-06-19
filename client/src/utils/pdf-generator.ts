@@ -114,11 +114,11 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
   const teamLogosBase64: { [key: string]: string } = {};
   console.log('Loading team logos...');
   
-  // Load logos for all teams in the game data plus ensure we have all Serie A logos
+  // Load logos for all Serie A 2025/26 teams (nuove squadre promosse: Pisa, Cremonese, Sassuolo)
   const teamSet = new Set(teams.map(t => t.name));
-  const allTeamNames = ["Atalanta", "Bologna", "Cagliari", "Como", "Empoli", "Fiorentina", 
+  const allTeamNames = ["Atalanta", "Bologna", "Cagliari", "Como", "Cremonese", "Fiorentina", 
                        "Genoa", "Hellas Verona", "Inter", "Juventus", "Lazio", "Lecce", 
-                       "Milan", "Monza", "Napoli", "Parma", "Roma", "Torino", "Udinese", "Venezia"];
+                       "Milan", "Napoli", "Parma", "Pisa", "Roma", "Sassuolo", "Torino", "Udinese"];
   
   allTeamNames.forEach(name => teamSet.add(name));
 
@@ -291,27 +291,31 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
     }
   };
 
-  // Fallback function for team display
+  // Fallback function for team display - mostra codice a 3 lettere quando logo non disponibile
   const drawTeamFallback = (team: any, x: number, y: number, size: number) => {
     const color = getTeamColor(team.name);
     (doc as any).setFillColor(color[0], color[1], color[2]);
     (doc as any).circle(x + size/2, y + size/2, size/2, 'F');
     
+    // Codice squadra a 3 lettere in bianco
     (doc as any).setTextColor(255, 255, 255);
-    (doc as any).setFontSize(4);
+    (doc as any).setFontSize(size > 4 ? 4 : 3);
     (doc as any).setFont('helvetica', 'bold');
-    const textWidth = (doc as any).getTextWidth(team.code);
-    (doc as any).text(team.code, x + size/2 - textWidth/2, y + size/2 + 1);
+    
+    // Genera codice a 3 lettere se non presente
+    const teamCode = team.code || team.name.substring(0, 3).toUpperCase();
+    const textWidth = (doc as any).getTextWidth(teamCode);
+    (doc as any).text(teamCode, x + size/2 - textWidth/2, y + size/2 + 1);
   };
 
-  // Function to get team colors for visual representation
+  // Function to get team colors for visual representation - Serie A 2025/26
   const getTeamColor = (teamName: string) => {
     const colorMap: { [key: string]: [number, number, number] } = {
       "Atalanta": [0, 70, 135],
       "Bologna": [150, 30, 45],
       "Cagliari": [200, 16, 46],
       "Como": [0, 85, 164],
-      "Empoli": [0, 100, 200],
+      "Cremonese": [170, 30, 30],     // Nuova promossa
       "Fiorentina": [103, 58, 183],
       "Genoa": [220, 20, 60],
       "Hellas Verona": [255, 235, 59],
@@ -320,13 +324,13 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
       "Lazio": [135, 206, 250],
       "Lecce": [255, 235, 59],
       "Milan": [172, 30, 45],
-      "Monza": [255, 0, 0],
       "Napoli": [135, 206, 250],
       "Parma": [255, 193, 7],
+      "Pisa": [0, 40, 120],            // Nuova promossa
       "Roma": [134, 24, 56],
+      "Sassuolo": [0, 120, 40],        // Nuova promossa
       "Torino": [140, 20, 75],
       "Udinese": [0, 0, 0],
-      "Venezia": [255, 152, 0],
     };
     return colorMap[teamName] || [128, 128, 128];
   };
@@ -628,15 +632,15 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
   doc.setTextColor(30, 41, 59);
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.text('Legenda Squadre Serie A 2024/25', 20, finalY + 8);
+  doc.text('Legenda Squadre Serie A 2025/26', 20, finalY + 8);
   
-  // Show all Serie A teams (all 20 teams) with modern styling  
+  // Show all Serie A 2025/26 teams (nuove squadre promosse: Pisa, Cremonese, Sassuolo)
   const allSerieATeamsForLegend = [
     { name: "Atalanta", code: "ATA" },
     { name: "Bologna", code: "BOL" },
     { name: "Cagliari", code: "CAG" },
     { name: "Como", code: "COM" },
-    { name: "Empoli", code: "EMP" },
+    { name: "Cremonese", code: "CRE" },
     { name: "Fiorentina", code: "FIO" },
     { name: "Genoa", code: "GEN" },
     { name: "Hellas Verona", code: "VER" },
@@ -645,13 +649,13 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
     { name: "Lazio", code: "LAZ" },
     { name: "Lecce", code: "LEC" },
     { name: "Milan", code: "MIL" },
-    { name: "Monza", code: "MON" },
     { name: "Napoli", code: "NAP" },
     { name: "Parma", code: "PAR" },
+    { name: "Pisa", code: "PIS" },
     { name: "Roma", code: "ROM" },
+    { name: "Sassuolo", code: "SAS" },
     { name: "Torino", code: "TOR" },
-    { name: "Udinese", code: "UDI" },
-    { name: "Venezia", code: "VEN" }
+    { name: "Udinese", code: "UDI" }
   ].sort((a, b) => a.name.localeCompare(b.name));
   
   doc.setFontSize(8);
