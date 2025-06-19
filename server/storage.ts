@@ -1,8 +1,10 @@
 import { 
   users, games, teams, tickets, matches, teamSelections, gameParticipants, userStats, timerLogs,
+  emailVerificationTokens, passwordResetTokens,
   type User, type InsertUser, type Game, type InsertGame, type Team, 
   type Ticket, type Match, type TeamSelection, type InsertTeamSelection,
-  type GameParticipant
+  type GameParticipant, type EmailVerificationToken, type InsertEmailVerificationToken,
+  type PasswordResetToken, type InsertPasswordResetToken
 } from "@shared/schema";
 import { db, safeDbQuery } from "./db";
 import { eq, and, desc, asc, sql, inArray, isNotNull } from "drizzle-orm";
@@ -87,6 +89,19 @@ export interface IStorage {
   
   // Timer logs
   createTimerLog(gameId: number, action: string, previousDeadline: Date | null, newDeadline: Date | null, adminId: number | null, details?: any): Promise<void>;
+  
+  // Email verification tokens
+  createEmailVerificationToken(token: InsertEmailVerificationToken): Promise<EmailVerificationToken>;
+  getEmailVerificationToken(token: string): Promise<EmailVerificationToken | undefined>;
+  deleteEmailVerificationToken(token: string): Promise<void>;
+  deleteExpiredEmailVerificationTokens(): Promise<void>;
+  
+  // Password reset tokens
+  createPasswordResetToken(token: InsertPasswordResetToken): Promise<PasswordResetToken>;
+  getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined>;
+  markPasswordResetTokenAsUsed(token: string): Promise<void>;
+  deletePasswordResetToken(token: string): Promise<void>;
+  deleteExpiredPasswordResetTokens(): Promise<void>;
   
   sessionStore: any;
 }
