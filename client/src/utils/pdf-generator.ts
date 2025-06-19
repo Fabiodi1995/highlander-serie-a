@@ -665,10 +665,13 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
     const x = 20 + (index % 4) * 65;
     const y = finalY + 12 + Math.floor(index / 4) * 5;
     
-    // Draw team logo using PNG image - smaller size for legend
+    // Draw team logo using PNG image or fallback - smaller size for legend
     drawTeamLogo(team, x, y - 2, 4);
     
-    // Add team name next to logo, aligned with logo center
+    // Always add team name next to logo, aligned with logo center
+    doc.setTextColor(71, 85, 105);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
     doc.text(`${team.code} - ${team.name}`, x + 6, y + 1);
   });
   

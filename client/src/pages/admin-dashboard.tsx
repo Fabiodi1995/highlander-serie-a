@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, LogOut, Plus, Gamepad2, Play, Users, TicketIcon, Calculator, Settings, Trash2, Trophy, Target, CheckCircle, Shield, Download, Clock, Calendar } from "lucide-react";
+import { User, LogOut, Plus, Gamepad2, Play, Users, TicketIcon, Calculator, Settings, Trash2, Trophy, Target, CheckCircle, Shield, Download, Clock, Calendar, AlertCircle } from "lucide-react";
 import { Link } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -1411,6 +1411,16 @@ export default function AdminDashboard() {
                             <span className="text-gray-500">Non Iniziato</span> : 
                             <span className="font-mono">Giornata {game.currentRound}</span>;
                         case 'countdown':
+                          // Se il round è bloccato e non c'è deadline, mostra "Scaduto"
+                          if (!game.selectionDeadline && game.roundStatus === "selection_locked") {
+                            return (
+                              <div className="flex items-center space-x-1 text-red-600">
+                                <AlertCircle className="h-4 w-4" />
+                                <span className="text-xs font-semibold">Scaduto</span>
+                              </div>
+                            );
+                          }
+                          
                           return game.selectionDeadline ? (
                             <CountdownDisplay 
                               deadline={game.selectionDeadline ? String(game.selectionDeadline) : null} 
