@@ -39,10 +39,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.isAuthenticated() || !req.user!.isAdmin) return res.sendStatus(403);
     
     try {
-      const gameData = insertGameSchema.parse({
+      const gameData = {
         ...req.body,
         createdBy: req.user!.id
-      });
+      };
       
       const game = await storage.createGame(gameData);
       res.status(201).json(game);
@@ -125,6 +125,155 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting game:", error);
       res.status(500).json({ message: "Failed to delete game" });
+    }
+  });
+
+  // Get game details
+  app.get("/api/games/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const gameId = parseInt(req.params.id);
+      const game = await storage.getGame(gameId);
+      
+      if (!game) {
+        return res.status(404).json({ message: "Game not found" });
+      }
+      
+      res.json(game);
+    } catch (error) {
+      console.error("Error fetching game:", error);
+      res.status(500).json({ message: "Failed to fetch game" });
+    }
+  });
+
+  // Join game
+  app.post("/api/games/:id/join", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const gameId = parseInt(req.params.id);
+      const userId = req.user!.id;
+      
+      const game = await storage.getGame(gameId);
+      if (!game || game.status !== "waiting") {
+        return res.status(400).json({ message: "Cannot join this game" });
+      }
+      
+      await storage.addGameParticipant(gameId, userId);
+      await storage.createTicket(gameId, userId);
+      
+      res.json({ message: "Successfully joined game" });
+    } catch (error) {
+      console.error("Error joining game:", error);
+      res.status(500).json({ message: "Failed to join game" });
+    }
+  });
+
+  // Get game participants
+  app.get("/api/games/:id/participants", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const gameId = parseInt(req.params.id);
+      const participants = await storage.getGameParticipants(gameId);
+      res.json(participants);
+    } catch (error) {
+      console.error("Error fetching participants:", error);
+      res.status(500).json({ message: "Failed to fetch participants" });
+    }
+  });
+
+  // Get user tickets for a game
+  app.get("/api/games/:id/tickets", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const gameId = parseInt(req.params.id);
+      const userId = req.user!.id;
+      
+      const tickets = await storage.getTicketsByUser(userId, gameId);
+      res.json(tickets);
+    } catch (error) {
+      console.error("Error fetching tickets:", error);
+      res.status(500).json({ message: "Failed to fetch tickets" });
+    }
+  });
+
+  // Create team selection
+  app.post("/api/team-selections", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const selectionData = insertTeamSelectionSchema.parse(req.body);
+      const selection = await storage.createTeamSelection(selectionData);
+      res.status(201).json(selection);
+    } catch (error) {
+      console.error("Error creating team selection:", error);
+      res.status(400).json({ message: "Invalid selection data" });
+    }
+  });
+
+  // Get team selections for a ticket
+  app.get("/api/tickets/:id/selections", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const ticketId = parseInt(req.params.id);
+      const selections = await storage.getTeamSelectionsByTicket(ticketId);
+      res.json(selections);
+    } catch (error) {
+      console.error("Error fetching selections:", error);
+      res.status(500).json({ message: "Failed to fetch selections" });
+    }
+  });
+
+  // Update match results (admin only)
+  app.patch("/api/matches/:id", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user!.isAdmin) return res.sendStatus(403);
+    
+    try {
+      const matchId = parseInt(req.params.id);
+      const { homeScore, awayScore } = req.body;
+      
+      await storage.updateMatchResult(matchId, homeScore, awayScore);
+      res.json({ message: "Match result updated successfully" });
+    } catch (error) {
+      console.error("Error updating match result:", error);
+      res.status(500).json({ message: "Failed to update match result" });
+    }
+  });
+
+  // Set game deadline
+  app.post("/api/games/:id/deadline", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user!.isAdmin) return res.sendStatus(403);
+    
+    try {
+      const gameId = parseInt(req.params.id);
+      const { deadline } = req.body;
+      
+      const deadlineDate = deadline ? new Date(deadline) : null;
+      await storage.updateGameDeadline(gameId, deadlineDate);
+      
+      res.json({ message: "Deadline updated successfully" });
+    } catch (error) {
+      console.error("Error setting deadline:", error);
+      res.status(500).json({ message: "Failed to set deadline" });
+    }
+  });
+
+  // Check timer status
+  app.get("/api/timer/check", async (req, res) => {
+    try {
+      const results = await checkExpiredDeadlines();
+      res.json({ 
+        message: "Timer check completed",
+        results: results,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Error checking timers:", error);
+      res.status(500).json({ message: "Failed to check timers" });
     }
   });
 
