@@ -1189,12 +1189,12 @@ export default function AdminDashboard() {
 
       {/* Navigation Header */}
       <nav className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+        <div className="mobile-container">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 py-4 sm:py-0 sm:h-16">
             <div className="flex items-center">
-              <h1 className="text-xl font-bold text-primary">Highlander Admin</h1>
+              <h1 className="mobile-title">Highlander Admin</h1>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="button-group">
               <Dialog open={createGameOpen} onOpenChange={setCreateGameOpen}>
                 <DialogTrigger asChild>
                   <Button>
@@ -1291,9 +1291,9 @@ export default function AdminDashboard() {
         </div>
       </nav>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mobile-container">
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="stats-grid mb-8">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
@@ -1353,12 +1353,12 @@ export default function AdminDashboard() {
 
         {/* Admin Dashboard with Tabs */}
         <Tabs defaultValue="games" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="games">Gestione Giochi</TabsTrigger>
-            <TabsTrigger value="history">Storico Giocatori</TabsTrigger>
-            <TabsTrigger value="selections">Scelte Squadre</TabsTrigger>
-            <TabsTrigger value="tickets">Ticket Giocatori</TabsTrigger>
-            <TabsTrigger value="overview">Panoramica</TabsTrigger>
+          <TabsList className="nav-tabs grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1">
+            <TabsTrigger value="games" className="text-xs sm:text-sm">Gestione Giochi</TabsTrigger>
+            <TabsTrigger value="history" className="text-xs sm:text-sm">Storico Giocatori</TabsTrigger>
+            <TabsTrigger value="selections" className="text-xs sm:text-sm">Scelte Squadre</TabsTrigger>
+            <TabsTrigger value="tickets" className="text-xs sm:text-sm">Ticket Giocatori</TabsTrigger>
+            <TabsTrigger value="overview" className="text-xs sm:text-sm">Panoramica</TabsTrigger>
           </TabsList>
 
           <TabsContent value="games" className="space-y-4">

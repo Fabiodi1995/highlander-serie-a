@@ -137,10 +137,9 @@ export function ModernTable<T extends Record<string, any> = Record<string, any>>
       )}
 
       {/* Table */}
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className={stickyHeader ? 'sticky top-0 z-10' : ''}>
+      <div className="table-container bg-white shadow-sm">
+        <table className="w-full">
+          <thead className={stickyHeader ? 'sticky top-0 z-10' : ''}>
               <tr className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
                 {columns.map((column) => {
                   const sortConfig = tableState.sortConfigs.find(config => config.key === column.key);
@@ -203,7 +202,6 @@ export function ModernTable<T extends Record<string, any> = Record<string, any>>
               })}
             </tbody>
           </table>
-        </div>
       </div>
 
       {/* Pagination and Info */}
