@@ -1411,8 +1411,8 @@ export default function AdminDashboard() {
                             <span className="text-gray-500">Non Iniziato</span> : 
                             <span className="font-mono">Giornata {game.currentRound}</span>;
                         case 'countdown':
-                          // Se il round è bloccato e non c'è deadline, mostra "Scaduto"
-                          if (!game.selectionDeadline && game.roundStatus === "selection_locked") {
+                          // Se il round è bloccato (selection_locked), mostra sempre "Scaduto"
+                          if (game.roundStatus === "selection_locked") {
                             return (
                               <div className="flex items-center space-x-1 text-red-600">
                                 <AlertCircle className="h-4 w-4" />
@@ -1421,15 +1421,19 @@ export default function AdminDashboard() {
                             );
                           }
                           
-                          return game.selectionDeadline ? (
-                            <CountdownDisplay 
-                              deadline={game.selectionDeadline ? String(game.selectionDeadline) : null} 
-                              size="sm" 
-                              showIcon={true}
-                            />
-                          ) : (
-                            <span className="text-gray-400 text-xs">Nessuna deadline</span>
-                          );
+                          // Se c'è una deadline attiva, mostra il countdown
+                          if (game.selectionDeadline) {
+                            return (
+                              <CountdownDisplay 
+                                deadline={String(game.selectionDeadline)} 
+                                size="sm" 
+                                showIcon={true}
+                              />
+                            );
+                          }
+                          
+                          // Nessuna deadline impostata
+                          return <span className="text-gray-400 text-xs">Nessuna deadline</span>;
                         case 'createdAt':
                           return <span className="text-sm">{new Date(game.createdAt).toLocaleDateString('it-IT')}</span>;
                         case 'actions':
