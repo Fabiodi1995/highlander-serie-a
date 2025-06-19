@@ -425,8 +425,8 @@ function TicketSelectionCard({
   });
 
   // Gestione sicura delle selezioni e dei team
-  const safeTeams = teams || [];
-  const safeSelections = allSelections || [];
+  const safeTeams = Array.isArray(teams) ? teams : [];
+  const safeSelections = Array.isArray(allSelections) ? allSelections : [];
 
   // Solo le selezioni dei round precedenti (completati), non il round corrente
   const previousSelections = safeSelections.filter(s => 
@@ -440,7 +440,11 @@ function TicketSelectionCard({
   );
   
   const availableTeams = safeTeams.filter(team => 
-    team && typeof team.id === 'number' && !usedTeamIds.has(team.id)
+    team && 
+    typeof team.id === 'number' && 
+    typeof team.name === 'string' &&
+    team.name.trim() !== '' &&
+    !usedTeamIds.has(team.id)
   );
 
   const previousTeamNames = previousSelections.length > 0 
@@ -481,22 +485,56 @@ function TicketSelectionCard({
               <SelectValue placeholder={disabled ? "Selezioni bloccate" : "Scegli una squadra..."} />
             </SelectTrigger>
             <SelectContent>
-              {availableTeams.length > 0 ? (
-                availableTeams
-                  .filter((team) => team && typeof team.id === 'number' && team.name)
-                  .map((team) => (
-                    <SelectItem key={team.id} value={team.id.toString()}>
-                      <div className="flex items-center gap-2">
-                        <TeamLogo team={team} size="sm" />
-                        <span>{team.name}</span>
-                      </div>
+              {(() => {
+                try {
+                  if (!availableTeams || availableTeams.length === 0) {
+                    return (
+                      <SelectItem value="no-teams" disabled>
+                        Nessuna squadra disponibile
+                      </SelectItem>
+                    );
+                  }
+                  
+                  return availableTeams
+                    .filter((team) => {
+                      try {
+                        return team && 
+                               typeof team.id === 'number' && 
+                               typeof team.name === 'string' &&
+                               team.name.trim().length > 0;
+                      } catch (e) {
+                        console.warn('Invalid team object:', team, e);
+                        return false;
+                      }
+                    })
+                    .map((team) => {
+                      try {
+                        return (
+                          <SelectItem key={`team-${team.id}`} value={team.id.toString()}>
+                            <div className="flex items-center gap-2">
+                              <TeamLogo team={team} size="sm" />
+                              <span>{team.name}</span>
+                            </div>
+                          </SelectItem>
+                        );
+                      } catch (e) {
+                        console.warn('Error rendering team:', team, e);
+                        return (
+                          <SelectItem key={`team-fallback-${team.id}`} value={team.id.toString()}>
+                            <span>{team.name || 'Squadra sconosciuta'}</span>
+                          </SelectItem>
+                        );
+                      }
+                    });
+                } catch (error) {
+                  console.error('Error rendering teams list:', error);
+                  return (
+                    <SelectItem value="error" disabled>
+                      Errore nel caricamento squadre
                     </SelectItem>
-                  ))
-              ) : (
-                <SelectItem value="no-teams" disabled>
-                  Nessuna squadra disponibile
-                </SelectItem>
-              )}
+                  );
+                }
+              })()}
             </SelectContent>
           </Select>
         </div>

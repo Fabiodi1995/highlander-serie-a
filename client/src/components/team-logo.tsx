@@ -34,10 +34,12 @@ const getTeamLogoPath = (teamName: string): string => {
     "Bologna": bolognaLogo,
     "Cagliari": cagliariLogo,
     "Como": comoLogo,
+    "Cremonese": empoliLogo, // Fallback for now
     "Empoli": empoliLogo,
     "Fiorentina": fiorentinaLogo,
     "Genoa": genoaLogo,
     "Hellas Verona": hellasVeronaLogo,
+    "Verona": hellasVeronaLogo, // Alternative name
     "Inter": interLogo,
     "Juventus": juventusLogo,
     "Lazio": lazioLogo,
@@ -46,7 +48,9 @@ const getTeamLogoPath = (teamName: string): string => {
     "Monza": monzaLogo,
     "Napoli": napoliLogo,
     "Parma": parmaLogo,
+    "Pisa": parmaLogo, // Fallback for now
     "Roma": romaLogo,
+    "Sassuolo": genoaLogo, // Fallback for now
     "Torino": torinoLogo,
     "Udinese": udineseLogo,
     "Venezia": veneziaLogo,
@@ -62,6 +66,15 @@ const sizeClasses = {
 };
 
 export function TeamLogo({ team, size = "md", showName = false }: TeamLogoProps) {
+  // Safety check for team object
+  if (!team || !team.name) {
+    return (
+      <div className={`${sizeClasses[size]} rounded-full bg-gray-300 flex items-center justify-center text-xs font-bold`}>
+        ?
+      </div>
+    );
+  }
+
   const logoPath = getTeamLogoPath(team.name);
 
   return (
@@ -71,10 +84,13 @@ export function TeamLogo({ team, size = "md", showName = false }: TeamLogoProps)
           src={logoPath} 
           alt={`Logo ${team.name}`}
           className={`${sizeClasses[size]} object-contain`}
+          onError={(e) => {
+            console.warn(`Failed to load logo for ${team.name}`);
+          }}
         />
       ) : (
         <div className={`${sizeClasses[size]} rounded-full bg-gray-300 flex items-center justify-center text-xs font-bold`}>
-          {team.code}
+          {team.code || team.name?.substring(0, 3).toUpperCase() || '?'}
         </div>
       )}
       {showName && (
