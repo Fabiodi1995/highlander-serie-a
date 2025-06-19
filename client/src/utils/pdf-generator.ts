@@ -24,7 +24,7 @@ import udineseLogo from "@assets/Udinese_1749734308301.png";
 import veneziaLogo from "@assets/Venezia_1749734308283.png";
 import veronaLogo from "@assets/Verona_1749734308300.png";
 
-// Team logo mapping for PDF generation
+// Team logo mapping for PDF generation - Complete Serie A 2025/26
 const teamLogoMap: { [key: string]: string } = {
   "Atalanta": atalantaLogo,
   "Bologna": bolognaLogo,
@@ -46,6 +46,29 @@ const teamLogoMap: { [key: string]: string } = {
   "Torino": torinoLogo,
   "Udinese": udineseLogo,
   "Venezia": veneziaLogo,
+  // Additional mappings for database variations
+  "Verona": veronaLogo,
+  "Hellas": veronaLogo,
+  "AC Milan": milanLogo,
+  "FC Inter": interLogo,
+  "Internazionale": interLogo,
+  "AS Roma": romaLogo,
+  "SS Lazio": lazioLogo,
+  "Juventus FC": juventusLogo,
+  "SSC Napoli": napoliLogo,
+  "ACF Fiorentina": fiorentinaLogo,
+  "Atalanta BC": atalantaLogo,
+  "Bologna FC": bolognaLogo,
+  "Cagliari Calcio": cagliariLogo,
+  "Como 1907": comoLogo,
+  "Empoli FC": empoliLogo,
+  "Genoa CFC": genoaLogo,
+  "US Lecce": lecceLogo,
+  "AC Monza": monzaLogo,
+  "Parma Calcio": parmaLogo,
+  "Torino FC": torinoLogo,
+  "Udinese Calcio": udineseLogo,
+  "Venezia FC": veneziaLogo
 };
 
 // Colors for different ticket statuses (light colors to not interfere with logos)
@@ -91,15 +114,23 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
   const teamLogosBase64: { [key: string]: string } = {};
   console.log('Loading team logos...');
   
-  // Load team logos
-  await Promise.all(teams.map(async (team) => {
-    const logoPath = teamLogoMap[team.name];
+  // Load logos for all teams in the game data plus ensure we have all Serie A logos
+  const teamSet = new Set(teams.map(t => t.name));
+  const allTeamNames = ["Atalanta", "Bologna", "Cagliari", "Como", "Empoli", "Fiorentina", 
+                       "Genoa", "Hellas Verona", "Inter", "Juventus", "Lazio", "Lecce", 
+                       "Milan", "Monza", "Napoli", "Parma", "Roma", "Torino", "Udinese", "Venezia"];
+  
+  allTeamNames.forEach(name => teamSet.add(name));
+
+  // Load logos for all teams
+  await Promise.all(Array.from(teamSet).map(async (teamName) => {
+    const logoPath = teamLogoMap[teamName];
     if (logoPath) {
       try {
-        teamLogosBase64[team.name] = await loadImageAsBase64(logoPath);
-        console.log(`Loaded logo for ${team.name}`);
+        teamLogosBase64[teamName] = await loadImageAsBase64(logoPath);
+        console.log(`Loaded logo for ${teamName}`);
       } catch (error) {
-        console.warn(`Failed to load logo for ${team.name}:`, error);
+        console.warn(`Failed to load logo for ${teamName}:`, error);
       }
     }
   }));
@@ -599,13 +630,34 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
   doc.setFont('helvetica', 'bold');
   doc.text('Legenda Squadre Serie A 2024/25', 20, finalY + 8);
   
-  // Show all Serie A teams (all 20 teams) with modern styling
-  const allSerieATeams = [...teams].sort((a, b) => a.name.localeCompare(b.name));
+  // Show all Serie A teams (all 20 teams) with modern styling  
+  const allSerieATeamsForLegend = [
+    { name: "Atalanta", code: "ATA" },
+    { name: "Bologna", code: "BOL" },
+    { name: "Cagliari", code: "CAG" },
+    { name: "Como", code: "COM" },
+    { name: "Empoli", code: "EMP" },
+    { name: "Fiorentina", code: "FIO" },
+    { name: "Genoa", code: "GEN" },
+    { name: "Hellas Verona", code: "VER" },
+    { name: "Inter", code: "INT" },
+    { name: "Juventus", code: "JUV" },
+    { name: "Lazio", code: "LAZ" },
+    { name: "Lecce", code: "LEC" },
+    { name: "Milan", code: "MIL" },
+    { name: "Monza", code: "MON" },
+    { name: "Napoli", code: "NAP" },
+    { name: "Parma", code: "PAR" },
+    { name: "Roma", code: "ROM" },
+    { name: "Torino", code: "TOR" },
+    { name: "Udinese", code: "UDI" },
+    { name: "Venezia", code: "VEN" }
+  ].sort((a, b) => a.name.localeCompare(b.name));
   
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(71, 85, 105);
-  allSerieATeams.forEach((team, index) => {
+  allSerieATeamsForLegend.forEach((team, index) => {
     const x = 20 + (index % 4) * 65;
     const y = finalY + 12 + Math.floor(index / 4) * 5;
     
@@ -617,7 +669,7 @@ export async function generateGameHistoryPDF(data: GameHistoryData) {
   });
   
   // Status legend with modern design
-  const statusY = finalY + Math.ceil(allSerieATeams.length / 4) * 5 + 20;
+  const statusY = finalY + Math.ceil(allSerieATeamsForLegend.length / 4) * 5 + 20;
   
   doc.setFillColor(255, 255, 255);
   doc.rect(15, statusY, 267, 25, 'F');

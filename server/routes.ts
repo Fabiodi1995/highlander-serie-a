@@ -2,8 +2,13 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { insertGameSchema, insertTeamSelectionSchema } from "@shared/schema";
+import { insertGameSchema, insertTeamSelectionSchema, tickets } from "@shared/schema";
+import { checkGameEndConditions, finalizeGame } from "./game-logic";
+import { checkExpiredDeadlines, validateSelectionDeadline } from "./timer-service";
 import { z } from "zod";
+import { db, withTransaction, batchOperation } from "./db";
+import { eq } from "drizzle-orm";
+import { serieAManager } from "./serieAManager";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
@@ -941,6 +946,164 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error uploading Excel calendar:", error);
       res.status(500).json({ message: "Failed to update calendar" });
     }
+  });
+
+  // Team selection management with deadline validation
+  app.post("/api/team-selections", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const { gameId, ticketId, teamId, round } = req.body;
+      
+      // Validate deadline before allowing selection
+      const deadlineCheck = await validateSelectionDeadline(gameId);
+      if (!deadlineCheck.valid) {
+        return res.status(400).json({ 
+          message: deadlineCheck.reason || "Selection deadline has expired" 
+        });
+      }
+      
+      const selectionData = insertTeamSelectionSchema.parse(req.body);
+      const selection = await storage.createTeamSelection(selectionData);
+      res.status(201).json(selection);
+    } catch (error) {
+      console.error("Error creating team selection:", error);
+      res.status(400).json({ message: "Invalid selection data" });
+    }
+  });
+
+  // Get team selections for a ticket
+  app.get("/api/tickets/:id/selections", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const ticketId = parseInt(req.params.id);
+      const selections = await storage.getTeamSelectionsByTicket(ticketId);
+      res.json(selections);
+    } catch (error) {
+      console.error("Error fetching selections:", error);
+      res.status(500).json({ message: "Failed to fetch selections" });
+    }
+  });
+
+  // Lock round with auto-assignment of missing teams
+  app.post("/api/games/:id/lock-round", async (req, res) => {
+    console.log("LOCK ROUND - Game ID:", req.params.id);
+    
+    try {
+      const gameId = parseInt(req.params.id);
+      const game = await storage.getGame(gameId);
+      
+      if (!game || game.status !== "active") {
+        return res.status(400).json({ message: "Game not found or not active" });
+      }
+
+      // Get all active tickets for this game
+      const tickets = await storage.getTicketsByGame(gameId);
+      const activeTickets = tickets.filter(t => t.isActive);
+      
+      // Check which tickets need team assignments for current round
+      let assignmentCount = 0;
+      const matches = await storage.getMatchesByRound(game.currentRound);
+      const availableTeams = matches.flatMap(m => [m.homeTeamId, m.awayTeamId]);
+      
+      for (const ticket of activeTickets) {
+        const selections = await storage.getTeamSelectionsByTicket(ticket.id);
+        const hasSelectionForRound = selections.some(s => s.round === game.currentRound);
+        
+        if (!hasSelectionForRound) {
+          // Auto-assign a random available team
+          const randomTeamId = availableTeams[Math.floor(Math.random() * availableTeams.length)];
+          await storage.createTeamSelection({
+            gameId: game.id,
+            ticketId: ticket.id,
+            teamId: randomTeamId,
+            round: game.currentRound
+          });
+          assignmentCount++;
+        }
+      }
+
+      // Update game round status to locked and remove deadline
+      await storage.updateGameRoundStatus(gameId, "locked");
+      await storage.updateGameDeadline(gameId, null);
+      
+      res.json({ 
+        message: "Round locked successfully",
+        autoAssignedCount: assignmentCount
+      });
+    } catch (error) {
+      console.error("Error locking round:", error);
+      res.status(500).json({ message: "Failed to lock round" });
+    }
+  });
+
+  // Timer management endpoints
+  app.get("/api/timer/check", async (req, res) => {
+    try {
+      const results = await checkExpiredDeadlines();
+      res.json({ 
+        message: "Timer check completed",
+        results: results,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Error checking timers:", error);
+      res.status(500).json({ message: "Failed to check timers" });
+    }
+  });
+
+  // Social features
+  app.get("/api/social/friends", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    res.json([]);
+  });
+
+  app.get("/api/social/friend-requests", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    res.json([]);
+  });
+
+  // Achievement system
+  app.get("/api/achievements/user", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    res.json([]);
+  });
+
+  app.post("/api/achievements/check", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    res.json({ newAchievements: [] });
+  });
+
+  app.get("/api/achievements/level", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    res.json({ level: 1, xp: 0 });
+  });
+
+  app.get("/api/achievements/leaderboard", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    res.json([]);
+  });
+
+  // Analytics endpoints
+  app.get("/api/analytics/user-stats", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    res.json({ gamesPlayed: 0, wins: 0, winRate: 0 });
+  });
+
+  app.get("/api/analytics/game-history", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    res.json([]);
+  });
+
+  app.get("/api/analytics/global-stats", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    res.json({ totalGames: 0, totalPlayers: 0 });
+  });
+
+  app.post("/api/analytics/events", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    res.json({ success: true });
   });
 
   const httpServer = createServer(app);
