@@ -37,7 +37,7 @@ function MatchResultsForm({
   onCancel 
 }: { 
   game: Game | null; 
-  onComplete: () => void; 
+  onComplete: () => Promise<void>; 
   onCancel: () => void; 
 }) {
   const [matchResults, setMatchResults] = useState<Record<number, { homeScore: number; awayScore: number }>>({});
@@ -235,9 +235,52 @@ function MatchResultsForm({
             {updateMatchResultMutation.isPending ? "Salvando..." : "Salva Risultati"}
           </Button>
           <Button 
-            onClick={() => {
+            onClick={async () => {
               console.log("Conferma e Calcola Round clicked");
-              onComplete();
+              if (!game) {
+                console.error("No game available");
+                return;
+              }
+              
+              try {
+                console.log(`Calculating turn for game ${game.id}`);
+                const response = await fetch(`/api/games/${game.id}/calculate-turn`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                  const error = await response.json();
+                  throw new Error(error.message || 'Failed to calculate turn');
+                }
+                
+                const result = await response.json();
+                console.log("Turn calculation successful:", result);
+                
+                // Refresh all game data
+                queryClient.invalidateQueries({ queryKey: ["/api/games"] });
+                queryClient.invalidateQueries({ queryKey: ["/api/admin/all-team-selections"] });
+                queryClient.invalidateQueries({ queryKey: ["/api/admin/all-tickets"] });
+                
+                // Close dialog
+                onCancel();
+                
+                toast({
+                  title: "Successo",
+                  description: "Giornata calcolata con successo",
+                });
+                
+              } catch (error) {
+                console.error("Error calculating turn:", error);
+                toast({
+                  title: "Errore",
+                  description: error instanceof Error ? error.message : "Errore nel calcolo",
+                  variant: "destructive",
+                });
+              }
             }}
             disabled={!allMatchesCompleted}
             className="bg-green-600 hover:bg-green-700 text-white"
