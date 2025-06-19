@@ -5,10 +5,12 @@ import { storage } from "./storage";
 import { insertGameSchema, insertTeamSelectionSchema, tickets } from "@shared/schema";
 import { checkGameEndConditions, finalizeGame } from "./game-logic";
 import { checkExpiredDeadlines, validateSelectionDeadline } from "./timer-service";
+import { emailService } from "./email-service";
 import { z } from "zod";
 import { db, withTransaction, batchOperation } from "./db";
 import { eq } from "drizzle-orm";
 import { serieAManager } from "./serieAManager";
+import bcrypt from "bcryptjs";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
@@ -1201,6 +1203,159 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/analytics/events", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     res.json({ success: true });
+  });
+
+  // Email verification and password reset endpoints
+  
+  // Send password reset email
+  app.post("/api/forgot-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email è richiesta" });
+      }
+
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        // Don't reveal if email exists or not for security
+        return res.json({ message: "Se l'email esiste, riceverai un link per il reset" });
+      }
+
+      // Generate reset token
+      const resetToken = emailService.generateVerificationToken();
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+      // Store reset token
+      await storage.createPasswordResetToken({
+        userId: user.id,
+        token: resetToken,
+        expiresAt
+      });
+
+      // Send email
+      const emailSent = await emailService.sendPasswordResetEmail({
+        email: user.email,
+        username: user.username,
+        token: resetToken
+      });
+
+      if (emailSent) {
+        res.json({ message: "Se l'email esiste, riceverai un link per il reset" });
+      } else {
+        res.status(500).json({ message: "Errore nell'invio dell'email" });
+      }
+    } catch (error) {
+      console.error("Error in forgot password:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Reset password with token
+  app.post("/api/reset-password", async (req, res) => {
+    try {
+      const { token, newPassword } = req.body;
+      
+      if (!token || !newPassword) {
+        return res.status(400).json({ message: "Token e nuova password sono richiesti" });
+      }
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({ message: "La password deve avere almeno 6 caratteri" });
+      }
+
+      // Verify token
+      const resetToken = await storage.getPasswordResetToken(token);
+      if (!resetToken) {
+        return res.status(400).json({ message: "Token non valido o scaduto" });
+      }
+
+      // Hash new password
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      // Update user password
+      await storage.updateUser(resetToken.userId, { password: hashedPassword });
+
+      // Mark token as used
+      await storage.markPasswordResetTokenAsUsed(token);
+
+      res.json({ message: "Password aggiornata con successo" });
+    } catch (error) {
+      console.error("Error in reset password:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Verify email endpoint
+  app.get("/api/verify-email", async (req, res) => {
+    try {
+      const { token } = req.query;
+      
+      if (!token || typeof token !== 'string') {
+        return res.status(400).json({ message: "Token non valido" });
+      }
+
+      const verificationToken = await storage.getEmailVerificationToken(token);
+      if (!verificationToken) {
+        return res.status(400).json({ message: "Token non valido o scaduto" });
+      }
+
+      // Update user as verified
+      await storage.updateUser(verificationToken.userId, { emailVerified: true });
+
+      // Delete token
+      await storage.deleteEmailVerificationToken(token);
+
+      res.json({ message: "Email verificata con successo" });
+    } catch (error) {
+      console.error("Error in verify email:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Resend verification email
+  app.post("/api/resend-verification", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const user = req.user!;
+      
+      if (user.emailVerified) {
+        return res.status(400).json({ message: "Email già verificata" });
+      }
+
+      // Generate new verification token
+      const verificationToken = emailService.generateVerificationToken();
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+      // Remove old tokens
+      await storage.deleteExpiredEmailVerificationTokens();
+
+      // Store new token
+      await storage.createEmailVerificationToken({
+        userId: user.id,
+        token: verificationToken,
+        email: user.email,
+        expiresAt
+      });
+
+      // Send email
+      const emailSent = await emailService.sendVerificationEmail({
+        userId: user.id,
+        email: user.email,
+        username: user.username,
+        token: verificationToken
+      });
+
+      if (emailSent) {
+        res.json({ message: "Email di verifica inviata" });
+      } else {
+        res.status(500).json({ message: "Errore nell'invio dell'email" });
+      }
+    } catch (error) {
+      console.error("Error in resend verification:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
   });
 
   const httpServer = createServer(app);

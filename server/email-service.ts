@@ -23,9 +23,10 @@ export class EmailService {
       ? 'https://yourdomain.com' 
       : 'http://localhost:5000';
     
-    this.isConfigured = !!process.env.SENDGRID_API_KEY;
-    if (this.isConfigured && process.env.SENDGRID_API_KEY) {
-      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+    const apiKey = process.env.SENDGRID_API_KEY;
+    this.isConfigured = !!apiKey;
+    if (this.isConfigured && apiKey) {
+      sgMail.setApiKey(apiKey);
     }
   }
 
@@ -58,7 +59,37 @@ export class EmailService {
       console.log(`To: ${data.email}`);
       console.log(`Subject: Conferma il tuo account Highlander`);
       console.log(`Verification URL: ${verificationUrl}`);
-      console.log('=== END EMAIL ===\n');
+      console.log('===============================================\n');
+      return true;
+    }
+  }
+
+  async sendPasswordResetEmail(data: PasswordResetData): Promise<boolean> {
+    const resetUrl = `${this.baseUrl}/reset-password?token=${data.token}`;
+    
+    if (this.isConfigured) {
+      try {
+        const msg = {
+          to: data.email,
+          from: process.env.FROM_EMAIL || 'noreply@highlander-app.com',
+          subject: 'Reset della Password - Highlander',
+          html: this.getPasswordResetTemplate(data.username, resetUrl),
+        };
+
+        await sgMail.send(msg);
+        console.log(`Password reset email sent to ${data.email}`);
+        return true;
+      } catch (error) {
+        console.error('SendGrid password reset email error:', error);
+        return false;
+      }
+    } else {
+      // Development mode - log email content
+      console.log('\n=== PASSWORD RESET EMAIL (DEVELOPMENT MODE) ===');
+      console.log(`To: ${data.email}`);
+      console.log(`Subject: Reset della Password - Highlander`);
+      console.log(`Reset URL: ${resetUrl}`);
+      console.log('===============================================\n');
       return true;
     }
   }
@@ -69,23 +100,15 @@ export class EmailService {
       <html>
       <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Conferma Email - Highlander</title>
+        <title>Conferma Account - Highlander</title>
         <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background: linear-gradient(135deg, #10b981, #3b82f6); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
-          .content { background: white; padding: 30px; border: 1px solid #e5e7eb; }
-          .footer { background: #f9fafb; padding: 20px; text-align: center; border-radius: 0 0 8px 8px; border: 1px solid #e5e7eb; border-top: none; }
-          .button { display: inline-block; background: #10b981; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; }
-          .button:hover { background: #059669; }
-          .highlight { background: #fef3c7; padding: 2px 6px; border-radius: 4px; }
+          ${this.getEmailStyles()}
         </style>
       </head>
       <body>
         <div class="container">
           <div class="header">
-            <h1 style="margin: 0; font-size: 28px;">🏆 Highlander</h1>
+            <h1 style="margin: 0; color: white;">🛡️ Highlander</h1>
             <p style="margin: 10px 0 0 0; opacity: 0.9;">Il Gioco di Eliminazione Serie A</p>
           </div>
           
@@ -128,36 +151,6 @@ export class EmailService {
     `;
   }
 
-  async sendPasswordResetEmail(email: string, username: string, resetToken: string): Promise<boolean> {
-    const resetUrl = `${this.baseUrl}/reset-password/${resetToken}`;
-    
-    if (process.env.SENDGRID_API_KEY) {
-      try {
-        const sgMail = await import('@sendgrid/mail');
-        sgMail.default.setApiKey(process.env.SENDGRID_API_KEY);
-
-        const msg = {
-          to: email,
-          from: 'noreply@highlander-app.com',
-          subject: 'Reset Password - Highlander',
-          html: this.getPasswordResetTemplate(username, resetUrl),
-        };
-
-        await sgMail.default.send(msg);
-        return true;
-      } catch (error) {
-        console.error('SendGrid password reset email error:', error);
-        return false;
-      }
-    } else {
-      console.log('\n=== PASSWORD RESET EMAIL (DEVELOPMENT MODE) ===');
-      console.log(`To: ${email}`);
-      console.log(`Reset URL: ${resetUrl}`);
-      console.log('=== END EMAIL ===\n');
-      return true;
-    }
-  }
-
   private getPasswordResetTemplate(username: string, resetUrl: string): string {
     return `
       <!DOCTYPE html>
@@ -166,23 +159,108 @@ export class EmailService {
         <meta charset="utf-8">
         <title>Reset Password - Highlander</title>
         <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .button { display: inline-block; background: #dc2626; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; }
+          ${this.getEmailStyles()}
         </style>
       </head>
       <body>
         <div class="container">
-          <h1>Reset Password</h1>
-          <p>Ciao ${username},</p>
-          <p>Hai richiesto il reset della password per il tuo account Highlander.</p>
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${resetUrl}" class="button">Reset Password</a>
+          <div class="header">
+            <h1 style="margin: 0; color: white;">🛡️ Highlander</h1>
+            <p style="margin: 10px 0 0 0; opacity: 0.9;">Reset della Password</p>
           </div>
-          <p>Se non hai richiesto questo reset, ignora questa email.</p>
+          
+          <div class="content">
+            <h2 style="color: #1f2937; margin-top: 0;">Ciao ${username}!</h2>
+            
+            <p>Hai richiesto il reset della password per il tuo account Highlander.</p>
+            
+            <p>Per impostare una nuova password, clicca sul pulsante qui sotto:</p>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${resetUrl}" class="button">Reset Password</a>
+            </div>
+            
+            <p><strong>Importante:</strong></p>
+            <ul>
+              <li>🔒 Questo link è valido solo per 1 ora</li>
+              <li>🔑 Potrai scegliere una nuova password sicura</li>
+              <li>✅ L'accesso al tuo account rimarrà protetto</li>
+            </ul>
+            
+            <p>Se non hai richiesto questo reset, puoi ignorare questa email. La tua password attuale rimarrà invariata.</p>
+            
+            <div style="background: #fef3c7; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+              <small><strong>Sicurezza:</strong> Per motivi di sicurezza, questo link scadrà automaticamente tra 60 minuti.</small>
+            </div>
+          </div>
+          
+          <div class="footer">
+            <p style="margin: 0; color: #6b7280; font-size: 14px;">
+              © 2025 Highlander - Gioco di Eliminazione Serie A<br>
+              <span class="highlight">Sistema di Sicurezza</span>
+            </p>
+          </div>
         </div>
       </body>
       </html>
+    `;
+  }
+
+  private getEmailStyles(): string {
+    return `
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        line-height: 1.6;
+        color: #374151;
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: #f9fafb;
+      }
+      .container {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        margin: 20px;
+      }
+      .header {
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+      }
+      .content {
+        padding: 30px;
+      }
+      .footer {
+        background: #f9fafb;
+        padding: 20px;
+        text-align: center;
+        border-top: 1px solid #e5e7eb;
+      }
+      .button {
+        display: inline-block;
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        color: white;
+        padding: 12px 30px;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: 600;
+        transition: transform 0.2s;
+      }
+      .button:hover {
+        transform: translateY(-2px);
+      }
+      .highlight {
+        color: #059669;
+        font-weight: 600;
+      }
+      ul {
+        padding-left: 20px;
+      }
+      li {
+        margin: 8px 0;
+      }
     `;
   }
 }
