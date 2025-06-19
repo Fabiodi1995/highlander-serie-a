@@ -163,30 +163,30 @@ export default function CalendarPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+        <div className="mobile-container">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 py-4 sm:py-6">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
               <Link href="/">
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="w-fit">
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Torna alla Dashboard
                 </Button>
               </Link>
               <div className="flex items-center space-x-3">
-                <Calendar className="h-8 w-8 text-blue-600" />
+                <Calendar className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Calendario Serie A 2025/26</h1>
-                  <p className="text-gray-600">Tutte le partite del campionato divise per giornata</p>
+                  <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Calendario Serie A 2025/26</h1>
+                  <p className="text-sm sm:text-base text-gray-600">Tutte le partite del campionato divise per giornata</p>
                 </div>
               </div>
             </div>
             
-            <div className="flex items-center space-x-2">
-              <Badge variant="outline" className="text-green-600 border-green-200">
+            <div className="flex items-center gap-2 overflow-x-auto">
+              <Badge variant="outline" className="text-green-600 border-green-200 flex-shrink-0">
                 <Trophy className="h-3 w-3 mr-1" />
                 38 Giornate
               </Badge>
-              <Badge variant="outline" className="text-blue-600 border-blue-200">
+              <Badge variant="outline" className="text-blue-600 border-blue-200 flex-shrink-0">
                 <Clock className="h-3 w-3 mr-1" />
                 380 Partite
               </Badge>
@@ -196,43 +196,49 @@ export default function CalendarPage() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mobile-container py-6 sm:py-8">
         {/* Pagination Controls */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center space-x-4">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 sm:mb-8">
+          <div className="flex items-center gap-2 sm:gap-4">
             <Button 
               onClick={goToPreviousPage} 
               disabled={currentPage === 1}
               variant="outline"
+              size="sm"
+              className="flex-shrink-0"
             >
-              <ChevronLeft className="h-4 w-4 mr-2" />
-              Precedenti
+              <ChevronLeft className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Precedenti</span>
             </Button>
-            <div className="text-sm text-gray-600">
+            <div className="text-xs sm:text-sm text-gray-600 text-center">
               Giornate {startIndex + 1}-{Math.min(endIndex, availableMatchdays.length)} di {availableMatchdays.length}
             </div>
             <Button 
               onClick={goToNextPage} 
               disabled={currentPage === totalPages}
               variant="outline"
+              size="sm"
+              className="flex-shrink-0"
             >
-              Prossime
-              <ChevronRight className="h-4 w-4 ml-2" />
+              <span className="hidden sm:inline">Prossime</span>
+              <ChevronRight className="h-4 w-4 sm:ml-2" />
             </Button>
           </div>
 
-          <div className="flex items-center space-x-2">
-            {Array.from({ length: totalPages }, (_, i) => (
-              <Button
-                key={i + 1}
-                onClick={() => setCurrentPage(i + 1)}
-                variant={currentPage === i + 1 ? "default" : "outline"}
-                size="sm"
-                className="w-8 h-8 p-0"
-              >
-                {i + 1}
-              </Button>
-            ))}
+          <div className="overflow-x-auto scrollbar-hide">
+            <div className="flex items-center gap-1 min-w-max px-2">
+              {Array.from({ length: totalPages }, (_, i) => (
+                <Button
+                  key={i + 1}
+                  onClick={() => setCurrentPage(i + 1)}
+                  variant={currentPage === i + 1 ? "default" : "outline"}
+                  size="sm"
+                  className="w-8 h-8 p-0 flex-shrink-0"
+                >
+                  {i + 1}
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -264,41 +270,41 @@ export default function CalendarPage() {
                 </CardHeader>
                 
                 <CardContent className="p-0">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
+                  <div className="grid grid-cols-1 gap-0">
                     {matches.map((match: DisplayMatch, index: number) => (
-                      <div key={match.id} className={`p-4 border-b ${index % 2 === 0 ? 'lg:border-r' : ''} last:border-b-0`}>
-                        <div className="flex items-center justify-between">
+                      <div key={match.id} className="p-3 sm:p-4 border-b last:border-b-0">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-0 sm:justify-between">
                           {/* Home Team */}
-                          <div className="flex items-center space-x-3 flex-1">
+                          <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
                             {teams && (
                               <TeamLogo 
                                 team={teams.find(t => t.id === match.homeTeamId)!} 
                                 size="sm" 
                               />
                             )}
-                            <div className="flex flex-col">
-                              <span className="font-medium text-gray-900">{match.homeTeam}</span>
+                            <div className="flex flex-col min-w-0">
+                              <span className="font-medium text-gray-900 text-sm sm:text-base truncate">{match.homeTeam}</span>
                               <span className="text-xs text-gray-500">Casa</span>
                             </div>
                           </div>
 
                           {/* Match Info */}
-                          <div className="flex flex-col items-center space-y-1 px-4">
-                            <div className="flex items-center space-x-2 text-sm text-gray-600">
+                          <div className="flex flex-col items-center space-y-1 px-2 sm:px-4 flex-shrink-0">
+                            <div className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm text-gray-600">
                               <Clock className="h-3 w-3" />
                               <span>{match.matchTime}</span>
                             </div>
-                            <div className="text-2xl font-bold text-gray-400">VS</div>
+                            <div className="text-lg sm:text-2xl font-bold text-gray-400">VS</div>
                             <div className="flex items-center space-x-1 text-xs text-gray-500">
                               <MapPin className="h-3 w-3" />
-                              <span className="truncate max-w-24">{match.stadium}</span>
+                              <span className="truncate max-w-20 sm:max-w-24">{match.stadium}</span>
                             </div>
                           </div>
 
                           {/* Away Team */}
-                          <div className="flex items-center space-x-3 flex-1 justify-end">
-                            <div className="flex flex-col items-end">
-                              <span className="font-medium text-gray-900">{match.awayTeam}</span>
+                          <div className="flex items-center space-x-2 sm:space-x-3 flex-1 justify-end min-w-0">
+                            <div className="flex flex-col items-end min-w-0">
+                              <span className="font-medium text-gray-900 text-sm sm:text-base truncate">{match.awayTeam}</span>
                               <span className="text-xs text-gray-500">Trasferta</span>
                             </div>
                             {teams && (
@@ -319,22 +325,26 @@ export default function CalendarPage() {
         </div>
 
         {/* Bottom Pagination */}
-        <div className="flex items-center justify-center mt-8 space-x-4">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6 sm:mt-8">
           <Button 
             onClick={goToPreviousPage} 
             disabled={currentPage === 1}
             variant="outline"
+            size="sm"
+            className="w-full sm:w-auto"
           >
             <ChevronLeft className="h-4 w-4 mr-2" />
             Precedenti
           </Button>
-          <span className="text-sm text-gray-600">
+          <span className="text-xs sm:text-sm text-gray-600 order-first sm:order-none">
             Pagina {currentPage} di {totalPages}
           </span>
           <Button 
             onClick={goToNextPage} 
             disabled={currentPage === totalPages}
             variant="outline"
+            size="sm"
+            className="w-full sm:w-auto"
           >
             Prossime
             <ChevronRight className="h-4 w-4 ml-2" />
