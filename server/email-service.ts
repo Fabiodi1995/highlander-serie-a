@@ -21,7 +21,7 @@ export class EmailService {
   constructor() {
     this.baseUrl = process.env.BASE_URL || 
       (process.env.NODE_ENV === 'production' 
-        ? 'https://tuodominio.com' 
+        ? 'https://highlandergame.it' 
         : 'http://localhost:5000');
     
     const apiKey = process.env.SENDGRID_API_KEY;
