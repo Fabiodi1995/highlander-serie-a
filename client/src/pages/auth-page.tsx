@@ -307,8 +307,8 @@ export default function AuthPage() {
                                   <Input 
                                     type="date" 
                                     {...field} 
-                                    value={field.value ? field.value.toISOString().split('T')[0] : ''} 
-                                    onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                                    value={field.value || ''} 
+                                    onChange={(e) => field.onChange(e.target.value || undefined)}
                                   />
                                 </FormControl>
                                 <FormMessage />
