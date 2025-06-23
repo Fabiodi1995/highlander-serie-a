@@ -1,95 +1,81 @@
-# Guida Deploy Completa Highlander
+# DEPLOY COMPLETATO SU GITHUB - SETUP SERVER
 
-## Repository GitHub Privato
-https://github.com/Fabiodi1995/highlander-serie-a
+## ✅ GITHUB REPOSITORY CREATO
+Repository: https://github.com/Fabiodi1995/highlander-serie-a.git
+Commit: 143e5f4 - "Initial: App Highlander completa con PM2"
+Files: 395 file caricati correttamente
 
-## Workflow Deploy Automatico
+## PROSSIMO STEP: SETUP SUL SERVER HETZNER
 
-### 1. Configurazione Iniziale (Una volta sola)
-
-Sul server Hetzner, esegui come root:
-```bash
-cd /home/highlander/app
-chmod +x deploy/complete-setup.sh
-./deploy/complete-setup.sh
-```
-
-### 2. Configurazione Webhook GitHub
-
-1. Vai su: https://github.com/Fabiodi1995/highlander-serie-a/settings/hooks
-2. Add webhook:
-   - URL: `https://highlandergame.it/deploy`
-   - Content-type: `application/json`
-   - Secret: `highlander-webhook-2024`
-   - Events: `Just the push event`
-
-### 3. Deploy Immediato con Fix Login
-
-Per applicare subito tutte le modifiche:
-```bash
-# Modifica IP in deploy/immediate-sync-deploy.sh
-sed -i 's/YOUR_HETZNER_IP/TUO_IP_REALE/' deploy/immediate-sync-deploy.sh
-./deploy/immediate-sync-deploy.sh
-```
-
-### 4. Workflow Futuro
-
-Per ogni modifica:
-1. Sviluppa in Replit
-2. Esegui: `./deploy/sync-to-github.sh`
-3. Il server si aggiorna automaticamente via webhook
-
-## Database Access (DBeaver)
-
-### Opzione A: Tunnel SSH
-```bash
-ssh -L 5432:localhost:5432 root@SERVER_IP
-```
-DBeaver: localhost:5432
-
-### Opzione B: Accesso Diretto
-Sul server:
-```bash
-chmod +x scripts/configure-postgresql-external.sh
-./scripts/configure-postgresql-external.sh
-```
-DBeaver: SERVER_IP:5432
-
-## Credenziali Database
-- Host: localhost (tunnel) o SERVER_IP (diretto)
-- Port: 5432
-- Database: highlander_db
-- Username: highlander
-- Password: P3CQeyzh/YLiyxabFSMgwoxRpUPW5qw4
-
-## Fix Login Applicato
-
-Il sistema ora include:
-- Response cloning per evitare "body stream already read"
-- Gestione errori migliorata per login/reset password
-- Deploy automatico configurato
-- Webhook GitHub per aggiornamenti istantanei
-
-## Test Post-Deploy
-
-1. Login: https://highlandergame.it
-2. Reset password
-3. Registrazione nuovo utente
-4. Funzionalità app complete
-
-## Comandi Utili
+Esegui questi comandi sul server:
 
 ```bash
-# Stato applicazione
+ssh root@78.47.123.128
+
+# Backup app attuale e setup nuovo repository
+cd /home/highlander
+pm2 stop highlander
+mv app app-backup-$(date +%Y%m%d-%H%M%S)
+
+# Clona dal nuovo repository
+git clone https://github.com/Fabiodi1995/highlander-serie-a.git app
+cd app
+
+# Copia configurazione ambiente dal backup
+cp ../app-backup-*/.env .
+
+# Installa dipendenze
+npm install
+
+# Build applicazione  
+npm run build
+
+# Avvia con PM2
+pm2 start ecosystem.config.js
+
+# Verifica stato
 pm2 list
-pm2 logs highlander
-
-# Stato webhook
-systemctl status highlander-webhook
-
-# Deploy manuale
-sudo -u highlander /home/highlander/app/auto-deploy.sh
-
-# Test webhook
-curl -X POST https://highlandergame.it/deploy
+curl -I https://highlandergame.it
 ```
+
+## CREA SCRIPT DEPLOY AUTOMATICO
+
+```bash
+cat > /home/highlander/deploy.sh << 'EOF'
+#!/bin/bash
+cd /home/highlander/app
+echo "🔄 Fermando applicazione..."
+pm2 stop highlander
+echo "📥 Aggiornando da GitHub..."
+git pull origin main
+echo "📦 Installando dipendenze..."
+npm install
+echo "🔨 Building applicazione..."
+npm run build
+echo "🚀 Riavviando applicazione..."
+pm2 start ecosystem.config.js
+echo "✅ Deploy completato!"
+pm2 list
+curl -I https://highlandergame.it
+EOF
+
+chmod +x /home/highlander/deploy.sh
+```
+
+## FLUSSO FUTURO
+
+### Aggiornamenti da Replit:
+```bash
+git add .
+git commit -m "Descrizione modifiche"
+git push origin main
+```
+
+### Deploy sul server:
+```bash
+ssh root@78.47.123.128
+cd /home/highlander
+./deploy.sh
+```
+
+Il setup è ora completo e scalabile per tutti gli aggiornamenti futuri!
