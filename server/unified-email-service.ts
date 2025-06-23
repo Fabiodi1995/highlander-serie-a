@@ -15,6 +15,11 @@ interface PasswordResetData {
   token: string;
 }
 
+interface UsernameRecoveryData {
+  email: string;
+  username: string;
+}
+
 export class UnifiedEmailService {
   private baseUrl: string;
   private emailProvider: 'smtp' | 'none';
@@ -87,6 +92,26 @@ export class UnifiedEmailService {
 
       default:
         this.logEmailToConsole('RESET PASSWORD', data.email, resetUrl);
+        return true;
+    }
+  }
+
+  async sendUsernameRecoveryEmail(data: UsernameRecoveryData): Promise<boolean> {
+    switch (this.emailProvider) {
+      case 'smtp':
+        return this.sendViaSMTP({
+          to: data.email,
+          subject: 'Recupero Username - Highlander',
+          html: this.getUsernameRecoveryTemplate(data.username)
+        });
+
+      default:
+        console.log('\n===============================================');
+        console.log(`📧 RECUPERO USERNAME (Modalità Sviluppo)`);
+        console.log('===============================================');
+        console.log(`To: ${data.email}`);
+        console.log(`Username: ${data.username}`);
+        console.log('===============================================\n');
         return true;
     }
   }
@@ -217,6 +242,66 @@ export class UnifiedEmailService {
             
             <div style="background: #fef3c7; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #f59e0b;">
               <small><strong>Sicurezza:</strong> Per motivi di sicurezza, questo link scadrà automaticamente tra 60 minuti.</small>
+            </div>
+          </div>
+          
+          <div class="footer">
+            <p style="margin: 0; color: #6b7280; font-size: 14px;">
+              © 2025 Highlander Game - Serie A 2025/26<br>
+              <span class="highlight">highlandergame.it</span>
+            </p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+  }
+
+  private getUsernameRecoveryTemplate(username: string): string {
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Recupero Username - Highlander</title>
+        <style>
+          ${this.getEmailStyles()}
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1 style="margin: 0; color: white;">🛡️ Highlander</h1>
+            <p style="margin: 10px 0 0 0; opacity: 0.9;">Recupero Username</p>
+          </div>
+          
+          <div class="content">
+            <h2 style="color: #1f2937; margin-top: 0;">Ecco il tuo username!</h2>
+            
+            <p>Hai richiesto il recupero del tuo username per l'account Highlander associato a questa email.</p>
+            
+            <div style="background: #f0f9ff; border: 2px solid #0284c7; border-radius: 8px; padding: 20px; margin: 30px 0; text-align: center;">
+              <p style="margin: 0; color: #0369a1; font-size: 14px; font-weight: 500;">Il tuo username è:</p>
+              <h3 style="margin: 10px 0 0 0; color: #0c4a6e; font-size: 24px; font-weight: bold;">${username}</h3>
+            </div>
+            
+            <p>Ora puoi utilizzare questo username per accedere al tuo account Highlander.</p>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${this.baseUrl}/auth" style="display: inline-block; background: #0284c7; color: white !important; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);">Accedi ora</a>
+            </div>
+            
+            <p><strong>Suggerimenti per la sicurezza:</strong></p>
+            <ul>
+              <li>🔒 Salva il tuo username in un luogo sicuro</li>
+              <li>🔑 Se hai dimenticato anche la password, usa il link "Password dimenticata?"</li>
+              <li>✅ Considera l'uso di un gestore di password</li>
+            </ul>
+            
+            <p>Se non hai richiesto questo recupero username, puoi ignorare questa email.</p>
+            
+            <div style="background: #f0fdf4; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #22c55e;">
+              <small><strong>Buon gioco!</strong> Ora puoi tornare a sfidare gli altri giocatori in Highlander.</small>
             </div>
           </div>
           

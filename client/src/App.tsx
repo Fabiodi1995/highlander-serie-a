@@ -35,6 +35,7 @@ import AnalyticsDashboard from "@/pages/analytics-dashboard";
 import CalendarPage from "@/pages/calendar";
 import DownloadAppPage from "@/pages/download-app";
 import ForgotPasswordPage from "@/pages/forgot-password";
+import ForgotUsernamePage from "@/pages/forgot-username";
 import ResetPasswordPage from "@/pages/reset-password";
 import VerifyEmailPage from "@/pages/verify-email";
 
@@ -43,6 +44,7 @@ function Router() {
     <Switch>
       <Route path="/auth" component={AuthPage} />
       <Route path="/forgot-password" component={ForgotPasswordPage} />
+      <Route path="/forgot-username" component={ForgotUsernamePage} />
       <Route path="/reset-password" component={ResetPasswordPage} />
       <Route path="/verify-email" component={VerifyEmailPage} />
       <Route path="/privacy-policy" component={PrivacyPolicyPage} />
