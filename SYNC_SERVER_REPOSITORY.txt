@@ -1,0 +1,70 @@
+SINCRONIZZAZIONE SERVER CON REPOSITORY GITHUB
+============================================
+
+STEP 1 - BACKUP DEL CODICE ATTUALE SUL SERVER:
+```bash
+ssh root@78.47.123.128
+cd /home/highlander/app
+
+# Backup delle modifiche locali
+cp -r . ../backup-$(date +%Y%m%d_%H%M%S)
+
+# Verifica lo stato di Git
+git status
+git log -1 --oneline
+```
+
+STEP 2 - FORZA SINCRONIZZAZIONE CON GITHUB:
+```bash
+# Scarica l'ultimo codice dal repository
+git fetch origin main
+
+# Resetta completamente al codice del repository (ATTENZIONE: cancella modifiche locali)
+git reset --hard origin/main
+
+# Verifica che ora sia sincronizzato
+git status
+git log -1 --oneline
+```
+
+STEP 3 - REINSTALLAZIONE E BUILD:
+```bash
+# Installa dipendenze (potrebbero essere cambiate)
+npm install
+
+# Build dell'applicazione con il nuovo codice
+npm run build
+
+# Restart completo di PM2
+pm2 restart highlander
+```
+
+STEP 4 - VERIFICA FUNZIONAMENTO:
+```bash
+# Controlla che PM2 sia attivo
+pm2 status
+
+# Verifica i log per errori
+pm2 logs highlander --lines 20
+
+# Test rapido dell'API
+curl -X POST https://highlandergame.it/api/forgot-username \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com"}'
+```
+
+STEP 5 - AGGIORNA SCRIPT DEPLOY.SH SUL SERVER:
+```bash
+# Modifica lo script deploy
+nano /home/highlander/deploy.sh
+
+# Cambia la riga 28 da:
+# pm2 reload highlander
+# Con:
+# pm2 restart highlander
+
+# Salva e rendi eseguibile
+chmod +x /home/highlander/deploy.sh
+```
+
+IMPORTANTE: Il comando `git reset --hard origin/main` cancellerà tutte le modifiche locali sul server e sincronizzerà completamente con il repository GitHub.
