@@ -26,6 +26,22 @@ if (useLocalPostgres) {
   });
   
   db = drizzlePostgres(pool, { schema });
+  
+  // Test connection and handle errors gracefully
+  pool.on('error', (err) => {
+    console.error('PostgreSQL pool error:', err);
+  });
+  
+  // Test initial connection
+  pool.connect((err, client, release) => {
+    if (err) {
+      console.error('Error acquiring client from pool:', err);
+    } else {
+      console.log('PostgreSQL connection established successfully');
+      if (client) release();
+    }
+  });
+  
 } else {
   // Use Neon serverless driver for cloud connections
   const sql = neon(process.env.DATABASE_URL!);

@@ -1,0 +1,32 @@
+VERIFICA E CREAZIONE SCHEMA DATABASE
+===================================
+
+Sul server, verifica se le tabelle esistono:
+
+```bash
+ssh root@78.47.123.128
+
+# Connetti al database PostgreSQL
+sudo -u postgres psql -d highlander_db
+
+# Verifica tabelle esistenti
+\dt
+
+# Se non ci sono tabelle, esci e crea lo schema
+\q
+
+# Vai alla directory app
+cd /home/highlander/app
+
+# Crea le tabelle con Drizzle
+npm run db:push
+
+# Verifica di nuovo
+sudo -u postgres psql -d highlander_db -c "\dt"
+
+# Restart PM2
+pm2 restart highlander
+pm2 logs highlander --lines 10
+```
+
+Il problema potrebbe essere che il database esiste ma non ha le tabelle necessarie.

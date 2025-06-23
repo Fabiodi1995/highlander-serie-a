@@ -1,52 +1,40 @@
-CORREZIONE IMMEDIATA ECOSYSTEM.CONFIG.JS
-======================================
+RISOLUZIONE DEFINITIVA PROBLEMA DATABASE
+=======================================
 
-Esegui questi comandi sul server:
+Esegui questo script completo sul server:
 
-# 1. Sostituisci ecosystem.config.js con sintassi corretta
-cat > ecosystem.config.js << 'EOF'
-module.exports = {
-  apps: [{
-    name: 'highlander',
-    script: 'server/index.ts',
-    interpreter: 'node',
-    interpreter_args: '--loader tsx',
-    cwd: '/home/highlander/app',
-    env: {
-      NODE_ENV: 'production',
-      PORT: 5000,
-      DATABASE_URL: 'postgresql://highlander:P3CQeyzh/YLiyxabFSMgwoxRpUPW5qw4@localhost:5432/highlander_db',
-      SMTP_USER: 'support@highlandergame.it',
-      SMTP_PASSWORD: 'Calibro9!',
-      SESSION_SECRET: 'your-session-secret-here',
-      BASE_URL: 'https://highlandergame.it'
-    },
-    instances: 1,
-    autorestart: true,
-    watch: false,
-    max_memory_restart: '1G',
-    error_file: './logs/error.log',
-    out_file: './logs/out.log',
-    log_file: './logs/combined.log',
-    time: true
-  }]
-}
-EOF
+```bash
+ssh root@78.47.123.128
+cd /home/highlander/app
 
-# 2. Crea directory logs
-mkdir -p logs
-
-# 3. Build applicazione
+# 1. Sync con repository
+git fetch origin main
+git reset --hard origin/main
+npm install
 npm run build
 
-# 4. Avvia PM2
-pm2 start ecosystem.config.js
+# 2. Verifica e crea schema database
+sudo -u postgres psql -d highlander_db << 'EOSQL'
+-- Verifica tabelle esistenti
+\dt
+-- Se non ci sono output, le tabelle non esistono
+EOSQL
 
-# 5. Verifica
-pm2 list
+# 3. Forza creazione schema con Drizzle
+npm run db:push
 
-# 6. Se funziona, salva configurazione
-pm2 save
+# 4. Restart PM2 completamente
+pm2 delete highlander
+pm2 start ecosystem.config.cjs
 
-echo "PM2 configurato correttamente"
-echo "Test app: https://highlandergame.it"
+# 5. Verifica finale
+pm2 status
+pm2 logs highlander --lines 10
+
+# 6. Test API
+curl -X POST https://highlandergame.it/api/forgot-username \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com"}'
+```
+
+Questo script risolverà tutti i problemi database e riavvierà l'applicazione da zero.
