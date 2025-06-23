@@ -1299,19 +1299,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Send username recovery email
   app.post("/api/forgot-username", async (req, res) => {
+    console.log("🎯 Richiesta forgot-username ricevuta:", req.body);
+    
     try {
       const { email } = req.body;
       
       if (!email) {
+        console.log("❌ Email mancante nella richiesta");
         return res.status(400).json({ message: "Email è richiesta" });
       }
 
+      console.log("🔍 Ricerca utente con email:", email);
       const user = await storage.getUserByEmail(email);
+      
       if (!user) {
+        console.log("👤 Utente non trovato per email:", email);
         // Don't reveal if email exists or not for security
         return res.json({ message: "Se l'email esiste, riceverai il tuo username" });
       }
 
+      console.log("📧 Invio email di recupero username a:", user.email);
       // Send email with username
       const emailSent = await emailService.sendUsernameRecoveryEmail({
         email: user.email,
@@ -1319,12 +1326,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       if (emailSent) {
+        console.log("✅ Email inviata con successo");
         res.json({ message: "Se l'email esiste, riceverai il tuo username" });
       } else {
+        console.log("❌ Errore invio email");
         res.status(500).json({ message: "Errore nell'invio dell'email" });
       }
     } catch (error) {
-      console.error("Error in forgot username:", error);
+      console.error("💥 Errore in forgot username:", error);
       res.status(500).json({ message: "Errore del server" });
     }
   });

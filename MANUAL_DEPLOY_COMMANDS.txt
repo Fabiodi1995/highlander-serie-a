@@ -1,70 +1,43 @@
-COMANDI DEPLOY MANUALE - GUIDA RAPIDA
-=====================================
+COMANDI PER DEPLOY MANUALE
+=========================
 
-## DA REPLIT A GITHUB (dopo modifiche qui)
-
+STEP 1 - COMMIT E PUSH DA REPLIT:
 ```bash
-# 1. Verifica modifiche
-git status
-
-# 2. Aggiungi file modificati
 git add .
+git commit -m "Debug: Logging dettagliato per forgot-username in produzione
 
-# 3. Commit con messaggio
-git commit -m "Fix: Aggiornato ecosystem.config.cjs e risolto login"
+- Aggiunto logging completo frontend con emoji per identificare facilmente gli errori
+- Aggiunto logging backend per tracciare richieste API
+- Controllo Content-Type per verificare risposte JSON valide
+- Gestione errori migliorata con stack trace completo"
 
-# 4. Push su GitHub
 git push origin main
 ```
 
-## DA GITHUB AL SERVER HETZNER
-
+STEP 2 - DEPLOY SUL SERVER:
 ```bash
-# Connetti al server
 ssh root@78.47.123.128
-
-# Vai nella directory app
-cd /home/highlander/app
-
-# Ferma l'applicazione
-pm2 stop highlander
-
-# Aggiorna dal repository
-git pull origin main
-
-# Installa eventuali nuove dipendenze
-npm install
-
-# Ricompila l'applicazione
-npm run build
-
-# Riavvia l'applicazione
-pm2 start ecosystem.config.cjs
-
-# Verifica stato
-pm2 list
-pm2 logs highlander --lines 10
+cd /home/highlander
+./deploy.sh
 ```
 
-## SCRIPT RAPIDO (da salvare sul server)
+STEP 3 - VERIFICA FUNZIONAMENTO:
+1. Vai su https://highlandergame.it/forgot-username
+2. Apri Developer Tools > Console
+3. Inserisci email di test (es: dicostanzo.fabio@yahoo.it)
+4. Clicca "Invia Username"
+5. Controlla i log nella console
 
-Crea `/home/highlander/deploy.sh`:
+I log mostreranno:
+🚀 = Richiesta inviata
+📡 = Response ricevuta
+📋 = Headers response
+📄 = Content-Type
+✅ = Dati parsati correttamente
+💥 = Errore con stack trace
+
+LOGS SERVER (se necessario):
 ```bash
-#!/bin/bash
-cd /home/highlander/app
-pm2 stop highlander
-git pull origin main
-npm install
-npm run build
-pm2 start ecosystem.config.cjs
-echo "Deploy completato!"
-pm2 list
-```
-
-Uso: `chmod +x deploy.sh && ./deploy.sh`
-
-## VERIFICA FINALE
-```bash
-curl -I https://highlandergame.it
-pm2 logs highlander --lines 5
+ssh root@78.47.123.128
+pm2 logs highlander --lines 50
 ```

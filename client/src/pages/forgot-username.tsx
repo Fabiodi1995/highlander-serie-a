@@ -32,7 +32,7 @@ export default function ForgotUsernamePage() {
     setIsLoading(true);
     
     try {
-      console.log("Invio richiesta a /api/forgot-username con:", data);
+      console.log("🚀 Invio richiesta forgot-username:", data);
       
       const response = await fetch("/api/forgot-username", {
         method: "POST",
@@ -42,11 +42,21 @@ export default function ForgotUsernamePage() {
         body: JSON.stringify(data),
       });
 
-      console.log("Response status:", response.status);
-      console.log("Response headers:", response.headers);
+      console.log("📡 Response status:", response.status, response.statusText);
+      console.log("📋 Response headers:", Object.fromEntries(response.headers.entries()));
+
+      // Check if response is JSON
+      const contentType = response.headers.get("content-type");
+      console.log("📄 Content-Type:", contentType);
+      
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await response.text();
+        console.error("❌ Risposta non JSON:", text);
+        throw new Error("Risposta del server non valida");
+      }
 
       const result = await response.json();
-      console.log("Response data:", result);
+      console.log("✅ Response data:", result);
 
       if (response.ok) {
         setIsSubmitted(true);
@@ -55,7 +65,7 @@ export default function ForgotUsernamePage() {
           description: result.message,
         });
       } else {
-        console.error("Errore API:", result);
+        console.error("⚠️ Errore API:", result);
         toast({
           title: "Errore",
           description: result.message || "Si è verificato un errore",
@@ -63,10 +73,11 @@ export default function ForgotUsernamePage() {
         });
       }
     } catch (error) {
-      console.error("Errore fetch:", error);
+      console.error("💥 Errore completo:", error);
+      console.error("💥 Errore stack:", error instanceof Error ? error.stack : 'No stack');
       toast({
         title: "Errore",
-        description: "Impossibile inviare la richiesta. Riprova più tardi.",
+        description: error instanceof Error ? error.message : "Impossibile inviare la richiesta. Riprova più tardi.",
         variant: "destructive",
       });
     } finally {
