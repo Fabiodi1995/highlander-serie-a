@@ -1,0 +1,91 @@
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# # Avvia PM2 con la configurazione corretta
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# pm2 start ecosystem.config.js
+[PM2] Spawning PM2 daemon with pm2_home=/root/.pm2
+[PM2] PM2 Successfully daemonized
+[PM2][ERROR] File ecosystem.config.js malformated
+ReferenceError: module is not defined
+    at file:///home/highlander/app/ecosystem.config.js:1:1
+    at ModuleJobSync.runSync (node:internal/modules/esm/module_job:387:35)
+    at ModuleLoader.importSyncForRequire (node:internal/modules/esm/loader:323:47)
+    at loadESMFromCJS (node:internal/modules/cjs/loader:1371:24)
+    at Module._compile (node:internal/modules/cjs/loader:1511:5)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1572:16)
+    at Module.load (node:internal/modules/cjs/loader:1275:32)
+    at Module._load (node:internal/modules/cjs/loader:1096:12)
+    at Module.require (node:internal/modules/cjs/loader:1298:19)
+    at require (node:internal/modules/helpers:182:18)
+root@ubuntu-4gb-nbg1-1:/home/highlander/app#
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# # Verifica stato
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# pm2 list
+┌────┬───────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name      │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+└────┴───────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# # Rimuovi il file problematico
+# Crea ecosystem.config.cjs (estensione .cjs forza CommonJS)
+cat > ecosystem.config.cjs << 'EOF'
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# rm ecosystem.config.js
+module.exports = {
+  apps: [{
+    name: 'highlander',
+    script: './dist/index.js',
+    cwd: '/home/highlander/app',
+    env: {
+      NODE_ENV: 'production',
+      PORT: 5000,
+      DATABASE_URL: 'postgresql://highlander:P3CQeyzh/YLiyxabFSMgwoxRpUPW5qw4@localhost:5432/highlander_db',
+root@ubuntu-4gb-nbg1-1:/home/highlander/app#
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# # Crea ecosystem.config.cjs (estensione .cjs forza CommonJS)
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# cat > ecosystem.config.cjs << 'EOF'
+> module.exports = {
+>   apps: [{
+>     name: 'highlander',
+>     script: './dist/index.js',
+>     cwd: '/home/highlander/app',
+>     env: {
+>       NODE_ENV: 'production',
+>       PORT: 5000,
+>       DATABASE_URL: 'postgresql://highlander:P3CQeyzh/YLiyxabFSMgwoxRpUPW5qw4@localhost:5432/highlander_db',
+>       SMTP_USER: 'support@highlandergame.it',
+>       SMTP_PASSWORD: 'Calibro9!',
+>       SESSION_SECRET: 'your-session-secret-here',
+>       BASE_URL: 'https://highlandergame.it'
+>     },
+>     instances: 1,
+>     autorestart: true,
+>     watch: false,
+>     max_memory_restart: '1G',
+>     error_file: './logs/error.log',
+>     out_file: './logs/out.log',
+>     log_file: './logs/combined.log',
+>     time: true
+>   }]
+> }
+> EOF
+mkdir -p logs
+
+# Avvia PM2 con il file corretto
+pm2 start ecosystem.config.cjs
+
+# Verifica stato
+pm2 listroot@ubuntu-4gb-nbg1-1:/home/highlander/app#
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# # Crea directory logs
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# mkdir -p logs
+root@ubuntu-4gb-nbg1-1:/home/highlander/app#
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# # Avvia PM2 con il file corretto
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# pm2 start ecosystem.config.cjs
+[PM2][WARN] Applications highlander not running, starting...
+[PM2] App [highlander] launched (1 instances)
+┌────┬───────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name          │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼───────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ highlander    │ default     │ 1.0.0   │ cluster │ 130124   │ 0s     │ 0    │ online    │ 0%       │ 46.5mb   │ root     │ disabled │
+└────┴───────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+root@ubuntu-4gb-nbg1-1:/home/highlander/app#
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# # Verifica stato
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# pm2 list
+┌────┬───────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name          │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼───────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ highlander    │ default     │ 1.0.0   │ cluster │ 130124   │ 5s     │ 0    │ online    │ 0%       │ 103.5mb  │ root     │ disabled │
+└────┴───────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+root@ubuntu-4gb-nbg1-1:/home/highlander/app#

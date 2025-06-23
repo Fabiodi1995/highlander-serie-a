@@ -1,0 +1,32 @@
+
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# mkdir -p /home/highlander/app/logs
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# chown -R highlander:highlander /home/highlander/app/logs
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# cd /home/highlander/app
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# sudo -u highlander pm2 start ecosystem.config.js --env production
+[PM2][WARN] Applications  not running, starting...
+[PM2][ERROR] Error: No script path - aborting
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# sudo -u highlander pm2 list
+┌────┬───────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name      │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+└────┴───────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# ls -la /home/highlander/app/dist/
+total 148
+drwxrwxr-x  3 highlander highlander   4096 Jun 23 14:23 .
+drwxr-xr-x 14 highlander highlander   4096 Jun 23 14:25 ..
+-rw-rw-r--  1 highlander highlander 137225 Jun 23 14:23 index.js
+drwxrwxr-x  3 highlander highlander   4096 Jun 23 14:23 public
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# sudo -u highlander pm2 start /home/highlander/app/dist/index.js --name "highlander-app" --env production
+[PM2] Starting /home/highlander/app/dist/index.js in fork_mode (1 instance)
+[PM2] Done.
+┌────┬───────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name              │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼───────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ highlander-app    │ default     │ 1.0.0   │ fork    │ 81433    │ 0s     │ 0    │ online    │ 0%       │ 29.8mb   │ hig… │ disabled │
+└────┴───────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# sudo -u highlander pm2 list
+┌────┬───────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name              │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼───────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ highlander-app    │ default     │ 1.0.0   │ fork    │ 81433    │ 2s     │ 0    │ online    │ 0%       │ 106.7mb  │ hig… │ disabled │
+└────┴───────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+root@ubuntu-4gb-nbg1-1:/home/highlander/app#

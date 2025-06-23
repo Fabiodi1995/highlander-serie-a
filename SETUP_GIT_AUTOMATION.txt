@@ -1,0 +1,116 @@
+GESTIONE GIT MANUALE E AUTOMATICA
+==================================
+
+## 1. AGGIORNAMENTO REPOSITORY DA REPLIT A GITHUB
+
+### Prima volta - Setup repository:
+```bash
+# Su Replit, configura Git se non fatto
+git config --global user.name "Tu"
+git config --global user.email "tua-email@example.com"
+
+# Aggiungi remote se non presente
+git remote add origin https://github.com/Fabiodi1995/highlander-serie-a.git
+
+# Verifica remote
+git remote -v
+```
+
+### Processo manuale per ogni aggiornamento:
+```bash
+# 1. Verifica status
+git status
+
+# 2. Aggiungi tutti i file modificati
+git add .
+
+# 3. Commit con messaggio descrittivo
+git commit -m "Fix: Risolto bug login e configurazione PM2"
+
+# 4. Push su GitHub
+git push origin main
+```
+
+## 2. AGGIORNAMENTO SERVER DA GITHUB
+
+### Setup iniziale sul server (solo prima volta):
+```bash
+# Sul server Hetzner
+cd /home/highlander
+
+# Clona repo se non presente
+git clone https://github.com/Fabiodi1995/highlander-serie-a.git app-new
+
+# O configura remote nell'app esistente
+cd /home/highlander/app
+git remote add origin https://github.com/Fabiodi1995/highlander-serie-a.git
+```
+
+### Processo deploy manuale:
+```bash
+# Sul server Hetzner
+cd /home/highlander/app
+
+# 1. Ferma applicazione
+pm2 stop highlander
+
+# 2. Backup corrente (opzionale)
+cp -r /home/highlander/app /home/highlander/app-backup-$(date +%Y%m%d-%H%M%S)
+
+# 3. Pull aggiornamenti da GitHub
+git pull origin main
+
+# 4. Installa dipendenze (se necessario)
+npm install
+
+# 5. Build applicazione
+npm run build
+
+# 6. Riavvia con PM2
+pm2 start ecosystem.config.cjs
+
+# 7. Verifica
+pm2 list
+pm2 logs highlander --lines 10
+```
+
+## 3. SCRIPT AUTOMATICO PER DEPLOY
+
+Crea script deploy.sh:
+```bash
+#!/bin/bash
+cd /home/highlander/app
+echo "Fermando applicazione..."
+pm2 stop highlander
+echo "Backup..."
+cp -r . ../app-backup-$(date +%Y%m%d-%H%M%S)
+echo "Aggiornando da Git..."
+git pull origin main
+echo "Build..."
+npm run build
+echo "Riavviando..."
+pm2 start ecosystem.config.cjs
+echo "Deploy completato!"
+pm2 list
+```
+
+Rendilo eseguibile:
+```bash
+chmod +x deploy.sh
+```
+
+Uso: `./deploy.sh`
+
+## 4. FLUSSO COMPLETO
+
+### Da Replit a Produzione:
+1. Modifica codice su Replit
+2. `git add . && git commit -m "Descrizione" && git push origin main`
+3. Sul server: `git pull origin main && npm run build && pm2 restart highlander`
+
+### Verifica sempre:
+```bash
+# Su server dopo deploy
+curl -I https://highlandergame.it
+pm2 logs highlander --lines 20
+```

@@ -1,0 +1,186 @@
+| 2:37:33 PM [express] Timer service started for deadline monitoring
+0|highland |
+0|highland | 🧪 Test Configurazione Email...
+0|highland | ✅ Connessione SMTP verificata
+0|highland | ✅ Sistema email configurato correttamente
+0|highland | ✅ Connessione SMTP One.com verificata - pronto per invio email reali
+0|highland | 🧪 Test completato
+0|highland |
+
+0|highlander-app  | Checking 0 active games at UTC time: 2025-06-23T14:38:03.399Z
+^C
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# curl -I http://localhost:5000
+HTTP/1.1 200 OK
+X-Powered-By: Express
+Accept-Ranges: bytes
+Cache-Control: public, max-age=0
+Last-Modified: Mon, 23 Jun 2025 14:36:44 GMT
+ETag: W/"271-1979d3856b1"
+Content-Type: text/html; charset=UTF-8
+Content-Length: 625
+Date: Mon, 23 Jun 2025 14:38:36 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# curl -I http://highlandergame.it
+HTTP/1.1 301 Moved Permanently
+Server: nginx/1.18.0 (Ubuntu)
+Date: Mon, 23 Jun 2025 14:38:36 GMT
+Content-Type: text/html
+Content-Length: 178
+Connection: keep-alive
+Location: https://highlandergame.it/
+
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# sudo apt install certbot python3-certbot-nginx -y
+Reading package lists... Done
+Building dependency tree
+Reading state information... Done
+certbot is already the newest version (0.40.0-1ubuntu0.1).
+python3-certbot-nginx is already the newest version (0.40.0-0ubuntu0.1).
+0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# sudo certbot --nginx -d highlandergame.it --non-interactive --agree-tos --email support@highlandergame.it
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Plugins selected: Authenticator nginx, Installer nginx
+Obtaining a new certificate
+Performing the following challenges:
+http-01 challenge for highlandergame.it
+Waiting for verification...
+Cleaning up challenges
+Deploying Certificate to VirtualHost /etc/nginx/sites-enabled/highlandergame.it
+Future versions of Certbot will automatically configure the webserver so that all requests redirect to secure HTTPS access. You can control this behavior and disable this warning with the --redirect and --no-redirect flags.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Congratulations! You have successfully enabled https://highlandergame.it
+
+You should test your configuration at:
+https://www.ssllabs.com/ssltest/analyze.html?d=highlandergame.it
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+IMPORTANT NOTES:
+ - Congratulations! Your certificate and chain have been saved at:
+   /etc/letsencrypt/live/highlandergame.it/fullchain.pem
+   Your key file has been saved at:
+   /etc/letsencrypt/live/highlandergame.it/privkey.pem
+   Your cert will expire on 2025-09-21. To obtain a new or tweaked
+   version of this certificate in the future, simply run certbot again
+   with the "certonly" option. To non-interactively renew *all* of
+   your certificates, run "certbot renew"
+ - Your account credentials have been saved in your Certbot
+   configuration directory at /etc/letsencrypt. You should make a
+   secure backup of this folder now. This configuration directory will
+   also contain certificates and private keys obtained by Certbot so
+   making regular backups of this folder is ideal.
+ - If you like Certbot, please consider supporting our work by:
+
+   Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
+   Donating to EFF:                    https://eff.org/donate-le
+
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u highlander --hp /home/highlander
+
+                        -------------
+
+__/\\\\\\\\\\\\\____/\\\\____________/\\\\____/\\\\\\\\\_____
+ _\/\\\/////////\\\_\/\\\\\\________/\\\\\\__/\\\///////\\\___
+  _\/\\\_______\/\\\_\/\\\//\\\____/\\\//\\\_\///______\//\\\__
+   _\/\\\\\\\\\\\\\/__\/\\\\///\\\/\\\/_\/\\\___________/\\\/___
+    _\/\\\/////////____\/\\\__\///\\\/___\/\\\________/\\\//_____
+     _\/\\\_____________\/\\\____\///_____\/\\\_____/\\\//________
+      _\/\\\_____________\/\\\_____________\/\\\___/\\\/___________
+       _\/\\\_____________\/\\\_____________\/\\\__/\\\\\\\\\\\\\\\_
+        _\///______________\///______________\///__\///////////////__
+
+
+                          Runtime Edition
+
+        PM2 is a Production Process Manager for Node.js applications
+                     with a built-in Load Balancer.
+
+                Start and Daemonize any application:
+                $ pm2 start app.js
+
+                Load Balance 4 instances of api.js:
+                $ pm2 start api.js -i 4
+
+                Monitor in production:
+                $ pm2 monitor
+
+                Make pm2 auto-boot at server restart:
+                $ pm2 startup
+
+                To go further checkout:
+                http://pm2.io/
+
+
+                        -------------
+
+[PM2] Init System found: systemd
+Platform systemd
+Template
+[Unit]
+Description=PM2 process manager
+Documentation=https://pm2.keymetrics.io/
+After=network.target
+
+[Service]
+Type=forking
+User=highlander
+LimitNOFILE=infinity
+LimitNPROC=infinity
+LimitCORE=infinity
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/usr/bin:/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin
+Environment=PM2_HOME=/home/highlander/.pm2
+PIDFile=/home/highlander/.pm2/pm2.pid
+Restart=on-failure
+
+ExecStart=/usr/lib/node_modules/pm2/bin/pm2 resurrect
+ExecReload=/usr/lib/node_modules/pm2/bin/pm2 reload all
+ExecStop=/usr/lib/node_modules/pm2/bin/pm2 kill
+
+[Install]
+WantedBy=multi-user.target
+
+Target path
+/etc/systemd/system/pm2-highlander.service
+Command list
+[ 'systemctl enable pm2-highlander' ]
+[PM2] Writing init configuration in /etc/systemd/system/pm2-highlander.service
+[PM2] Making script booting at startup...
+[PM2] [-] Executing: systemctl enable pm2-highlander...
+Created symlink /etc/systemd/system/multi-user.target.wants/pm2-highlander.service → /etc/systemd/system/pm2-highlander.service.
+[PM2] [v] Command successfully executed.
++---------------------------------------+
+[PM2] Freeze a process list on reboot via:
+$ pm2 save
+
+[PM2] Remove init script via:
+$ pm2 unstartup systemd
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# sudo -u highlander pm2 save
+[PM2] Saving current process list...
+[PM2] Successfully saved in /home/highlander/.pm2/dump.pm2
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# sed -i 's/proxy_pass http:\/\/localhost:3000;/proxy_pass http:\/\/localhost:5000;/g' /etc/nginx/sites-available/highlandergame.it
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# nginx -t && systemctl reload nginx
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# curl -I https://highlandergame.it
+HTTP/2 200
+server: nginx/1.18.0 (Ubuntu)
+date: Mon, 23 Jun 2025 14:40:05 GMT
+content-type: text/html; charset=UTF-8
+content-length: 625
+x-powered-by: Express
+accept-ranges: bytes
+cache-control: public, max-age=0
+last-modified: Mon, 23 Jun 2025 14:36:44 GMT
+etag: W/"271-1979d3856b1"
+strict-transport-security: max-age=31536000; includeSubDomains; preload
+x-frame-options: DENY
+x-content-type-options: nosniff
+x-xss-protection: 1; mode=block
+
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# sudo -u highlander pm2 status
+┌────┬───────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name              │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼───────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ highlander-app    │ default     │ 1.0.0   │ fork    │ 86358    │ 2m     │ 0    │ online    │ 0%       │ 97.4mb   │ hig… │ disabled │
+└────┴───────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+root@ubuntu-4gb-nbg1-1:/home/highlander/app#

@@ -1,0 +1,52 @@
+SETUP GIT REPOSITORY CORRETTO
+=============================
+
+Il problema: Git add non funziona con tool di Replit
+
+SOLUZIONE: Esegui manualmente nella shell di Replit:
+
+# 1. Aggiungi file essenziali
+git add client/
+git add server/
+git add shared/
+git add package.json
+git add package-lock.json
+git add ecosystem.config.js
+git add .gitignore
+git add tsconfig.json
+git add vite.config.ts
+git add tailwind.config.ts
+git add drizzle.config.ts
+git add components.json
+git add postcss.config.js
+
+# 2. Verifica cosa è stato aggiunto
+git status
+
+# 3. Primo commit
+git commit -m "Initial: App Highlander pulita con PM2 e fix login"
+
+# 4. Connetti repository (assicurati di aver creato repository vuoto su GitHub)
+git remote add origin https://github.com/Fabiodi1995/highlander-serie-a.git
+git branch -M main
+git push -u origin main
+
+IMPORTANTE:
+- ecosystem.config.js ora corretto con script: './dist/index.js'
+- Tutte le configurazioni ambiente incluse
+- Solo file essenziali nel repository
+
+DOPO IL PUSH SU GITHUB:
+Sul server Hetzner esegui:
+
+ssh root@78.47.123.128
+cd /home/highlander
+pm2 stop highlander
+mv app app-backup-$(date +%Y%m%d)
+git clone https://github.com/Fabiodi1995/highlander-serie-a.git app
+cd app
+cp ../app-backup-*/.env .
+npm install
+npm run build
+pm2 start ecosystem.config.js
+pm2 list

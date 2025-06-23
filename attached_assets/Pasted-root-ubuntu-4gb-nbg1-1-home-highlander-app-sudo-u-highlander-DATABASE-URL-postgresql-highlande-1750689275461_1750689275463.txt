@@ -1,0 +1,83 @@
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# sudo -u highlander DATABASE_URL="postgresql://highlander_db:P3CQeyzh%2FYLiyxabFSMgwoxRpUPW5qw4@localhost:5432/highlander_prod" NODE_ENV="production" PORT="3000" BASE_URL="https://highlandergame.it" SMTP_USER="support@highlandergame.it" SMTP_PASSWORD="Calibro9!" SESSION_SECRET="highlander-secret-2025" pm2 start dist/index.js --name "highlander-app"
+[PM2] Starting /home/highlander/app/dist/index.js in fork_mode (1 instance)
+[PM2] Done.
+┌────┬───────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name              │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼───────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ highlander-app    │ default     │ 1.0.0   │ fork    │ 84319    │ 0s     │ 0    │ online    │ 0%       │ 3.4mb    │ hig… │ disabled │
+└────┴───────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# sleep 3
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# sudo -u highlander pm2 logs highlander-app --lines 10
+[TAILING] Tailing last 10 lines for [highlander-app] process (change the value with --lines option)
+/home/highlander/.pm2/logs/highlander-app-out.log last 10 lines:
+0|highland | Email provider configured: smtp
+0|highland | Email provider configured: smtp
+0|highland | Email provider configured: smtp
+0|highland | Email provider configured: smtp
+0|highland | Email provider configured: smtp
+
+/home/highlander/.pm2/logs/highlander-app-error.log last 10 lines:
+0|highland |       at async file:///home/highlander/app/dist/index.js:3513:18 {
+0|highland |     [cause]: Error: self-signed certificate
+0|highland |         at TLSSocket.onConnectSecure (node:_tls_wrap:1677:34)
+0|highland |         at TLSSocket.emit (node:events:524:28)
+0|highland |         at TLSSocket._finishInit (node:_tls_wrap:1076:8)
+0|highland |         at ssl.onhandshakedone (node:_tls_wrap:862:12) {
+0|highland |       code: 'DEPTH_ZERO_SELF_SIGNED_CERT'
+0|highland |     }
+0|highland |   }
+0|highland | }
+
+0|highlander-app  | Email provider configured: smtp
+0|highlander-app  | NeonDbError: Error connecting to database: fetch failed
+0|highlander-app  |     at execute (file:///home/highlander/app/node_modules/@neondatabase/serverless/index.mjs:1549:24)
+0|highlander-app  |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+0|highlander-app  |     at async NeonHttpPreparedQuery.execute (file:///home/highlander/app/node_modules/drizzle-orm/neon-http/session.js:40:20)
+0|highlander-app  |     at async DatabaseStorage.getAllTeams (file:///home/highlander/app/dist/index.js:654:16)
+0|highlander-app  |     at async DatabaseStorage.seedTeams (file:///home/highlander/app/dist/index.js:679:31)
+0|highlander-app  |     at async registerRoutes (file:///home/highlander/app/dist/index.js:2326:3)
+0|highlander-app  |     at async file:///home/highlander/app/dist/index.js:3513:18 {
+0|highlander-app  |   severity: undefined,
+0|highlander-app  |   code: undefined,
+0|highlander-app  |   detail: undefined,
+0|highlander-app  |   hint: undefined,
+0|highlander-app  |   position: undefined,
+0|highlander-app  |   internalPosition: undefined,
+0|highlander-app  |   internalQuery: undefined,
+0|highlander-app  |   where: undefined,
+0|highlander-app  |   schema: undefined,
+0|highlander-app  |   table: undefined,
+0|highlander-app  |   column: undefined,
+0|highlander-app  |   dataType: undefined,
+0|highlander-app  |   constraint: undefined,
+0|highlander-app  |   file: undefined,
+0|highlander-app  |   line: undefined,
+0|highlander-app  |   routine: undefined,
+0|highlander-app  |   sourceError: TypeError: fetch failed
+0|highlander-app  |       at node:internal/deps/undici/undici:13510:13
+0|highlander-app  |       at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+0|highlander-app  |       at async execute (file:///home/highlander/app/node_modules/@neondatabase/serverless/index.mjs:1548:15)
+0|highlander-app  |       at async NeonHttpPreparedQuery.execute (file:///home/highlander/app/node_modules/drizzle-orm/neon-http/session.js:40:20)
+0|highlander-app  |       at async DatabaseStorage.getAllTeams (file:///home/highlander/app/dist/index.js:654:16)
+0|highlander-app  |       at async DatabaseStorage.seedTeams (file:///home/highlander/app/dist/index.js:679:31)
+0|highlander-app  |       at async registerRoutes (file:///home/highlander/app/dist/index.js:2326:3)
+0|highlander-app  |       at async file:///home/highlander/app/dist/index.js:3513:18 {
+0|highlander-app  |     [cause]: Error: self-signed certificate
+0|highlander-app  |         at TLSSocket.onConnectSecure (node:_tls_wrap:1677:34)
+0|highlander-app  |         at TLSSocket.emit (node:events:524:28)
+0|highlander-app  |         at TLSSocket._finishInit (node:_tls_wrap:1076:8)
+0|highlander-app  |         at ssl.onhandshakedone (node:_tls_wrap:862:12) {
+0|highlander-app  |       code: 'DEPTH_ZERO_SELF_SIGNED_CERT'
+0|highlander-app  |     }
+0|highlander-app  |   }
+0|highlander-app  | }
+0|highlander-app  | Email provider configured: smtp
+0|highlander-app  | NeonDbError: Error connecting to database: fetch failed
+0|highlander-app  |     at execute (file:///home/highlander/app/node_modules/@neondatabase/serverless/index.mjs:1549:24)
+0|highlander-app  |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+0|highlander-app  |     at async NeonHttpPreparedQuery.execute (file:///home/highlander/app/node_modules/drizzle-orm/neon-http/session.js:40:20)
+0|highlander-app  |     at async DatabaseStorage.getAllTeams (file:///home/highlander/app/dist/index.js:654:16)
+0|highlander-app  |     at async DatabaseStorage.seedTeams (file:///home/highlander/app/dist/index.js:679:31)
+0|highlander-app  |     at async registerRoutes (file:///home/highlander/app/dist/index.js:2326:3)
+0|highlander-app  |     at async file:///home/highlander/app/dist/index.js:3513:18 {
+0|highlander-app  |   severity: undefined,

@@ -1,0 +1,204 @@
+tu-4gb-nbg1-1:/home/highlander/app# cd /home/highlander/app
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# grep -n "neon\|Neon" server/db.ts
+1:import { neon, neonConfig } from '@neondatabase/serverless';
+2:import { drizzle } from 'drizzle-orm/neon-http';
+12:const sql = neon(process.env.DATABASE_URL);
+40:      // For Neon HTTP, we'll implement a manual rollback pattern
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# head -20 server/db.ts
+import { neon, neonConfig } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-http';
+import * as schema from "@shared/schema";
+
+if (!process.env.DATABASE_URL) {
+  throw new Error(
+    "DATABASE_URL must be set. Did you forget to provision a database?",
+  );
+}
+
+// Simple HTTP connection with minimal configuration
+const sql = neon(process.env.DATABASE_URL);
+export const db = drizzle(sql, { schema });
+
+// Simple query queue to prevent connection overload
+let queryQueue: Array<() => Promise<any>> = [];
+let isProcessing = false;
+
+export async function safeDbQuery<T>(queryFn: () => Promise<T>): Promise<T> {
+  return new Promise((resolve, reject) => {
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# curl -I http://localhost:3000
+curl: (7) Failed to connect to localhost port 3000: Connection refused
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# cat > /home/highlander/app/server/db.ts << 'EOF'
+if (!process.env.DATABASE_URL) {
+  throw new Error(
+    "DATABASE_URL must be set. Did you forget to provision a database?",
+  );
+}
+> import { drizzle } from 'drizzle-orm/postgres-js';
+> import postgres from 'postgres';
+> import * as schema from "@shared/schema";
+>
+> if (!process.env.DATABASE_URL) {
+>   throw new Error(
+>     "DATABASE_URL must be set. Did you forget to provision a database?",
+>   );
+> }
+>
+> // PostgreSQL connection
+> const sql = postgres(process.env.DATABASE_URL);
+> export const db = drizzle(sql, { schema });
+// Simple query queue to prevent connection overload
+let queryQueue: Array<() => Promise<any>> = [];
+let isProcessing = false;
+
+export async function safeDbQuery<T>(queryFn: () => Promise<T>): Promise<T> {
+>
+> // Simple query queue to prevent connection overload
+> let queryQueue: Array<() => Promise<any>> = [];
+> let isProcessing = false;
+>
+    );
+    results.push(...batchResults);
+  }
+
+  return results;
+}
+
+async function processQueue() {
+  if (isProcessing || queryQueue.length === 0) return;
+
+> export async function safeDbQuery<T>(queryFn: () => Promise<T>): Promise<T> {
+>   return new Promise((resolve, reject) => {
+>     queryQueue.push(async () => {
+>       try {
+>         const result = await queryFn();
+>         resolve(result);
+>       } catch (error) {
+>         reject(error);
+>       }
+>     });
+>
+>     if (!isProcessing) {
+>       processQueue();
+>     }
+>   });
+> }
+>
+> export async function withTransaction<T>(
+>   callback: (tx: any) => Promise<T>
+> ): Promise<T> {
+>   // For PostgreSQL, we'll implement a manual rollback pattern
+>   // since we're using a simple connection
+>   try {
+>     const result = await callback(db);
+>     return result;
+>   } catch (error) {
+>     throw error;
+>   }
+> }
+>
+> export async function batchOperation<T>(
+>   operations: Array<() => Promise<T>>,
+>   batchSize: number = 10
+> ): Promise<T[]> {
+>   const results: T[] = [];
+>
+>   for (let i = 0; i < operations.length; i += batchSize) {
+>     const batch = operations.slice(i, i + batchSize);
+>     const batchResults = await Promise.all(
+>       batch.map(op => safeDbQuery(op))
+>     );
+>     results.push(...batchResults);
+>   }
+>
+>   return results;
+> }
+>
+> async function processQueue() {
+>   if (isProcessing || queryQueue.length === 0) return;
+>
+>   isProcessing = true;
+>
+>   while (queryQueue.length > 0) {
+>     const query = queryQueue.shift();
+>     if (query) {
+>       try {
+>         await query();
+>       } catch (error) {
+>         console.error('Database query error:', error);
+>       }
+>     }
+>   }
+>
+>   isProcessing = false;
+> }
+> EOF
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# cd /home/highlander/app
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# sudo -u highlander npm install postgres
+
+added 1 package, and audited 547 packages in 3s
+
+68 packages are looking for funding
+  run `npm fund` for details
+
+9 vulnerabilities (1 low, 7 moderate, 1 high)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues possible (including breaking changes), run:
+  npm audit fix --force
+
+Some issues need review, and may require choosing
+a different dependency.
+
+Run `npm audit` for details.
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# sudo -u highlander npm run build
+
+> rest-express@1.0.0 build
+> vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+
+vite v5.4.14 building for production...
+transforming (3) src/main.tsxBrowserslist: browsers data (caniuse-lite) is 8 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+✓ 3084 modules transformed.
+../dist/public/index.html                              0.63 kB │ gzip:   0.38 kB
+../dist/public/assets/venezia-D_fWP4pR.png             4.80 kB
+../dist/public/assets/empoli-CklK0oDS.png             11.00 kB
+../dist/public/assets/monza-D7huOLMf.png              13.44 kB
+../dist/public/assets/juventus-IqobQH2R.png           13.68 kB
+../dist/public/assets/genoa-UQ5QDtFs.png              68.83 kB
+../dist/public/assets/verona-BS5vNO7G.png             71.29 kB
+../dist/public/assets/lazio-Dvi8klaf.png              77.30 kB
+../dist/public/assets/como-BvbK8SOr.png               82.32 kB
+../dist/public/assets/bologna-BW8nbKVK.png            88.06 kB
+../dist/public/assets/fiorentina-C6e5FQMH.png        106.45 kB
+../dist/public/assets/napoli-CvbEU81f.png            110.27 kB
+../dist/public/assets/milan-BVuFwyRm.png             114.22 kB
+../dist/public/assets/cremonese-BM-tfWL9.png         118.72 kB
+../dist/public/assets/pisa-D32VSvT5.png              119.29 kB
+../dist/public/assets/atalanta-Oz_CtUao.png          119.65 kB
+../dist/public/assets/parma-D1ceDhUl.png             120.98 kB
+../dist/public/assets/inter-CAt5Z4ID.png             121.79 kB
+../dist/public/assets/roma-Bz_q_oyu.png              127.59 kB
+../dist/public/assets/cagliari-CAeByPda.png          129.83 kB
+../dist/public/assets/lecce-CZMc69Uo.png             130.63 kB
+../dist/public/assets/sassuolo-uP1QNaKF.png          132.20 kB
+../dist/public/assets/torino-sKcCC-D9.png            151.55 kB
+../dist/public/assets/udinese-Bk63gtH_.png           194.48 kB
+../dist/public/assets/index-r0D9NJ67.css              99.05 kB │ gzip:  16.13 kB
+../dist/public/assets/purify.es-BFmuJLeH.js           21.93 kB │ gzip:   8.62 kB
+../dist/public/assets/index.es-Z5Co9lYB.js           150.53 kB │ gzip:  51.48 kB
+../dist/public/assets/html2canvas.esm-CBrSDip1.js    201.42 kB │ gzip:  48.03 kB
+../dist/public/assets/index-C4n4Ssx7.js            1,602.05 kB │ gzip: 467.50 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 25.91s
+
+  dist/index.js  133.4kb
+
+⚡ Done in 23ms
+root@ubuntu-4gb-nbg1-1:/home/highlander/app#

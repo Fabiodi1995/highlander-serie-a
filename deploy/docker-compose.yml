@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  highlander-app:
+    build: 
+      context: ..
+      dockerfile: deploy/Dockerfile
+    container_name: highlander-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=${DATABASE_URL}
+      - SESSION_SECRET=${SESSION_SECRET}
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY}
+      - FROM_EMAIL=${FROM_EMAIL}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+    volumes:
+      - ../uploads:/app/uploads
+      - ../logs:/app/logs
+    depends_on:
+      - postgres
+    networks:
+      - highlander-network
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: highlander-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-highlander}
+      - POSTGRES_USER=${POSTGRES_USER:-highlander}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - highlander-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: highlander-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+      - ../uploads:/var/www/uploads
+    depends_on:
+      - highlander-app
+    networks:
+      - highlander-network
+
+volumes:
+  postgres_data:
+
+networks:
+  highlander-network:
+    driver: bridge

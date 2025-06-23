@@ -1,0 +1,67 @@
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+  Unrecognized feature: 'ambient-light-sensor'.
+_ @ framework-1579df33b769d473.js:1
+  Unrecognized feature: 'battery'.
+_ @ framework-1579df33b769d473.js:1
+  Unrecognized feature: 'execution-while-not-rendered'.
+_ @ framework-1579df33b769d473.js:1
+  Unrecognized feature: 'execution-while-out-of-viewport'.
+_ @ framework-1579df33b769d473.js:1
+  Unrecognized feature: 'layout-animations'.
+_ @ framework-1579df33b769d473.js:1
+  Unrecognized feature: 'legacy-image-formats'.
+_ @ framework-1579df33b769d473.js:1
+  Unrecognized feature: 'navigation-override'.
+_ @ framework-1579df33b769d473.js:1
+  Unrecognized feature: 'oversized-images'.
+_ @ framework-1579df33b769d473.js:1
+framework-1579df33b769d473.js:1  Unrecognized feature: 'publickey-credentials'.
+_ @ framework-1579df33b769d473.js:1
+framework-1579df33b769d473.js:1  Unrecognized feature: 'speaker-selection'.
+_ @ framework-1579df33b769d473.js:1
+framework-1579df33b769d473.js:1  Unrecognized feature: 'unoptimized-images'.
+_ @ framework-1579df33b769d473.js:1
+framework-1579df33b769d473.js:1  Unrecognized feature: 'unsized-media'.
+_ @ framework-1579df33b769d473.js:1
+framework-1579df33b769d473.js:1  Unrecognized feature: 'pointer-lock'.
+_ @ framework-1579df33b769d473.js:1
+framework-1579df33b769d473.js:1  Allow attribute will take precedence over 'allowfullscreen'.
+_ @ framework-1579df33b769d473.js:1
+framework-1579df33b769d473.js:1  Allow attribute will take precedence over 'allowpaymentrequest'.
+_ @ framework-1579df33b769d473.js:1
+stallwart.build.js:1 stallwart: failed ping 1
+workspace_iframe.html:32  Unrecognized feature: 'ambient-light-sensor'.
+workspace_iframe.html:32  Unrecognized feature: 'battery'.
+workspace_iframe.html:32  Unrecognized feature: 'execution-while-not-rendered'.
+workspace_iframe.html:32  Unrecognized feature: 'execution-while-out-of-viewport'.
+workspace_iframe.html:32  Unrecognized feature: 'layout-animations'.
+workspace_iframe.html:32  Unrecognized feature: 'legacy-image-formats'.
+workspace_iframe.html:32  Unrecognized feature: 'navigation-override'.
+workspace_iframe.html:32  Unrecognized feature: 'oversized-images'.
+workspace_iframe.html:32  Unrecognized feature: 'publickey-credentials'.
+workspace_iframe.html:32  Unrecognized feature: 'speaker-selection'.
+workspace_iframe.html:32  Unrecognized feature: 'unoptimized-images'.
+workspace_iframe.html:32  Unrecognized feature: 'unsized-media'.
+workspace_iframe.html:32  Allow attribute will take precedence over 'allowfullscreen'.
+workspace_iframe.html:32  Allow attribute will take precedence over 'allowpaymentrequest'.
+
+                
+          
+          
+          
+         Microsoft Edge is moving towards a new experience that allows users to choose to browse without third-party cookies.
+
+                
+          
+          
+          
+         Microsoft Edge is moving towards a new experience that allows users to choose to browse without third-party cookies.
+[NEW] Explain Console errors by using Copilot in Edge: click
+         
+         to explain an error. 
+        Learn more
+        Don't show again

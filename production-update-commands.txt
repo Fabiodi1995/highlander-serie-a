@@ -1,0 +1,64 @@
+COMANDI SETUP REPOSITORY NUOVO
+==============================
+
+PASSAGGIO 1 - ELIMINA REPOSITORY ATTUALE:
+- Vai su GitHub: https://github.com/Fabiodi1995/highlander-serie-a
+- Settings → Delete Repository
+
+PASSAGGIO 2 - CREA NUOVO REPOSITORY:
+- GitHub → New Repository
+- Nome: highlander-serie-a  
+- NON inizializzare con README
+
+PASSAGGIO 3 - ESEGUI QUI SU REPLIT:
+
+rm -rf .git
+git init
+git config --global user.name "Fabio"
+git config --global user.email "fabiodi1995@gmail.com"
+
+git add client/ server/ shared/ package.json package-lock.json ecosystem.config.cjs .gitignore tsconfig.json vite.config.ts tailwind.config.ts drizzle.config.ts components.json postcss.config.js
+
+git commit -m "Initial: App Highlander pulita con PM2 setup"
+
+git remote add origin https://github.com/Fabiodi1995/highlander-serie-a.git
+git branch -M main
+git push -u origin main
+
+PASSAGGIO 4 - SUL SERVER HETZNER:
+
+ssh root@78.47.123.128
+
+cd /home/highlander
+pm2 stop highlander
+mv app app-backup-$(date +%Y%m%d)
+
+git clone https://github.com/Fabiodi1995/highlander-serie-a.git app
+cd app
+
+cp ../app-backup-*/​.env .
+
+npm install
+npm run build
+pm2 start ecosystem.config.cjs
+pm2 list
+
+PASSAGGIO 5 - CREA SCRIPT DEPLOY:
+
+cat > /home/highlander/deploy.sh << 'EOF'
+#!/bin/bash
+cd /home/highlander/app
+pm2 stop highlander
+git pull origin main
+npm install  
+npm run build
+pm2 start ecosystem.config.cjs
+echo "Deploy completato!"
+pm2 list
+EOF
+
+chmod +x /home/highlander/deploy.sh
+
+FLUSSO FUTURO:
+- Modifiche su Replit → git add . && git commit -m "Msg" && git push
+- Deploy server → ./deploy.sh

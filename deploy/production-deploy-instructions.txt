@@ -1,0 +1,74 @@
+ISTRUZIONI DEPLOY PRODUZIONE HIGHLANDER
+
+=== SETUP INIZIALE REPOSITORY ===
+
+1. Crea repository GitHub:
+   - Vai su GitHub.com
+   - New Repository → "highlander-app"
+   - Private repository
+   - Non inizializzare con README
+
+2. Sul server Hetzner, esegui come root:
+
+cd /home/highlander/app
+
+# Inizializza Git nella directory esistente
+git init
+git config user.name "Highlander Server"
+git config user.email "deploy@highlandergame.it"
+
+# Aggiungi remote GitHub (sostituisci USERNAME)
+git remote add origin https://github.com/USERNAME/highlander-app.git
+
+# Prima commit
+git add .
+git commit -m "Initial production code"
+git branch -M main
+git push -u origin main
+
+=== CONFIGURAZIONE AUTO-DEPLOY ===
+
+3. Configura webhook automatico:
+
+chmod +x deploy/simple-git-deploy.sh
+./deploy/simple-git-deploy.sh
+
+4. Test deploy manuale:
+
+sudo -u highlander /home/highlander/app/auto-deploy.sh
+
+=== WORKFLOW FUTURO ===
+
+Per aggiornamenti futuri:
+
+1. Modifica codice in Replit
+2. Scarica progetto aggiornato
+3. Sul tuo computer:
+   git add .
+   git commit -m "Descrizione modifiche"
+   git push origin main
+4. Il server si aggiorna automaticamente via webhook
+
+=== DEPLOY IMMEDIATO FIX LOGIN ===
+
+Per applicare subito il fix corrente:
+
+# Sostituisci YOUR_HETZNER_IP con IP reale
+sed -i 's/YOUR_HETZNER_IP/TUO_IP_REALE/' deploy/quick-fix-deploy.sh
+./deploy/quick-fix-deploy.sh
+
+=== VERIFICA ===
+
+Dopo deploy:
+- Test: https://highlandergame.it
+- Stato: pm2 list
+- Log: pm2 logs highlander
+- Webhook: systemctl status highlander-webhook
+
+=== VANTAGGI SISTEMA ===
+
+- Deploy automatico ad ogni push
+- Backup automatico versioni precedenti
+- Rollback semplice con Git
+- Tracciabilità completa modifiche
+- Zero downtime durante aggiornamenti

@@ -1,0 +1,82 @@
+~/workspace$ # Rimuovi Git attuale e reinizializza
+rm -rf .git
+git init
+
+# Configura Git
+git config --global user.name "Fabio"
+git config --global user.email "fabiodi1995@gmail.com"
+
+# Aggiungi solo file essenziali del progetto
+git add client/ server/ shared/ package.json package-lock.json ecosystem.config.cjs .gitignore tsconfig.json vite.config.ts tailwind.config.ts drizzle.config.ts components.json postcss.config.js
+
+# Primo commit pulito
+git commit -m "Initial: App Highlander pulita con PM2 e fix login"
+
+# Connetti al nuovo repository
+git remote add origin https://github.com/Fabiodi1995/highlander-serie-a.git
+git branch -M main
+git push -u origin main
+Initialized empty Git repository in /home/runner/workspace/.git/
+fatal: pathspec 'ecosystem.config.cjs' did not match any files
+On branch main
+
+Initial commit
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+    .env.example
+    .gitignore
+    .replit
+    APK_INSTALLATION_GUIDE.md
+    COMPLETE_FIX_DEPLOY.txt
+    DBEAVER_CONNECTION_GUIDE.md
+    DEPLOYMENT_GUIDE.md
+    DEPLOYMENT_GUIDE_HETZNER.md
+    DEPLOYMENT_INSTRUCTIONS.md
+    DEPLOY_COMPLETE_GUIDE.md
+    ECOSYSTEM_FIX.txt
+    EMAIL_CONFIGURATION_GUIDE.md
+    FINAL_VERIFICATION.txt
+    FIX_PM2_COMMANDS.txt
+    MANUAL_DEPLOY_COMMANDS.txt
+    MOBILE_APP_GUIDE.md
+    MOBILE_IMPLEMENTATION_GUIDE.md
+    ONE_COM_SETUP_GUIDE.md
+    PM2_FIX_IMMEDIATE.txt
+    POST_DEPLOY_STATUS.txt
+    QUICK_DEPLOYMENT_GUIDE.md
+    QUICK_PM2_FIX.txt
+    README-DEPLOYMENT.md
+    README.md
+    SECURITY_GUIDE.md
+    SETUP_GIT_AUTOMATION.txt
+    attached_assets/
+    calendar-images-000.ppm
+    calendar-images-001.ppm
+    calendar-text.txt
+    client/
+    components.json
+    cookies.txt
+    deploy.sh
+    deploy/
+    drizzle.config.ts
+    ecosystem.config.js
+    load_all_matches.js
+    package-lock.json
+    package.json
+    postcss.config.js
+    production-update-commands.txt
+    pwa-builder-config.json
+    quick-db-setup.md
+    scripts/
+    serie-a-2025-26-calendar.pdf
+    server/
+    shared/
+    tailwind.config.ts
+    tsconfig.json
+    update-production.sh
+    vite.config.ts
+
+nothing added to commit but untracked files present (use "git add" to track)
+error: src refspec main does not match any
+error: failed to push some refs to 'https://github.com/Fabiodi1995/highlander-serie-a.git'

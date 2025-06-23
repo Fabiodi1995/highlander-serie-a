@@ -1,0 +1,50 @@
+RISOLUZIONE PUSH GITHUB - FILE TROPPO GRANDI
+===========================================
+
+Il problema: GitHub rifiuta file > 100MB (highlander.tar.gz, backup files)
+
+SOLUZIONE IMMEDIATA:
+
+```bash
+# 1. Rimuovi file troppo grandi dal tracking Git
+git rm --cached highlander*.tar.gz *backup*.tar.gz
+
+# 2. Rimuovi file dalla directory (se ancora presenti)
+rm -f highlander*.tar.gz *backup*.tar.gz
+
+# 3. Aggiorna .gitignore (già fatto)
+git add .gitignore
+
+# 4. Commit la rimozione
+git commit -m "Remove large archive files from Git tracking"
+
+# 5. Push su GitHub
+git push origin main
+```
+
+ALTERNATIVA SE ANCORA PROBLEMI:
+
+```bash
+# Reset dell'ultimo commit problematico
+git reset --soft HEAD~1
+
+# Rimuovi file grandi
+rm -f *.tar.gz
+
+# Aggiungi solo file necessari
+git add client/ server/ shared/ package.json ecosystem.config.cjs .gitignore
+
+# Nuovo commit
+git commit -m "Fix: Login bug risolto e PM2 configurato"
+
+# Push
+git push origin main
+```
+
+VERIFICA:
+```bash
+git status
+git ls-files | grep -E "\\.tar\\.gz$"  # Dovrebbe essere vuoto
+```
+
+I file .gitignore sono stati aggiornati per evitare questo problema in futuro.

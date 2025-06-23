@@ -1,0 +1,32 @@
+root@ubuntu-4gb-nbg1-1:/home/highlander/app#
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# sudo -u highlander pm2 delete highlander-app
+[PM2] Applying action deleteProcessId on app [highlander-app](ids: [ 0 ])
+[PM2] [highlander-app](0) ✓
+┌────┬───────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name      │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+└────┴───────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# sudo -u highlander pm2 start ecosystem.config.js --env production
+[PM2][WARN] Applications  not running, starting...
+[PM2][ERROR] Error: No script path - aborting
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# sudo -u highlander pm2 logs highlander-app --lines 5
+[TAILING] Tailing last 5 lines for [highlander-app] process (change the value with --lines option)
+^C
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# cd /home/highlander/app
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# sudo -u highlander DATABASE_URL="postgresql://highlander_db:P3CQeyzh/YLiyxabFSMgwoxRpUPW5qw4@localhost:5432/highlander_prod" NODE_ENV="production" PORT="3000" BASE_URL="https://highlandergame.it" SMTP_USER="support@highlandergame.it" SMTP_PASSWORD="Calibro9!" SESSION_SECRET="highlander-secret-2025" pm2 start dist/index.js --name "highlander-app"
+[PM2] Starting /home/highlander/app/dist/index.js in fork_mode (1 instance)
+[PM2] Done.
+┌────┬───────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name              │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼───────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ highlander-app    │ default     │ 1.0.0   │ fork    │ 83232    │ 0s     │ 0    │ online    │ 0%       │ 16.8mb   │ hig… │ disabled │
+└────┴───────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# sudo -u highlander pm2 logs highlander-app --lines 5
+[TAILING] Tailing last 5 lines for [highlander-app] process (change the value with --lines option)
+/home/highlander/.pm2/logs/highlander-app-out.log last 5 lines:
+/home/highlander/.pm2/logs/highlander-app-error.log last 5 lines:
+0|highland |     at server/storage.ts (file:///home/highlander/app/dist/index.js:459:5)
+0|highland |     at __init (file:///home/highlander/app/dist/index.js:4:56)
+0|highland |     at file:///home/highlander/app/dist/index.js:1728:1
+0|highland |     at ModuleJob.run (node:internal/modules/esm/module_job:263:25)
+0|highland |     at async ModuleLoader.import (node:internal/modules/esm/loader:540:24)
+

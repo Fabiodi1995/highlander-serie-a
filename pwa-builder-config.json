@@ -1,0 +1,39 @@
+{
+  "name": "Highlander",
+  "packageId": "it.highlandergame.app",
+  "version": "1.0.0",
+  "display": "standalone",
+  "orientation": "portrait",
+  "themeColor": "#1e40af",
+  "backgroundColor": "#ffffff",
+  "startUrl": "/",
+  "scope": "/",
+  "webManifestUrl": "https://highlandergame.it/manifest.json",
+  "iconUrl": "https://highlandergame.it/icons/icon-512x512.png",
+  "splashScreens": true,
+  "shortcuts": [
+    {
+      "name": "Nuova Partita",
+      "url": "/create",
+      "description": "Crea una nuova partita Highlander"
+    },
+    {
+      "name": "I Miei Giochi",
+      "url": "/dashboard",
+      "description": "Visualizza le tue partite attive"
+    }
+  ],
+  "features": {
+    "locationService": false,
+    "playBilling": false,
+    "chromeOsOnly": false
+  },
+  "signingKey": {
+    "file": "",
+    "alias": "highlander-key"
+  },
+  "appVersionCode": 1,
+  "enableNotifications": true,
+  "enableSiteSettingsShortcut": true,
+  "includeSourceCode": false
+}

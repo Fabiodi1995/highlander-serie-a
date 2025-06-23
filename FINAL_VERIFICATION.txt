@@ -1,0 +1,31 @@
+VERIFICA FINALE DEPLOY E FIX LOGIN
+==================================
+
+L'applicazione è ora online! Esegui questi test sul server:
+
+# 1. Verifica che l'app risponda
+curl -I https://highlandergame.it
+
+# 2. Controlla i log per assicurarsi che non ci siano errori
+pm2 logs highlander --lines 20
+
+# 3. Se tutto è OK, salva la configurazione PM2 per autostart
+pm2 save
+pm2 startup
+
+# 4. TEST LOGIN WEB
+Vai su: https://highlandergame.it
+- Prova login con credenziali esistenti
+- Verifica che NON appaia più l'errore "body stream already read"
+- Testa reset password se necessario
+
+Il fix applicato ha risolto:
+✓ Response cloning per evitare doppia lettura del body
+✓ Gestione errori migliorata per login e reset password
+✓ Configurazione PM2 corretta con ecosystem.config.cjs
+
+Status attuale:
+✓ PM2: highlander online (PID 130124)
+✓ Memoria: 103.5MB
+✓ Build: completato correttamente
+✓ Server: https://highlandergame.it

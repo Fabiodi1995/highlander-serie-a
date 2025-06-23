@@ -1,0 +1,18 @@
+
+-nella tab scelte squadre segna con "Superato" al posto di "Attivo" lo stato del ticket quando il round è stato superato ed inserisci la funzione per ogni colonna per poterle ordinare in base a quella selezionata, di default l'ordinamento è per stato ticket nell'ordine Vincitore(se il gioco è finito), Attivo, Superato, Eliminato
+-inserisci la funzione per ogni colonna per poterle ordinare in base a quella che si seleziona per tutte le tabelle presenti nell'app, mantieni gli ordinamenti standard come già esistono se l'utente non seleziona alcuna colonna per l'ordinamento
+-mostra lo stato Vincitore per i ticket che superano con successo l'ultimo round del gioco
+-ricorda che nel caso ci fossero più ticket che hanno superato il round finale saranno tutti i ticket vincitori senza distinzioni, aggiorna anche il regolamento e le logiche del gioco in modo che rispettino questa regola
+
+
+-rimuovere la sezione "Selezioni" ed aggiungere la sezione "Classifiche", "Calendario", "Regolamento" (cha già sono presenti nel footer, sia per desktop che per mobile) per tutti gli utenti (sia Admin che non) ma non mostrare pagine suggerite (Pagine Disponibili) per gli utenti che non sono admin
+
+
+-mostrare messaggio di errore al posto di 401: Unauthorized se la login è sbagliata
+-centra il logo nella schermata di login/registrazione e rendilo uguale sia su Desktop che Mobile (in mobile in questo momento mostra solo il logo senza il resto "highlander serie a challenge" che invece è presente su desktop)
+-inserisci il campo indirizzo nel form di registrazione e nel profilo utente oltre al campo città che già esiste
+-integra API di google maps per recuperare e suggerire l'indirizzo inserito dall'utente in fase di registrazione e anche quando modifica i dati nel profilo in modo da compilare automaticamente poi i campi indirizzo, città, paese
+-integra API di google maps per recuperare e suggerire la città inserito dall'utente in fase di registrazione e anche quando modifica i dati nel profilo in modo da compilare automaticamente poi i campi città, paese
+-integra API di google maps per recuperare e suggerire il paese inserito dall'utente in fase di registrazione e anche quando modifica i dati nel profilo in modo da compilare automaticamente poi il campo paese
+-permetti la registrazione anche se i dati inseriti dall'utente non corrispondono con quelli suggeriti dalle API di google maps
+-controlla che la registrazione non è possibile se non sono stati inseriti tutti i campi del form

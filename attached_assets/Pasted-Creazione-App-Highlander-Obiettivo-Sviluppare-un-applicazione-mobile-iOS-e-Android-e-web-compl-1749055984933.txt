@@ -1,0 +1,71 @@
+Creazione App "Highlander"
+Obiettivo: Sviluppare un'applicazione mobile (iOS e Android) e web completa per un gioco multigiocatore chiamato "Highlander", basato sui risultati della Serie A italiana. L'applicazione deve includere un'architettura full-stack: frontend, backend, database (DB), e API.
+
+Nome dell'App: Highlander
+
+1. Descrizione Generale del Gioco
+Highlander è un gioco di eliminazione in cui i partecipanti selezionano squadre di Serie A per ogni turno (giornata di campionato). I ticket (che rappresentano le "vite" dei giocatori) vengono eliminati se la squadra associata perde o pareggia la sua partita. L'obiettivo è essere l'ultimo giocatore con almeno un ticket attivo. L'admin gestisce la creazione di giochi indipendenti e l'avanzamento dei turni.
+
+2. Funzionalità Core (Backend & API)
+2.1 Gestione Utenti e Autenticazione:
+
+Registrazione e Login: Sistema sicuro di registrazione/login per i giocatori e per l'admin (con ruoli distinti).
+Profilo Utente: Archiviazione e gestione delle informazioni utente (es. username, password criptata).
+2.2 Gestione Dati Serie A:
+
+Integrazione Dati Partite: Sistema per acquisire i risultati ufficiali delle partite di Serie A (fonte dati da definire in fase di sviluppo, ma il sistema deve essere predisposto per un'integrazione API esterna).
+Calendario Serie A: Funzionalità per tracciare il calendario delle giornate e degli orari delle partite.
+2.3 Gestione Giochi (Lato Admin):
+
+Creazione Multi-Gioco: L'admin deve poter creare più istanze di gioco "Highlander" indipendenti.
+Per ogni gioco:
+Definire una data di inizio (corrispondente a una specifica giornata di Serie A).
+Assegnare un nome univoco al gioco.
+Assegnazione Ticket: L'admin può assegnare un numero variabile di ticket a giocatori specifici per un dato gioco prima dell'inizio del primo turno di quel gioco. Una volta iniziato, non è più possibile assegnare nuovi ticket.
+Gestione Giocatori per Gioco: L'admin può associare giocatori specifici a ogni gioco da lui creato.
+Chiusura Iscrizioni: Funzionalità per l'admin per "chiudere le iscrizioni" a un gioco, bloccando l'assegnazione di ticket e dando il via al primo turno.
+Calcolo Turno: Pulsante 'CALCOLA TURNO' per l'admin. Questo triggererà il backend per:
+Verificare i risultati delle partite della giornata di riferimento per tutte le squadre scelte.
+Identificare i ticket eliminati (squadra ha pareggiato o perso).
+Identificare i giocatori eliminati (se tutti i loro ticket sono stati eliminati).
+Aggiornare lo stato del gioco e dei giocatori/ticket.
+Preparare il sistema per il nuovo turno.
+2.4 Logica di Gioco:
+
+Gestione Ticket: Associazione ticket-giocatore, stato (attivo/eliminato).
+Tracciamento Scelte Squadre: Memorizzazione della squadra scelta per ogni ticket in ogni turno per implementare la restrizione: un ticket non può scegliere una squadra che ha già scelto in un turno precedente per quel ticket specifico.
+Criteri di Eliminazione: Implementazione della logica per eliminare i ticket (pareggio o sconfitta della squadra scelta) e i giocatori (tutti i ticket eliminati).
+Determinazione Vincitore:
+Se rimane un solo giocatore con almeno un ticket attivo, quel giocatore è il vincitore.
+Se alla fine della stagione di Serie A (dopo l'ultima giornata) ci sono più giocatori con ticket attivi, tutti i ticket e i relativi giocatori ancora in gioco verranno dichiarati vincitori (es. "Giocatore X - Ticket Y").
+3. Funzionalità Frontend (Mobile & Web)
+3.1 Accesso e Navigazione:
+
+Pagine di Login/Registrazione.
+Dashboard Giocatore: Dopo il login, una pagina principale (privata per ogni utente) che mostri:
+I giochi a cui il giocatore partecipa.
+I suoi ticket attivi e lo stato di ciascuno.
+Un riassunto dei suoi progressi nei vari giochi.
+Dashboard Admin: Un'interfaccia dedicata per l'admin per gestire i giochi, assegnare ticket, chiudere iscrizioni e avviare il calcolo dei turni.
+3.2 Interfaccia di Gioco:
+
+Scelta Squadra: Interfaccia intuitiva per ogni giocatore per selezionare la squadra per i suoi ticket attivi per il turno corrente.
+Visualizzazione chiara della deadline (15 minuti prima della prima partita della giornata).
+Elenco delle squadre disponibili (escludendo quelle già scelte per quel ticket nei turni precedenti).
+Conferma della scelta.
+Visualizzazione Classifica/Storico:
+Classifica Generale: Una sezione che mostri i giocatori ancora in gioco, con il numero di ticket attivi.
+Storico Risultati: Una sezione per consultare i risultati di tutti i turni passati per ogni gioco, mostrando quali ticket sono stati eliminati e perché.
+IMPORTANTE: I giocatori NON DEVONO poter visualizzare le scelte delle squadre degli altri giocatori per il turno corrente prima che il turno sia iniziato e calcolato.
+4. Requisiti Tecnici e Architettura
+Database: Progettazione di un DB robusto per gestire utenti, giochi, ticket, scelte squadre, risultati partite, storico turni. (Suggerimento: PostgreSQL o MongoDB per flessibilità).
+API: Tutte le interazioni tra frontend e backend devono avvenire tramite API RESTful ben documentate e sicure.
+Backend: Sviluppo di un backend scalabile (es. Node.js con Express, Python con Django/Flask, o linguaggio equivalente).
+Frontend Mobile: Sviluppo di app native (Kotlin/Swift) o ibride (React Native/Flutter) per iOS e Android.
+Frontend Web (Admin): Interfaccia web per l'admin (es. React, Angular, Vue.js).
+Hosting/Deployment: Preparazione per il deployment su un ambiente cloud scalabile (es. AWS, Google Cloud, Azure).
+5. Dettagli Aggiuntivi
+Creazione da Zero: Ribadiamo che tutte le componenti (frontend, backend, DB, API) devono essere create da zero.
+Chiarezza e Semplicità: Il design e l'interfaccia utente devono essere puliti, intuitivi e facili da usare per tutti i tipi di utenti.
+Manutenzione Futura: L'architettura deve essere modulare e scalabile per permettere future aggiunte di funzionalità (es. notifiche push, statistiche avanzate).
+Gestione Errori: Implementazione robusta della gestione degli errori lato server e client.

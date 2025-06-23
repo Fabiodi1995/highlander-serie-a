@@ -1,0 +1,59 @@
+RISOLUZIONE RAPIDA ERRORE PM2
+=============================
+
+Esegui questi comandi sul server (uno alla volta):
+
+# 1. Ferma tutti i processi
+pm2 delete all || true
+pm2 kill
+pkill -f node || true
+
+# 2. Verifica che ecosystem.config.js esista
+ls -la ecosystem.config.js
+
+# 3. Se non esiste, crealo:
+cat > ecosystem.config.js << 'EOF'
+module.exports = {
+  apps: [{
+    name: 'highlander',
+    script: 'server/index.ts',
+    interpreter: 'node',
+    interpreter_args: '--loader tsx',
+    env: {
+      NODE_ENV: 'production',
+      PORT: 5000
+    },
+    instances: 1,
+    autorestart: true,
+    watch: false
+  }]
+}
+EOF
+
+# 4. Crea directory logs
+mkdir -p logs
+
+# 5. Build applicazione
+npm run build
+
+# 6. Avvia con PM2
+pm2 start ecosystem.config.js
+
+# 7. Verifica
+pm2 list
+pm2 logs highlander
+
+Se funziona, vedrai "highlander" online in pm2 list.
+Poi testa: https://highlandergame.it
+
+=============================
+
+ALTERNATIVA se PM2 continua a dare problemi:
+
+# Avvio diretto senza PM2
+nohup npm run dev > app.log 2>&1 &
+
+# Verifica che funzioni
+curl -I https://highlandergame.it
+
+Se l'app risponde, il fix login è applicato correttamente.
