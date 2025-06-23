@@ -1,0 +1,36 @@
+AGGIORNAMENTO REPOSITORY GITHUB
+===============================
+
+COMANDI DA ESEGUIRE NELLA SHELL DI REPLIT:
+
+# 1. Verifica status delle modifiche
+git status
+
+# 2. Aggiungi tutte le modifiche
+git add .
+
+# 3. Commit con messaggio descrittivo
+git commit -m "Feature: Aggiunta funzionalità Username dimenticato
+
+- Route API /api/forgot-username per recupero username
+- Servizio email per invio username via SMTP 
+- Pagina frontend /forgot-username con form
+- Link Username dimenticato nella pagina login
+- Template email personalizzato per recupero username
+- Integrazione completa con sistema esistente"
+
+# 4. Push su GitHub
+git push origin main
+
+DOPO IL PUSH GITHUB:
+
+# 5. Deploy sul server Hetzner
+ssh root@78.47.123.128
+cd /home/highlander
+./deploy.sh
+
+VERIFICA FINALE:
+- GitHub: https://github.com/Fabiodi1995/highlander-serie-a
+- Produzione: https://highlandergame.it/auth
+
+La funzionalità sarà disponibile cliccando "Username dimenticato?" nella pagina di login.
