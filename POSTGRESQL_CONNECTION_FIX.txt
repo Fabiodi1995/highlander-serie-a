@@ -1,0 +1,29 @@
+RISOLUZIONE ERRORE CONNECTION STRING POSTGRESQL
+==============================================
+
+PROBLEMA: Password con caratteri speciali (/) non è URL-encoded nella connection string.
+
+SOLUZIONE IMMEDIATA SUL SERVER:
+
+ssh root@78.47.123.128
+cd /home/highlander/app
+
+# Modifica ecosystem.config.cjs
+nano ecosystem.config.cjs
+
+# Cambia la DATABASE_URL da:
+DATABASE_URL: 'postgresql://highlander:P3CQeyzh/YLiyxabFSMgwoxRpUPW5qw4@localhost:5432/highlander_db'
+
+# A (con password URL-encoded):
+DATABASE_URL: 'postgresql://highlander:P3CQeyzh%2FYLiyxabFSMgwoxRpUPW5qw4@localhost:5432/highlander_db'
+
+# Il carattere "/" diventa "%2F" nell'URL encoding
+
+# Restart PM2
+pm2 restart highlander
+pm2 logs highlander --lines 5
+
+SPIEGAZIONE:
+- Il carattere "/" nella password viene interpretato come separatore URL
+- Deve essere codificato come %2F per essere trattato come carattere letterale
+- Questo risolverà l'errore di parsing della connection string
