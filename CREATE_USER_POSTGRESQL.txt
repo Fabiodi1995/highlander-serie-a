@@ -1,0 +1,60 @@
+CREAZIONE UTENTE POSTGRESQL
+===========================
+
+Sul server esegui questi comandi SQL uno per volta:
+
+```bash
+sudo -u postgres psql
+```
+
+Poi in PostgreSQL:
+```sql
+CREATE USER highlander WITH PASSWORD 'HighlanderDB2024!';
+GRANT ALL PRIVILEGES ON DATABASE highlander_db TO highlander;
+ALTER DATABASE highlander_db OWNER TO highlander;
+\q
+```
+
+Testa connessione:
+```bash
+psql "postgresql://highlander:HighlanderDB2024!@localhost:5432/highlander_db"
+\q
+```
+
+Aggiorna ecosystem:
+```bash
+cd /home/highlander/app
+
+cat > ecosystem.config.cjs << 'EOF'
+module.exports = {
+  apps: [{
+    name: 'highlander',
+    script: './dist/index.js',
+    cwd: '/home/highlander/app',
+    env: {
+      NODE_ENV: 'production',
+      PORT: 5000,
+      DATABASE_URL: 'postgresql://highlander:HighlanderDB2024!@localhost:5432/highlander_db',
+      SMTP_USER: 'support@highlandergame.it',
+      SMTP_PASSWORD: 'Calibro9!',
+      FROM_EMAIL: 'support@highlandergame.it',
+      SENDGRID_API_KEY: '',
+      SESSION_SECRET: 'highlander-secure-session-2024',
+      BASE_URL: 'https://highlandergame.it'
+    },
+    instances: 1,
+    autorestart: true,
+    watch: false,
+    max_memory_restart: '1G',
+    error_file: './logs/error.log',
+    out_file: './logs/out.log',
+    log_file: './logs/combined.log',
+    time: true
+  }]
+}
+EOF
+
+pm2 delete highlander
+pm2 start ecosystem.config.cjs
+pm2 logs highlander --lines 5
+```
