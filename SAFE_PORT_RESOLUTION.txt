@@ -1,0 +1,30 @@
+RISOLUZIONE SICURA CONFLITTO PORTA 5000
+=======================================
+
+SITUAZIONE:
+- Processo Node.js vecchio (PID 128655) occupa porta 5000 
+- PM2 non riesce a riavviare per conflitto porta
+- Nginx attivo (OK, non interferisce)
+
+SOLUZIONE SICURA:
+
+```bash
+# 1. Ferma PM2 completamente
+pm2 stop highlander
+pm2 delete highlander
+
+# 2. Termina il processo vecchio sulla porta 5000
+sudo kill -TERM 128655
+
+# 3. Verifica che la porta sia libera
+sudo netstat -tlnp | grep :5000
+
+# 4. Riavvia PM2 con porta libera
+pm2 start ecosystem.config.cjs
+
+# 5. Verifica funzionamento
+pm2 status
+pm2 logs highlander --lines 5
+```
+
+Questo termina il processo vecchio che blocca la porta senza toccare nginx o altri servizi critici.
