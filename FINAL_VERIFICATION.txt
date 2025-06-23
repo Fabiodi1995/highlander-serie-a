@@ -1,31 +1,30 @@
-VERIFICA FINALE DEPLOY E FIX LOGIN
-==================================
+COMANDO CORRETTO CREAZIONE UTENTE ADMIN
+=======================================
 
-L'applicazione è ora online! Esegui questi test sul server:
+Sul server di produzione, esegui:
 
-# 1. Verifica che l'app risponda
-curl -I https://highlandergame.it
+```bash
+sudo -u postgres psql highlander_prod << 'EOF'
+INSERT INTO users (username, email, password, first_name, last_name, date_of_birth, phone_number, city, country, is_admin, email_verified, created_at)
+VALUES ('admin', 'dicostanzo.fabio@yahoo.it', 'temp_admin_2024', 'Admin', 'User', '1990-01-01', '+39123456789', 'Roma', 'Italia', true, true, NOW())
+ON CONFLICT (username) DO NOTHING;
 
-# 2. Controlla i log per assicurarsi che non ci siano errori
-pm2 logs highlander --lines 20
+-- Verifica creazione
+SELECT username, email, is_admin, first_name FROM users WHERE username = 'admin';
+EOF
+```
 
-# 3. Se tutto è OK, salva la configurazione PM2 per autostart
-pm2 save
-pm2 startup
+CREDENZIALI UTENTE ADMIN:
+- Username: admin
+- Email: dicostanzo.fabio@yahoo.it
+- Password temporanea: temp_admin_2024
 
-# 4. TEST LOGIN WEB
-Vai su: https://highlandergame.it
-- Prova login con credenziali esistenti
-- Verifica che NON appaia più l'errore "body stream already read"
-- Testa reset password se necessario
+PASSAGGI SUCCESSIVI:
+1. Esegui il comando sopra per creare l'utente admin
+2. Vai su https://highlandergame.it/forgot-password  
+3. Inserisci email: dicostanzo.fabio@yahoo.it
+4. Riceverai email con link per impostare password: Calibro9!
 
-Il fix applicato ha risolto:
-✓ Response cloning per evitare doppia lettura del body
-✓ Gestione errori migliorata per login e reset password
-✓ Configurazione PM2 corretta con ecosystem.config.cjs
-
-Status attuale:
-✓ PM2: highlander online (PID 130124)
-✓ Memoria: 103.5MB
-✓ Build: completato correttamente
-✓ Server: https://highlandergame.it
+Per l'utente test con problema login:
+- Il problema è password bcrypt vs scrypt
+- Dovrà usare forgot-password per reimpostare la password correttamente
