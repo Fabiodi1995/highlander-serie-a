@@ -1,0 +1,43 @@
+VERIFICA STATO DATABASE POSTGRESQL
+=================================
+
+Sul server esegui questi comandi per verificare lo stato attuale:
+
+```bash
+sudo -u postgres psql
+```
+
+Verifica database esistenti:
+```sql
+\l
+```
+
+Verifica utenti esistenti:
+```sql
+\du
+```
+
+Se highlander_db esiste, connettiti:
+```sql
+\c highlander_db
+```
+
+Verifica tabelle esistenti:
+```sql
+\dt
+```
+
+Verifica schema delle tabelle principali:
+```sql
+\d users
+\d teams
+\d games
+\d tickets
+```
+
+Esci:
+```sql
+\q
+```
+
+INCOLLA QUI I RISULTATI DI QUESTI COMANDI così posso vedere esattamente cosa esiste e cosa manca nel database.
