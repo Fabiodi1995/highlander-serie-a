@@ -1,59 +1,25 @@
-RISOLUZIONE RAPIDA ERRORE PM2
-=============================
+COMANDI IMMEDIATI PER REPOSITORY VUOTO
+=====================================
 
-Esegui questi comandi sul server (uno alla volta):
+Esegui questi comandi nella shell di Replit:
 
-# 1. Ferma tutti i processi
-pm2 delete all || true
-pm2 kill
-pkill -f node || true
+# 1. Rimuovi lock Git
+rm -f .git/index.lock
 
-# 2. Verifica che ecosystem.config.js esista
-ls -la ecosystem.config.js
+# 2. Forza push su GitHub
+git push -f origin main
 
-# 3. Se non esiste, crealo:
-cat > ecosystem.config.js << 'EOF'
-module.exports = {
-  apps: [{
-    name: 'highlander',
-    script: 'server/index.ts',
-    interpreter: 'node',
-    interpreter_args: '--loader tsx',
-    env: {
-      NODE_ENV: 'production',
-      PORT: 5000
-    },
-    instances: 1,
-    autorestart: true,
-    watch: false
-  }]
-}
-EOF
+# 3. Se fallisce, reset e riprova
+git reset --soft HEAD~1
+git add .
+git commit -m "Initial: App Highlander completa"
+git push -f origin main
 
-# 4. Crea directory logs
-mkdir -p logs
+VERIFICA:
+Vai su https://github.com/Fabiodi1995/highlander-serie-a
+e controlla che i file siano presenti.
 
-# 5. Build applicazione
-npm run build
-
-# 6. Avvia con PM2
-pm2 start ecosystem.config.js
-
-# 7. Verifica
-pm2 list
-pm2 logs highlander
-
-Se funziona, vedrai "highlander" online in pm2 list.
-Poi testa: https://highlandergame.it
-
-=============================
-
-ALTERNATIVA se PM2 continua a dare problemi:
-
-# Avvio diretto senza PM2
-nohup npm run dev > app.log 2>&1 &
-
-# Verifica che funzioni
-curl -I https://highlandergame.it
-
-Se l'app risponde, il fix login è applicato correttamente.
+Se ancora vuoto:
+1. Elimina repository su GitHub
+2. Crea nuovo repository vuoto
+3. Ripeti setup Git da capo
