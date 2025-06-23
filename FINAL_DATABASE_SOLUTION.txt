@@ -1,0 +1,65 @@
+SOLUZIONE DEFINITIVA DATABASE
+============================
+
+SITUAZIONE IDENTIFICATA:
+- Database "highlander_prod" esiste con tutte le tabelle
+- Tabelle appartengono all'utente "highlander_db"
+- L'applicazione usa utente "highlander" che non ha permessi
+
+SOLUZIONE:
+
+1. Imposta password per utente highlander_db:
+```sql
+-- In PostgreSQL
+ALTER USER highlander_db WITH PASSWORD 'HighlanderDB2024!';
+\q
+```
+
+2. Testa connessione con utente corretto:
+```bash
+psql "postgresql://highlander_db:HighlanderDB2024!@localhost:5432/highlander_prod"
+\q
+```
+
+3. Aggiorna ecosystem.config.cjs con utente corretto:
+```bash
+cd /home/highlander/app
+
+cat > ecosystem.config.cjs << 'EOF'
+module.exports = {
+  apps: [{
+    name: 'highlander',
+    script: './dist/index.js',
+    cwd: '/home/highlander/app',
+    env: {
+      NODE_ENV: 'production',
+      PORT: 5000,
+      DATABASE_URL: 'postgresql://highlander_db:HighlanderDB2024!@localhost:5432/highlander_prod',
+      SMTP_USER: 'support@highlandergame.it',
+      SMTP_PASSWORD: 'Calibro9!',
+      FROM_EMAIL: 'support@highlandergame.it',
+      SENDGRID_API_KEY: '',
+      SESSION_SECRET: 'highlander-secure-session-2024',
+      BASE_URL: 'https://highlandergame.it'
+    },
+    instances: 1,
+    autorestart: true,
+    watch: false,
+    max_memory_restart: '1G',
+    error_file: './logs/error.log',
+    out_file: './logs/out.log',
+    log_file: './logs/combined.log',
+    time: true
+  }]
+}
+EOF
+```
+
+4. Restart PM2:
+```bash
+pm2 delete highlander
+pm2 start ecosystem.config.cjs
+pm2 logs highlander --lines 5
+```
+
+L'utente corretto è "highlander_db", non "highlander".
