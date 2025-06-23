@@ -1,43 +1,129 @@
-COMANDI PER DEPLOY MANUALE
-=========================
+COMANDI MANUALI DEPLOY E VERIFICA PRODUZIONE
+===========================================
 
-STEP 1 - COMMIT E PUSH DA REPLIT:
+ESEGUI SUL SERVER PRODUZIONE:
+
 ```bash
-git add .
-git commit -m "Debug: Logging dettagliato per forgot-username in produzione
+# 1. VERIFICA STATO DATABASE
+sudo -u postgres psql highlander_prod << 'EOF'
+SELECT COUNT(*) as teams FROM teams;
+SELECT COUNT(*) as matches FROM matches;
+SELECT COUNT(*) as games FROM games;
+SELECT COUNT(*) as users FROM users WHERE is_admin = true;
+\q
+EOF
 
-- Aggiunto logging completo frontend con emoji per identificare facilmente gli errori
-- Aggiunto logging backend per tracciare richieste API
-- Controllo Content-Type per verificare risposte JSON valide
-- Gestione errori migliorata con stack trace completo"
+# 2. POPOLA DATI SERIE A SE MANCANTI
+cd /home/highlander/app
+node load_all_matches.js
 
-git push origin main
+# 3. VERIFICA DATI POPOLATI
+sudo -u postgres psql highlander_prod << 'EOF'
+SELECT COUNT(*) as teams_after FROM teams;
+SELECT COUNT(*) as matches_after FROM matches;
+SELECT name FROM teams ORDER BY name LIMIT 10;
+\q
+EOF
+
+# 4. CONFIGURA NGINX PER WEBSOCKET
+sudo tee /etc/nginx/sites-available/highlander_websocket << 'EOF'
+location /ws/ {
+    proxy_pass http://127.0.0.1:5000;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_read_timeout 86400;
+}
+EOF
+
+# Aggiorna configurazione nginx principale
+sudo sed -i '/location \/ {/i\    include /etc/nginx/sites-available/highlander_websocket;' /etc/nginx/sites-enabled/default
+sudo nginx -t
+sudo systemctl reload nginx
+
+# 5. COPIA ICONE PWA SE MANCANTI
+mkdir -p /home/highlander/app/dist/icons
+cp /home/highlander/app/client/public/icons/* /home/highlander/app/dist/icons/ 2>/dev/null || echo "Icone da copiare manualmente"
+
+# 6. AGGIORNA MANIFEST PWA
+cp /home/highlander/app/client/public/manifest.json /home/highlander/app/dist/ 2>/dev/null || echo "Manifest da copiare manualmente"
+
+# 7. RIAVVIA SERVIZI
+npm run build
+pm2 restart highlander
+sudo systemctl reload nginx
+
+# 8. VERIFICA FINALE
+sleep 10
+pm2 status
+pm2 logs highlander --lines 5
 ```
 
-STEP 2 - DEPLOY SUL SERVER:
+VERIFICA COMPLETA FUNZIONALITÀ:
+
 ```bash
-ssh root@78.47.123.128
-cd /home/highlander
-./deploy.sh
+# TEST API SENZA AUTENTICAZIONE
+echo "=== TEST API PUBBLICHE ==="
+curl -s https://highlandergame.it/api/forgot-username -X POST -H "Content-Type: application/json" -d '{"email":"test@test.com"}'
+
+# TEST LOGIN ADMIN
+echo "=== TEST LOGIN ADMIN ==="
+LOGIN_RESPONSE=$(curl -s -c cookies.txt -X POST https://highlandergame.it/api/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"temp_admin_2024"}')
+echo $LOGIN_RESPONSE
+
+# TEST API CON SESSIONE
+echo "=== TEST API AUTENTICATE ==="
+curl -s -b cookies.txt https://highlandergame.it/api/teams | head -c 100
+curl -s -b cookies.txt https://highlandergame.it/api/matches | head -c 100
+curl -s -b cookies.txt https://highlandergame.it/api/games | head -c 100
+
+# TEST WEBSOCKET
+echo "=== TEST WEBSOCKET ==="
+curl -I https://highlandergame.it/ws/social
+
+# TEST PWA ASSETS
+echo "=== TEST PWA ==="
+curl -I https://highlandergame.it/manifest.json
+curl -I https://highlandergame.it/icons/icon-144x144.png
+
+# CLEANUP
+rm -f cookies.txt
 ```
 
-STEP 3 - VERIFICA FUNZIONAMENTO:
-1. Vai su https://highlandergame.it/forgot-username
-2. Apri Developer Tools > Console
-3. Inserisci email di test (es: dicostanzo.fabio@yahoo.it)
-4. Clicca "Invia Username"
-5. Controlla i log nella console
+CONFRONTO REPLIT vs PRODUZIONE:
 
-I log mostreranno:
-🚀 = Richiesta inviata
-📡 = Response ricevuta
-📋 = Headers response
-📄 = Content-Type
-✅ = Dati parsati correttamente
-💥 = Errore con stack trace
-
-LOGS SERVER (se necessario):
 ```bash
-ssh root@78.47.123.128
-pm2 logs highlander --lines 50
+# DATI REPLIT
+echo "=== DATI REPLIT ==="
+curl -s localhost:5000/api/teams 2>/dev/null | grep -o '\[.*\]' | wc -c
+curl -s localhost:5000/api/matches 2>/dev/null | grep -o '\[.*\]' | wc -c
+
+# DATI PRODUZIONE (con autenticazione)
+echo "=== DATI PRODUZIONE ==="
+curl -s -c temp_cookies.txt -X POST https://highlandergame.it/api/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"temp_admin_2024"}' > /dev/null
+
+curl -s -b temp_cookies.txt https://highlandergame.it/api/teams | wc -c
+curl -s -b temp_cookies.txt https://highlandergame.it/api/matches | wc -c
+
+rm -f temp_cookies.txt
 ```
+
+CHECKLIST FINALE:
+- [ ] Database popolato con teams Serie A (20 squadre)
+- [ ] Database popolato con matches Serie A (380 partite)
+- [ ] Utente admin operativo
+- [ ] WebSocket configurato in nginx
+- [ ] Icone PWA presenti
+- [ ] Manifest PWA funzionante
+- [ ] Login/logout funzionanti
+- [ ] API autenticate accessibili
+- [ ] Sistema email operativo
+- [ ] Forgot username/password funzionanti

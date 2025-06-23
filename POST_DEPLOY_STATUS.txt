@@ -1,30 +1,103 @@
-STATUS POST-DEPLOY HIGHLANDER
-============================
+VERIFICA COMPLETA PRODUZIONE VS REPLIT
+====================================
 
-APPLICAZIONE ONLINE ✓
-- URL: https://highlandergame.it
-- PM2: highlander online (PID 130124)
-- Memoria: 103.5MB
-- Build: completato
+PROBLEMI IDENTIFICATI DAI LOG:
+1. WebSocket errori (wss://highlandergame.it/ws/social failed)
+2. API lock-round restituisce 400 (Bad Request)
+3. Admin non vede partite per calcolare risultati
+4. Icone PWA mancanti
 
-FIX LOGIN APPLICATO ✓
-- Response cloning implementato
-- Errore "body stream already read" risolto
-- Gestione errori migliorata
+COMANDI VERIFICA PRODUZIONE:
+```bash
+# 1. VERIFICA DATABASE - DATI SERIE A
+sudo -u postgres psql highlander_prod << 'EOF'
+-- Conta partite Serie A 2025/26
+SELECT COUNT(*) as total_matches FROM matches;
 
-PROSSIMI PASSI:
+-- Verifica teams esistenti
+SELECT COUNT(*) as total_teams FROM teams;
+SELECT name FROM teams ORDER BY name LIMIT 5;
 
-1. TEST IMMEDIATO:
-   - Vai su https://highlandergame.it
-   - Prova login/registrazione
-   - Verifica funzionamento senza errori
+-- Verifica se ci sono giochi attivi
+SELECT id, name, status, current_round, round_status FROM games;
 
-2. SALVA CONFIGURAZIONE PM2:
-   pm2 save
-   pm2 startup
+-- Verifica utenti admin
+SELECT username, email, is_admin FROM users WHERE is_admin = true;
+EOF
 
-3. SETUP GIT AUTOMATION (opzionale):
-   - Configura webhook GitHub per deploy automatico futuro
-   - Segui SETUP_GIT_AUTOMATION.txt per automatizzare deploy
+# 2. VERIFICA API ENDPOINTS
+curl -s https://highlandergame.it/api/matches | jq '.length // "ERRORE"'
+curl -s https://highlandergame.it/api/teams | jq '.length // "ERRORE"'
+curl -s https://highlandergame.it/api/games | jq '.length // "ERRORE"'
 
-L'applicazione è pronta e il fix del login è stato applicato con successo.
+# 3. VERIFICA WEBSOCKET SETUP
+grep -r "ws\|WebSocket" /home/highlander/app/server/ || echo "WebSocket non configurato"
+
+# 4. VERIFICA ICONE PWA
+ls -la /home/highlander/app/dist/icons/ || echo "Cartella icone mancante"
+
+# 5. VERIFICA PROCESS STATUS
+pm2 logs highlander --lines 20 | grep -i error
+pm2 monit
+```
+
+CHECKLIST COMPLETA FUNZIONALITÀ:
+```bash
+# TEST 1: AUTENTICAZIONE
+echo "=== TEST AUTENTICAZIONE ==="
+curl -X POST https://highlandergame.it/api/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"temp_admin_2024"}'
+
+# TEST 2: API TEAMS
+echo "=== TEST API TEAMS ==="
+curl -s https://highlandergame.it/api/teams | head -c 100
+
+# TEST 3: API MATCHES
+echo "=== TEST API MATCHES ==="
+curl -s https://highlandergame.it/api/matches | head -c 100
+
+# TEST 4: API GAMES
+echo "=== TEST API GAMES ==="
+curl -s https://highlandergame.it/api/games | head -c 100
+
+# TEST 5: FORGOT USERNAME/PASSWORD
+echo "=== TEST FORGOT FUNCTIONS ==="
+curl -X POST https://highlandergame.it/api/forgot-username \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com"}'
+
+# TEST 6: EMAIL SYSTEM
+echo "=== TEST EMAIL SYSTEM ==="
+grep -i "email\|smtp" /home/highlander/app/logs/out-0.log | tail -5
+
+# TEST 7: PWA MANIFEST
+echo "=== TEST PWA ==="
+curl -s https://highlandergame.it/manifest.json | jq .name
+
+# TEST 8: STATIC FILES
+echo "=== TEST STATIC FILES ==="
+curl -I https://highlandergame.it/icons/icon-144x144.png
+```
+
+CONFRONTO REPLIT vs PRODUZIONE:
+```bash
+# Su Replit (per confronto)
+echo "=== REPLIT DATA ==="
+echo "Teams: $(curl -s localhost:5000/api/teams | jq length)"
+echo "Matches: $(curl -s localhost:5000/api/matches | jq length)"
+echo "Games: $(curl -s localhost:5000/api/games | jq length)"
+
+# Su Produzione
+echo "=== PRODUZIONE DATA ==="
+echo "Teams: $(curl -s https://highlandergame.it/api/teams | jq length)"
+echo "Matches: $(curl -s https://highlandergame.it/api/matches | jq length)"
+echo "Games: $(curl -s https://highlandergame.it/api/games | jq length)"
+```
+
+PRIORITÀ FIX:
+1. Verificare/ripopolare dati Serie A nel database
+2. Configurare WebSocket per nginx
+3. Aggiungere icone PWA mancanti
+4. Testare API lock-round con dati validi
+5. Verificare autenticazione admin completa

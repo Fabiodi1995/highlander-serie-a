@@ -1,0 +1,149 @@
+forgot-username:40 SW registered:  ServiceWorkerRegistration {installing: null, waiting: null, active: ServiceWorker, navigationPreload: NavigationPreloadManager, scope: 'https://highlandergame.it/', …}
+index-BUzvSwNR.js:433 Service Worker registered: https://highlandergame.it/
+index-BUzvSwNR.js:48 
+            
+            
+           GET https://highlandergame.it/api/user 401 (Unauthorized)
+(anonime) @ index-BUzvSwNR.js:48
+a @ index-BUzvSwNR.js:48
+v @ index-BUzvSwNR.js:48
+start @ index-BUzvSwNR.js:48
+fetch @ index-BUzvSwNR.js:48
+dg @ index-BUzvSwNR.js:48
+onSubscribe @ index-BUzvSwNR.js:48
+subscribe @ index-BUzvSwNR.js:48
+(anonime) @ index-BUzvSwNR.js:48
+H$ @ index-BUzvSwNR.js:38
+N2 @ index-BUzvSwNR.js:40
+mh @ index-BUzvSwNR.js:40
+QC @ index-BUzvSwNR.js:40
+ou @ index-BUzvSwNR.js:38
+TJ @ index-BUzvSwNR.js:40
+Lu @ index-BUzvSwNR.js:40
+jF @ index-BUzvSwNR.js:40
+N @ index-BUzvSwNR.js:25
+T @ index-BUzvSwNR.js:25
+forgot-username:1 Error while trying to use the following icon from the Manifest: https://highlandergame.it/icons/icon-144x144.png (Download error or resource isn't a valid image)
+index-BUzvSwNR.js:709 🚀 Invio richiesta forgot-username: {email: 'rojanob204@boxmach.com'}
+index-BUzvSwNR.js:709 📡 Response status: 200 
+index-BUzvSwNR.js:709 📋 Response headers: {content-length: '58', content-type: 'application/json; charset=utf-8', date: 'Mon, 23 Jun 2025 18:29:24 GMT', etag: 'W/"3a-+U1KYL9fa15dfnDDJNm1x/mMgtc"', server: 'nginx/1.18.0 (Ubuntu)', …}
+index-BUzvSwNR.js:709 📄 Content-Type: application/json; charset=utf-8
+index-BUzvSwNR.js:709 ✅ Response data: {message: "Se l'email esiste, riceverai il tuo username"}
+index-BUzvSwNR.js:433 WebSocket connection to 'wss://highlandergame.it/ws/social' failed: 
+P @ index-BUzvSwNR.js:433
+(anonime) @ index-BUzvSwNR.js:433
+N2 @ index-BUzvSwNR.js:40
+mh @ index-BUzvSwNR.js:40
+TJ @ index-BUzvSwNR.js:40
+Lu @ index-BUzvSwNR.js:40
+QC @ index-BUzvSwNR.js:40
+ou @ index-BUzvSwNR.js:38
+(anonime) @ index-BUzvSwNR.js:40
+index-BUzvSwNR.js:433 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+P.o.current.onerror @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:433 WebSocket connection to 'wss://highlandergame.it/ws/social' failed: 
+P @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:433 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+P.o.current.onerror @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:433 WebSocket connection to 'wss://highlandergame.it/ws/social' failed: 
+P @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:433 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+P.o.current.onerror @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:433 WebSocket connection to 'wss://highlandergame.it/ws/social' failed: 
+P @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:433 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+P.o.current.onerror @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:433 WebSocket connection to 'wss://highlandergame.it/ws/social' failed: 
+P @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:433 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+P.o.current.onerror @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:433 WebSocket connection to 'wss://highlandergame.it/ws/social' failed: 
+P @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:433 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+P.o.current.onerror @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:433 WebSocket connection to 'wss://highlandergame.it/ws/social' failed: 
+P @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:433 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+P.o.current.onerror @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:433 WebSocket connection to 'wss://highlandergame.it/ws/social' failed: 
+P @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:433 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+P.o.current.onerror @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:433 WebSocket connection to 'wss://highlandergame.it/ws/social' failed: 
+P @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:433 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+P.o.current.onerror @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:433 WebSocket connection to 'wss://highlandergame.it/ws/social' failed: 
+P @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:433 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+P.o.current.onerror @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:433 WebSocket connection to 'wss://highlandergame.it/ws/social' failed: 
+P @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:433 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+P.o.current.onerror @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:632 User selection changed: 1
+index-BUzvSwNR.js:433 WebSocket connection to 'wss://highlandergame.it/ws/social' failed: 
+P @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:433 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+P.o.current.onerror @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:632 Submitting ticket assignment: gameId=1, userId=1, count=3
+index-BUzvSwNR.js:632 Attempting to assign 3 tickets to user 1 for game 1
+index-BUzvSwNR.js:433 WebSocket connection to 'wss://highlandergame.it/ws/social' failed: 
+P @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:433 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+P.o.current.onerror @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:433 WebSocket connection to 'wss://highlandergame.it/ws/social' failed: 
+P @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:433 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+P.o.current.onerror @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:632 User selection changed: 3
+index-BUzvSwNR.js:433 WebSocket connection to 'wss://highlandergame.it/ws/social' failed: 
+P @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:433 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+P.o.current.onerror @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:632 Submitting ticket assignment: gameId=1, userId=3, count=5
+index-BUzvSwNR.js:632 Attempting to assign 5 tickets to user 3 for game 1
+index-BUzvSwNR.js:433 WebSocket connection to 'wss://highlandergame.it/ws/social' failed: 
+P @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:433 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+P.o.current.onerror @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:632 
+            
+            
+           POST https://highlandergame.it/api/games/1/lock-round 400 (Bad Request)
+mutationFn @ index-BUzvSwNR.js:632
+fn @ index-BUzvSwNR.js:48
+v @ index-BUzvSwNR.js:48
+start @ index-BUzvSwNR.js:48
+execute @ index-BUzvSwNR.js:48
+await in execute
+mutate @ index-BUzvSwNR.js:48
+(anonime) @ index-BUzvSwNR.js:48
+onClick @ index-BUzvSwNR.js:632
+QQ @ index-BUzvSwNR.js:37
+JQ @ index-BUzvSwNR.js:37
+eZ @ index-BUzvSwNR.js:37
+wC @ index-BUzvSwNR.js:37
+O$ @ index-BUzvSwNR.js:37
+(anonime) @ index-BUzvSwNR.js:37
+V_ @ index-BUzvSwNR.js:40
+e$ @ index-BUzvSwNR.js:37
+oS @ index-BUzvSwNR.js:37
+y_ @ index-BUzvSwNR.js:37
+gZ @ index-BUzvSwNR.js:37
+index-BUzvSwNR.js:433 WebSocket connection to 'wss://highlandergame.it/ws/social' failed: 
+P @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:433 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+P.o.current.onerror @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:433 WebSocket connection to 'wss://highlandergame.it/ws/social' failed: 
+P @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:433 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+P.o.current.onerror @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:433 WebSocket connection to 'wss://highlandergame.it/ws/social' failed: 
+P @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:433 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+P.o.current.onerror @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:433 WebSocket connection to 'wss://highlandergame.it/ws/social' failed: 
+P @ index-BUzvSwNR.js:433
+index-BUzvSwNR.js:433 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+P.o.current.onerror @ index-BUzvSwNR.js:433
