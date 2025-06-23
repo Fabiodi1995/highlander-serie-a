@@ -1,53 +1,260 @@
-SOLUZIONE DEFINITIVA PROBLEMA DATABASE
-=====================================
+COMANDI DEFINITIVI PER RISOLVERE PRODUZIONE
+==========================================
 
-Sul server esegui ESATTAMENTE questi comandi in sequenza:
+ESEGUI QUESTI COMANDI SUL SERVER (root@78.47.123.128):
 
-```bash
+# 1. DIAGNOSI INIZIALE
+echo "=== DIAGNOSI STATO ATTUALE ==="
 cd /home/highlander/app
+sudo -u postgres psql highlander_prod -c "SELECT COUNT(*) as teams FROM teams;"
+sudo -u postgres psql highlander_prod -c "SELECT COUNT(*) as matches FROM matches;"
+pm2 status
+ls -la dist/icons/ 2>/dev/null || echo "Cartella icone mancante"
 
-# 1. Ferma completamente PM2
-pm2 stop highlander
-pm2 delete highlander
+# 2. FIX DATABASE - POPOLA DATI SERIE A
+echo "=== POPOLAMENTO DATABASE ==="
+node load_all_matches.js
+echo "Verifica dati popolati:"
+sudo -u postgres psql highlander_prod -c "SELECT COUNT(*) as teams_after FROM teams;"
+sudo -u postgres psql highlander_prod -c "SELECT COUNT(*) as matches_after FROM matches;"
 
-# 2. Verifica che ecosystem.config.cjs sia corretto
-cat ecosystem.config.cjs
+# 3. FIX AUTENTICAZIONE - AGGIORNA AUTH.TS
+echo "=== FIX SISTEMA AUTENTICAZIONE ==="
+cp server/auth.ts server/auth.ts.backup
 
-# Se non mostra la password URL-encoded, ricrea il file:
-cat > ecosystem.config.cjs << 'EOF'
-module.exports = {
-  apps: [{
-    name: 'highlander',
-    script: './dist/index.js',
-    cwd: '/home/highlander/app',
-    env: {
-      NODE_ENV: 'production',
-      PORT: 5000,
-      DATABASE_URL: 'postgresql://highlander:P3CQeyzh%2FYLiyxabFSMgwoxRpUPW5qw4@localhost:5432/highlander_db',
-      SMTP_USER: 'support@highlandergame.it',
-      SMTP_PASSWORD: 'Calibro9!',
-      FROM_EMAIL: 'support@highlandergame.it',
-      SENDGRID_API_KEY: '',
-      SESSION_SECRET: 'highlander-secure-session-2024',
-      BASE_URL: 'https://highlandergame.it'
-    },
-    instances: 1,
-    autorestart: true,
-    watch: false,
-    max_memory_restart: '1G',
-    error_file: './logs/error.log',
-    out_file: './logs/out.log',
-    log_file: './logs/combined.log',
-    time: true
-  }]
+cat > server/auth.ts << 'EOF'
+import passport from "passport";
+import { Strategy as LocalStrategy } from "passport-local";
+import { Express } from "express";
+import session from "express-session";
+import { scrypt, randomBytes, timingSafeEqual } from "crypto";
+import { promisify } from "util";
+import bcrypt from "bcryptjs";
+import { storage } from "./storage";
+import { emailService } from "./unified-email-service";
+import { User as SelectUser } from "@shared/schema";
+
+declare global {
+  namespace Express {
+    interface User extends SelectUser {}
+  }
+}
+
+const scryptAsync = promisify(scrypt);
+
+async function hashPassword(password: string) {
+  const salt = randomBytes(16).toString("hex");
+  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+  return `${buf.toString("hex")}.${salt}`;
+}
+
+async function comparePasswords(supplied: string, stored: string) {
+  try {
+    if (stored.startsWith('$2b$') || stored.startsWith('$2a$') || stored.startsWith('$2y$')) {
+      return await bcrypt.compare(supplied, stored);
+    }
+    if (stored.includes('.')) {
+      const [hashed, salt] = stored.split(".");
+      const hashedBuf = Buffer.from(hashed, "hex");
+      const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+      return timingSafeEqual(hashedBuf, suppliedBuf);
+    }
+    return supplied === stored;
+  } catch (error) {
+    console.error('Password comparison error:', error);
+    return false;
+  }
+}
+
+export function setupAuth(app: Express) {
+  const sessionSettings: session.SessionOptions = {
+    secret: process.env.SESSION_SECRET || "highlander-secret-key",
+    resave: false,
+    saveUninitialized: false,
+    store: storage.sessionStore,
+  };
+
+  app.set("trust proxy", 1);
+  app.use(session(sessionSettings));
+  app.use(passport.initialize());
+  app.use(passport.session());
+
+  passport.use(
+    new LocalStrategy(async (username, password, done) => {
+      try {
+        console.log('Login attempt for username:', username);
+        const user = await storage.getUserByUsername(username);
+        if (!user) {
+          console.log('User not found:', username);
+          return done(null, false);
+        }
+        
+        const passwordValid = await comparePasswords(password, user.password);
+        console.log('Password validation result:', passwordValid);
+        
+        if (!passwordValid) {
+          return done(null, false);
+        } else {
+          return done(null, user);
+        }
+      } catch (error) {
+        console.error('Login error:', error);
+        return done(error);
+      }
+    }),
+  );
+
+  passport.serializeUser((user, done) => done(null, user.id));
+  passport.deserializeUser(async (id: number, done) => {
+    try {
+      const user = await storage.getUser(id);
+      done(null, user);
+    } catch (error) {
+      console.error('Deserialize user error:', error);
+      done(error);
+    }
+  });
+
+  app.post("/api/register", async (req, res, next) => {
+    try {
+      const existingUser = await storage.getUserByUsername(req.body.username);
+      if (existingUser) {
+        return res.status(400).send("Username già esistente");
+      }
+
+      const existingEmail = await storage.getUserByEmail(req.body.email);
+      if (existingEmail) {
+        return res.status(400).send("Email già registrata");
+      }
+
+      const userData = {
+        ...req.body,
+        password: await hashPassword(req.body.password),
+        dateOfBirth: req.body.dateOfBirth ? new Date(req.body.dateOfBirth) : undefined,
+      };
+
+      const user = await storage.createUser(userData);
+
+      if (!user.emailVerified) {
+        try {
+          const verificationToken = emailService.generateVerificationToken();
+          const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+          await storage.createEmailVerificationToken({
+            userId: user.id,
+            token: verificationToken,
+            email: user.email,
+            expiresAt
+          });
+
+          await emailService.sendVerificationEmail({
+            userId: user.id,
+            email: user.email,
+            username: user.username,
+            token: verificationToken
+          });
+        } catch (emailError) {
+          console.error('Error sending verification email:', emailError);
+        }
+      }
+
+      req.login(user, (err) => {
+        if (err) return next(err);
+        res.status(201).json(user);
+      });
+    } catch (error) {
+      console.error('Registration error:', error);
+      res.status(500).json({ message: "Errore durante la registrazione" });
+    }
+  });
+
+  app.post("/api/login", (req, res, next) => {
+    passport.authenticate("local", (err: any, user: any, info: any) => {
+      if (err) {
+        console.error('Login authentication error:', err);
+        return res.status(500).json({ message: "Errore durante il login" });
+      }
+      if (!user) {
+        return res.status(401).json({ message: "Credenziali non valide" });
+      }
+      req.login(user, (loginErr: any) => {
+        if (loginErr) {
+          console.error('Login session error:', loginErr);
+          return res.status(500).json({ message: "Errore durante il login" });
+        }
+        return res.status(200).json(user);
+      });
+    })(req, res, next);
+  });
+
+  app.post("/api/logout", (req, res, next) => {
+    req.logout((err) => {
+      if (err) return next(err);
+      res.sendStatus(200);
+    });
+  });
 }
 EOF
 
-# 3. Avvia PM2 da zero con nuove variabili
-pm2 start ecosystem.config.cjs
+# 4. FIX NGINX WEBSOCKET
+echo "=== CONFIGURAZIONE NGINX WEBSOCKET ==="
+sudo tee /etc/nginx/sites-available/highlander_websocket << 'EOF'
+location /ws/ {
+    proxy_pass http://127.0.0.1:5000;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_read_timeout 86400;
+}
+EOF
 
-# 4. Verifica immediatamente
-pm2 logs highlander --lines 15
-```
+# Inserisci configurazione WebSocket in nginx
+sudo cp /etc/nginx/sites-enabled/default /etc/nginx/sites-enabled/default.backup
+sudo sed -i '/location \/ {/i\    include /etc/nginx/sites-available/highlander_websocket;' /etc/nginx/sites-enabled/default
 
-Questo forza PM2 a caricare le nuove variabili ambiente e risolve l'errore di autenticazione PostgreSQL.
+# 5. FIX PWA ASSETS
+echo "=== COPIA ASSETS PWA ==="
+mkdir -p dist/icons dist/public
+find client/public -name "*.png" -exec cp {} dist/icons/ \; 2>/dev/null || echo "Icone non trovate in client/public"
+find client/public -name "manifest.json" -exec cp {} dist/ \; 2>/dev/null || echo "Manifest non trovato"
+
+# 6. REBUILD E RESTART
+echo "=== REBUILD APPLICAZIONE ==="
+npm run build
+sudo nginx -t
+if [ $? -eq 0 ]; then
+    sudo systemctl reload nginx
+    echo "Nginx ricaricato con successo"
+else
+    echo "Errore configurazione nginx - ripristino backup"
+    sudo cp /etc/nginx/sites-enabled/default.backup /etc/nginx/sites-enabled/default
+fi
+
+pm2 restart highlander
+sleep 5
+
+# 7. VERIFICA FINALE
+echo "=== VERIFICA FINALE ==="
+pm2 status
+pm2 logs highlander --lines 10 | grep -v "Checking.*games"
+
+# Test API
+curl -s -X POST https://highlandergame.it/api/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"temp_admin_2024"}' | head -c 200
+
+echo -e "\n=== STATO ASSETS PWA ==="
+ls -la dist/icons/ | head -5
+ls -la dist/manifest.json 2>/dev/null || echo "Manifest mancante"
+
+echo -e "\n=== VERIFICA DATABASE ==="
+sudo -u postgres psql highlander_prod -c "SELECT COUNT(*) as final_teams FROM teams;"
+sudo -u postgres psql highlander_prod -c "SELECT COUNT(*) as final_matches FROM matches;"
+
+echo -e "\n=== FIX COMPLETATO ==="
+echo "Testare login su: https://highlandergame.it/auth"
+echo "Testare admin su: https://highlandergame.it/admin"
