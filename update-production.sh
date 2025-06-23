@@ -12,7 +12,7 @@ module.exports = {
     env: {
       NODE_ENV: 'production',
       PORT: 5000,
-      DATABASE_URL: 'postgresql://highlander:P3CQeyzh/YLiyxabFSMgwoxRpUPW5qw4@localhost:5432/highlander_db',
+      DATABASE_URL: 'postgresql://highlander:P3CQeyzh%2FYLiyxabFSMgwoxRpUPW5qw4@localhost:5432/highlander_db',
       SMTP_USER: 'support@highlandergame.it',
       SMTP_PASSWORD: 'Calibro9!',
       SESSION_SECRET: 'your-session-secret-here',
