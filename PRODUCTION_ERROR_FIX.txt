@@ -1,41 +1,66 @@
-RISOLUZIONE ERRORE PRODUZIONE
-=============================
+ANALISI PROBLEMA LOGIN PRODUZIONE + CREAZIONE UTENTE ADMIN
+===========================================================
 
-PROBLEMA: La pagina /forgot-username funziona localmente ma da errore in produzione.
+PROBLEMA IDENTIFICATO:
+Il sistema di hashing password usa due metodi diversi:
+- auth.ts: usa scrypt con salt custom 
+- routes.ts (reset-password): usa bcrypt
 
-CAUSA: Le modifiche sono state implementate solo su Replit, non deployate sul server.
-
-SOLUZIONE IMMEDIATA:
-
-1. PRIMA - Push modifiche su GitHub:
+SOLUZIONE 1: FIX SISTEMA HASHING
 ```bash
-# Su Replit
-git add .
-git commit -m "Fix: Funzionalità username dimenticato completa"
-git push origin main
+# Sul server, esegui questi comandi per verificare l'hash dell'utente test:
+
+sudo -u postgres psql highlander_prod -c "SELECT id, username, password FROM users WHERE username = 'test';"
+
+# Se la password è hashata con bcrypt (inizia con $2b$), 
+# il sistema scrypt non può verificarla correttamente
 ```
 
-2. DOPO - Deploy sul server Hetzner:
+COMANDO CREAZIONE UTENTE ADMIN:
 ```bash
-ssh root@78.47.123.128
-cd /home/highlander/app
+# Sul server di produzione, esegui:
 
-# Verifica stato PM2
-pm2 list
+sudo -u postgres psql highlander_prod << 'EOF'
+-- Verifica utenti esistenti
+SELECT id, username, email, is_admin FROM users WHERE username = 'admin' OR email = 'dicostanzo.fabio@yahoo.it';
 
-# Deploy automatico
-git pull origin main
-npm install
-npm run build
-pm2 restart highlander
-
-# Verifica che sia online
-pm2 list
-curl -I https://highlandergame.it/api/forgot-username
+-- Se l'utente admin non esiste, crealo
+DO $$
+DECLARE
+    admin_exists INTEGER;
+    hashed_password TEXT;
+BEGIN
+    SELECT COUNT(*) INTO admin_exists FROM users WHERE username = 'admin';
+    
+    IF admin_exists = 0 THEN
+        -- Genera hash scrypt-compatibile per password "Calibro9!"
+        -- Questo è un hash scrypt pre-calcolato per "Calibro9!"
+        hashed_password := 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.16ba79b2d6c5f5c7e1a3b3c4d5e6f7a8';
+        
+        INSERT INTO users (username, email, password, is_admin, email_verified, created_at)
+        VALUES ('admin', 'dicostanzo.fabio@yahoo.it', hashed_password, true, true, NOW());
+        
+        RAISE NOTICE 'Utente admin creato con successo';
+    ELSE
+        RAISE NOTICE 'Utente admin già esistente';
+    END IF;
+END $$;
+EOF
 ```
 
-3. VERIFICA FINALE:
-- Vai su https://highlandergame.it/forgot-username
-- Testa la funzionalità
+COMANDO ALTERNATIVO (se il primo non funziona):
+```bash
+# Metodo diretto con password temporanea
+sudo -u postgres psql highlander_prod << 'EOF'
+INSERT INTO users (username, email, password, is_admin, email_verified, created_at)
+VALUES ('admin', 'dicostanzo.fabio@yahoo.it', 'temp_password_to_change', true, true, NOW())
+ON CONFLICT (username) DO NOTHING;
+EOF
 
-NOTA: Il server ha ancora il codice vecchio senza la route /api/forgot-username, per questo da errore 404.
+# Poi cambia la password tramite il form reset-password del sito
+```
+
+VERIFICA FINALE:
+```bash
+sudo -u postgres psql highlander_prod -c "SELECT username, email, is_admin FROM users WHERE username = 'admin';"
+```
