@@ -1,0 +1,44 @@
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# sudo -u postgres psql
+psql (12.22 (Ubuntu 12.22-0ubuntu0.20.04.4))
+Type "help" for help.
+
+postgres=#
+postgres=# \l
+                                       List of databases
+      Name       |  Owner   | Encoding |   Collate   |    Ctype    |     Access privileges
+-----------------+----------+----------+-------------+-------------+----------------------------
+ highlander_prod | postgres | UTF8     | en_US.UTF-8 | en_US.UTF-8 | =Tc/postgres              +
+                 |          |          |             |             | postgres=CTc/postgres     +
+                 |          |          |             |             | highlander_db=CTc/postgres
+ postgres        | postgres | UTF8     | en_US.UTF-8 | en_US.UTF-8 |
+ template0       | postgres | UTF8     | en_US.UTF-8 | en_US.UTF-8 | =c/postgres               +
+                 |          |          |             |             | postgres=CTc/postgres
+ template1       | postgres | UTF8     | en_US.UTF-8 | en_US.UTF-8 | =c/postgres               +
+                 |          |          |             |             | postgres=CTc/postgres
+(4 rows)
+
+postgres=# \du
+                                     List of roles
+   Role name   |                         Attributes                         | Member of
+---------------+------------------------------------------------------------+-----------
+ highlander    |                                                            | {}
+ highlander_db |                                                            | {}
+ postgres      | Superuser, Create role, Create DB, Replication, Bypass RLS | {}
+
+postgres=#
+postgres=# # Se highlander_db esiste:
+postgres-# \c highlander_db
+FATAL:  database "highlander_db" does not exist
+Previous connection kept
+postgres-# \dt
+Did not find any relations.
+postgres-# \d users
+Did not find any relation named "users".
+postgres-# \d teams
+Did not find any relation named "teams".
+postgres-# \d games
+Did not find any relation named "games".
+postgres-# \d tickets
+Did not find any relation named "tickets".
+postgres-#
+postgres-# \q
