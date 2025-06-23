@@ -1,0 +1,32 @@
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# pm2 status
+┌────┬───────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name          │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼───────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ highlander    │ default     │ 1.0.0   │ cluster │ 159979   │ 11s    │ 2    │ online    │ 0%       │ 108.7mb  │ root     │ disabled │
+└────┴───────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# pm2 logs highlander --lines 20
+[TAILING] Tailing last 20 lines for [highlander] process (change the value with --lines option)
+/home/highlander/app/logs/out-0.log last 20 lines:
+/home/highlander/app/logs/error-0.log last 20 lines:
+0|highland | You have triggered an unhandledRejection, you may have forgotten to catch a Promise rejection:
+0|highland | Error: Database connection string provided to `neon()` is not a valid URL. Connection string: postgresql://highlander:P3CQeyzh/YLiyxabFSMgwoxRpUPW5qw4@localhost:5432/highlander_db
+0|highland |     at neon (file:///home/highlander/app/node_modules/@neondatabase/serverless/index.mjs:1526:52)
+0|highland |     at server/db.ts (file:///home/highlander/app/dist/index.js:426:11)
+0|highland |     at __init (file:///home/highlander/app/dist/index.js:4:56)
+0|highland |     at server/storage.ts (file:///home/highlander/app/dist/index.js:459:5)
+0|highland |     at __init (file:///home/highlander/app/dist/index.js:4:56)
+0|highland |     at file:///home/highlander/app/dist/index.js:1728:1
+0|highland |     at ModuleJob.run (node:internal/modules/esm/module_job:263:25)
+0|highland |     at async ModuleLoader.import (node:internal/modules/esm/loader:540:24)
+0|highland | You have triggered an unhandledRejection, you may have forgotten to catch a Promise rejection:
+0|highland | Error: Database connection string provided to `neon()` is not a valid URL. Connection string: postgresql://highlander:P3CQeyzh/YLiyxabFSMgwoxRpUPW5qw4@localhost:5432/highlander_db
+0|highland |     at neon (file:///home/highlander/app/node_modules/@neondatabase/serverless/index.mjs:1526:52)
+0|highland |     at server/db.ts (file:///home/highlander/app/dist/index.js:426:11)
+0|highland |     at __init (file:///home/highlander/app/dist/index.js:4:56)
+0|highland |     at server/storage.ts (file:///home/highlander/app/dist/index.js:459:5)
+0|highland |     at __init (file:///home/highlander/app/dist/index.js:4:56)
+0|highland |     at file:///home/highlander/app/dist/index.js:1728:1
+0|highland |     at ModuleJob.run (node:internal/modules/esm/module_job:263:25)
+0|highland |     at async ModuleLoader.import (node:internal/modules/esm/loader:540:24)
+
+

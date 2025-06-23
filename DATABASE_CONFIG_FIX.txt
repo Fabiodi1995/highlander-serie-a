@@ -1,0 +1,40 @@
+RISOLUZIONE ERRORE DATABASE NEON
+================================
+
+PROBLEMA: Il codice aggiornato dal repository usa @neondatabase/serverless ma il server ha PostgreSQL locale.
+
+SOLUZIONE IMMEDIATA:
+
+1. MODIFICA ECOSYSTEM.CONFIG.CJS SUL SERVER:
+```bash
+ssh root@78.47.123.128
+cd /home/highlander/app
+
+nano ecosystem.config.cjs
+```
+
+Cambia la configurazione database da:
+```javascript
+DATABASE_URL: 'postgresql://highlander:P3CQeyzh/YLiyxabFSMgwoxRpUPW5qw4@localhost:5432/highlander_db'
+```
+
+A (per usare driver PostgreSQL normale invece di Neon):
+```javascript
+NODE_ENV: 'production',
+USE_LOCAL_POSTGRES: 'true',
+DATABASE_URL: 'postgresql://highlander:P3CQeyzh/YLiyxabFSMgwoxRpUPW5qw4@localhost:5432/highlander_db'
+```
+
+2. RESTART PM2:
+```bash
+pm2 restart highlander
+pm2 logs highlander --lines 10
+```
+
+ALTERNATIVA - MODIFICA IL CODICE PER SUPPORTARE ENTRAMBI:
+
+Nel file server/db.ts aggiungere controllo per usare il driver corretto:
+- Se USE_LOCAL_POSTGRES=true → usa postgres normale
+- Altrimenti → usa @neondatabase/serverless
+
+Preferisco la prima soluzione per non modificare il codice core.

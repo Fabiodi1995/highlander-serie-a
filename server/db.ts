@@ -1,5 +1,7 @@
-import { neon, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-http';
+import { Pool } from 'pg';
+import { neon } from '@neondatabase/serverless';
+import { drizzle as drizzlePostgres } from 'drizzle-orm/node-postgres';
+import { drizzle as drizzleNeon } from 'drizzle-orm/neon-http';
 import * as schema from "@shared/schema";
 
 if (!process.env.DATABASE_URL) {
@@ -8,9 +10,29 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-// Simple HTTP connection with minimal configuration
-const sql = neon(process.env.DATABASE_URL);
-export const db = drizzle(sql, { schema });
+// Check if we should use local PostgreSQL or Neon cloud
+const useLocalPostgres = process.env.USE_LOCAL_POSTGRES === 'true' || 
+                        process.env.DATABASE_URL.includes('localhost') ||
+                        process.env.DATABASE_URL.includes('127.0.0.1');
+
+console.log(`Database mode: ${useLocalPostgres ? 'Local PostgreSQL' : 'Neon Cloud'}`);
+
+let db: any;
+
+if (useLocalPostgres) {
+  // Use standard PostgreSQL driver for local connections
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL!,
+  });
+  
+  db = drizzlePostgres(pool, { schema });
+} else {
+  // Use Neon serverless driver for cloud connections
+  const sql = neon(process.env.DATABASE_URL!);
+  db = drizzleNeon(sql, { schema });
+}
+
+export { db };
 
 // Simple query queue to prevent connection overload
 let queryQueue: Array<() => Promise<any>> = [];

@@ -1,0 +1,51 @@
+AGGIORNAMENTO FINALE SERVER CON DATABASE FIX
+==========================================
+
+STEP 1 - PUSH MODIFICHE SU GITHUB:
+```bash
+git add .
+git commit -m "Fix: Supporto dual database PostgreSQL locale e Neon cloud
+
+- Modificato server/db.ts per supportare entrambi i driver
+- Aggiunto pacchetto pg per PostgreSQL locale
+- Auto-detection basata su DATABASE_URL
+- Logging per identificare modalità database utilizzata
+- Funzionalità forgot-username testata e funzionante"
+
+git push origin main
+```
+
+STEP 2 - AGGIORNAMENTO SERVER:
+```bash
+ssh root@78.47.123.128
+cd /home/highlander/app
+
+# Backup
+cp -r . ../backup-$(date +%Y%m%d_%H%M%S)
+
+# Sync con repository
+git fetch origin main
+git reset --hard origin/main
+
+# Installa nuove dipendenze (pg)
+npm install
+
+# Build
+npm run build
+
+# Restart PM2
+pm2 restart highlander
+
+# Verifica
+pm2 status
+pm2 logs highlander --lines 10
+```
+
+STEP 3 - VERIFICA FUNZIONALITÀ:
+- Vai su https://highlandergame.it/forgot-username
+- Apri console browser (F12)
+- Inserisci email esistente
+- Verifica log dettagliati nella console
+- Controlla email in arrivo
+
+Il server ora rileverà automaticamente PostgreSQL locale e userà il driver corretto.
