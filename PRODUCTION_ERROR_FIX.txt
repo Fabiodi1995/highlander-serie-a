@@ -1,0 +1,41 @@
+RISOLUZIONE ERRORE PRODUZIONE
+=============================
+
+PROBLEMA: La pagina /forgot-username funziona localmente ma da errore in produzione.
+
+CAUSA: Le modifiche sono state implementate solo su Replit, non deployate sul server.
+
+SOLUZIONE IMMEDIATA:
+
+1. PRIMA - Push modifiche su GitHub:
+```bash
+# Su Replit
+git add .
+git commit -m "Fix: Funzionalità username dimenticato completa"
+git push origin main
+```
+
+2. DOPO - Deploy sul server Hetzner:
+```bash
+ssh root@78.47.123.128
+cd /home/highlander/app
+
+# Verifica stato PM2
+pm2 list
+
+# Deploy automatico
+git pull origin main
+npm install
+npm run build
+pm2 restart highlander
+
+# Verifica che sia online
+pm2 list
+curl -I https://highlandergame.it/api/forgot-username
+```
+
+3. VERIFICA FINALE:
+- Vai su https://highlandergame.it/forgot-username
+- Testa la funzionalità
+
+NOTA: Il server ha ancora il codice vecchio senza la route /api/forgot-username, per questo da errore 404.
