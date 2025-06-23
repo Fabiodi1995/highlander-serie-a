@@ -1,36 +1,45 @@
-RISOLUZIONE GIT LOCK PROBLEM
-============================
+RISOLUZIONE LOCK GIT E DEPLOY IMMEDIATO
+=====================================
 
-Git ha un lock file bloccato. Esegui questi comandi nella shell:
+PROBLEMA: Git lock impedisce commit delle modifiche debug.
 
-# 1. Rimuovi il file di lock
-rm -f .git/index.lock
+SOLUZIONE MANUALE PER IL DEPLOY:
 
-# 2. Rimuovi remote esistente
-git remote rm origin
+1. ACCEDI AL SERVER DIRETTAMENTE:
+```bash
+ssh root@78.47.123.128
+cd /home/highlander/app
+```
 
-# 3. Aggiungi tutti i file in una volta
-git add .
+2. MODIFICA DIRETTAMENTE IL FILE IN PRODUZIONE:
+```bash
+nano client/src/pages/forgot-username.tsx
+```
 
-# 4. Commit
-git commit -m "Initial: App Highlander completa con PM2"
+Aggiungi i console.log nella funzione onSubmit:
+```javascript
+console.log("Invio richiesta a /api/forgot-username con:", data);
+console.log("Response status:", response.status);
+console.log("Response data:", result);
+console.error("Errore fetch:", error);
+```
 
-# 5. Aggiungi remote
-git remote add origin https://github.com/Fabiodi1995/highlander-serie-a.git
+3. REBUILD E RESTART:
+```bash
+npm run build
+pm2 restart highlander
+```
 
-# 6. Push
-git branch -M main
-git push -u origin main
+4. TESTA IN PRODUZIONE:
+- Vai su https://highlandergame.it/forgot-username
+- Apri Developer Tools > Console
+- Inserisci email e clicca "Invia Username"
+- Controlla i log nella console
 
-ALTERNATIVA SE PERSISTE IL PROBLEMA:
+ALTERNATIVA - DEPLOY SCRIPT AUTOMATICO:
+```bash
+cd /home/highlander
+./deploy.sh
+```
 
-# Reset completo
-rm -rf .git
-git init
-git add .
-git commit -m "Initial: App Highlander"
-git remote add origin https://github.com/Fabiodi1995/highlander-serie-a.git
-git branch -M main
-git push -u origin main
-
-Questo dovrebbe risolvere il lock e completare il push.
+I log mostreranno esattamente dove fallisce la richiesta.

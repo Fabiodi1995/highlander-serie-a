@@ -1,25 +1,28 @@
-COMANDI IMMEDIATI PER REPOSITORY VUOTO
-=====================================
+DEPLOY IMMEDIATO SENZA GIT
+=========================
 
-Esegui questi comandi nella shell di Replit:
+Accedi al server e modifica direttamente:
 
-# 1. Rimuovi lock Git
-rm -f .git/index.lock
+ssh root@78.47.123.128
+cd /home/highlander/app
 
-# 2. Forza push su GitHub
-git push -f origin main
+# Modifica il file problema
+nano client/src/pages/forgot-username.tsx
 
-# 3. Se fallisce, reset e riprova
-git reset --soft HEAD~1
-git add .
-git commit -m "Initial: App Highlander completa"
-git push -f origin main
+# Cerca la funzione onSubmit e aggiungi prima di 'try':
+console.log("DEBUG: Iniziando richiesta forgot-username");
 
-VERIFICA:
-Vai su https://github.com/Fabiodi1995/highlander-serie-a
-e controlla che i file siano presenti.
+# Dopo 'const response = await fetch':
+console.log("DEBUG: Response ricevuta:", response.status, response.statusText);
 
-Se ancora vuoto:
-1. Elimina repository su GitHub
-2. Crea nuovo repository vuoto
-3. Ripeti setup Git da capo
+# Dopo 'const result = await response.json()':
+console.log("DEBUG: Result parsed:", result);
+
+# Nel catch block:
+console.error("DEBUG: Errore completo:", error);
+
+# Salva (Ctrl+X, Y, Enter) e rebuild
+npm run build
+pm2 restart highlander
+
+# Testa su https://highlandergame.it/forgot-username con console aperta

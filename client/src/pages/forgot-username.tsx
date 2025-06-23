@@ -32,6 +32,8 @@ export default function ForgotUsernamePage() {
     setIsLoading(true);
     
     try {
+      console.log("Invio richiesta a /api/forgot-username con:", data);
+      
       const response = await fetch("/api/forgot-username", {
         method: "POST",
         headers: {
@@ -40,7 +42,11 @@ export default function ForgotUsernamePage() {
         body: JSON.stringify(data),
       });
 
+      console.log("Response status:", response.status);
+      console.log("Response headers:", response.headers);
+
       const result = await response.json();
+      console.log("Response data:", result);
 
       if (response.ok) {
         setIsSubmitted(true);
@@ -49,6 +55,7 @@ export default function ForgotUsernamePage() {
           description: result.message,
         });
       } else {
+        console.error("Errore API:", result);
         toast({
           title: "Errore",
           description: result.message || "Si è verificato un errore",
@@ -56,6 +63,7 @@ export default function ForgotUsernamePage() {
         });
       }
     } catch (error) {
+      console.error("Errore fetch:", error);
       toast({
         title: "Errore",
         description: "Impossibile inviare la richiesta. Riprova più tardi.",
