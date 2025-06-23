@@ -1,0 +1,32 @@
+ANALISI PORTA 5000 - VERIFICA SERVIZI
+====================================
+
+Sul server esegui questi comandi per verificare cosa usa la porta 5000:
+
+```bash
+# Verifica processi sulla porta 5000
+sudo netstat -tlnp | grep :5000
+sudo lsof -i :5000
+
+# Verifica se è nginx o apache
+sudo systemctl status nginx
+sudo systemctl status apache2
+
+# Verifica se è un altro processo PM2
+pm2 list
+
+# Verifica processi node attivi
+ps aux | grep node
+
+# Verifica configurazioni web server
+sudo cat /etc/nginx/sites-enabled/default | grep -i port
+sudo cat /etc/apache2/ports.conf | grep -i listen
+```
+
+INCOLLA I RISULTATI così posso identificare:
+1. Cosa occupa la porta 5000
+2. Se è un servizio critico
+3. Se possiamo riconfiguare o fermare il conflitto
+4. La soluzione più sicura senza rompere altri servizi
+
+Non applicherò modifiche finché non vedo esattamente cosa usa quella porta.
