@@ -1,0 +1,41 @@
+RISOLUZIONE AUTENTICAZIONE GITHUB
+=================================
+
+GitHub richiede Personal Access Token dal 2021.
+
+OPZIONE 1 - PERSONAL ACCESS TOKEN:
+
+1. Vai su GitHub: Settings → Developer settings → Personal access tokens → Tokens (classic)
+2. Generate new token (classic)
+3. Seleziona scopes: repo (full control)
+4. Copia il token generato
+
+5. Aggiorna remote URL con token:
+git remote set-url origin https://TOKEN@github.com/Fabiodi1995/highlander-serie-a.git
+
+6. Push:
+git push -f origin main
+
+OPZIONE 2 - SSH (PIÙ SICURA):
+
+1. Genera chiave SSH:
+ssh-keygen -t ed25519 -C "fabiodi1995@gmail.com"
+
+2. Aggiungi chiave a GitHub:
+- Copia contenuto di ~/.ssh/id_ed25519.pub
+- GitHub Settings → SSH and GPG keys → New SSH key
+
+3. Cambia remote a SSH:
+git remote set-url origin git@github.com:Fabiodi1995/highlander-serie-a.git
+
+4. Push:
+git push -f origin main
+
+OPZIONE 3 - SEMPLICE (per ora):
+
+Usa il browser per caricare manualmente:
+1. Crea zip del progetto (escludi .git)
+2. Carica su GitHub via web interface
+3. Successivamente configura SSH per automatizzare
+
+RACCOMANDAZIONE: Usa OPZIONE 1 per velocità immediata.
