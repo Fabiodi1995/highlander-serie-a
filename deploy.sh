@@ -25,7 +25,7 @@ npm run build
 
 # Restart application with PM2
 echo "🔄 Restarting application..."
-pm2 reload highlander
+pm2 restart highlander
 
 # Check application status
 echo "✅ Checking application status..."

@@ -1,0 +1,42 @@
+AGGIORNAMENTO MANUALE SERVER
+===========================
+
+COMANDI PER AGGIORNAMENTO IMMEDIATO:
+
+ssh root@78.47.123.128
+cd /home/highlander/app
+
+# Verifica stato attuale
+git status
+git log -1 --oneline
+
+# Forza pull delle modifiche
+git fetch origin
+git reset --hard origin/main
+
+# Reinstalla dipendenze
+npm install
+
+# Build applicazione
+npm run build
+
+# Restart PM2
+pm2 restart highlander
+
+# Verifica status
+pm2 status
+pm2 logs highlander --lines 20
+
+PROBLEMA IDENTIFICATO:
+Il deploy.sh usa "pm2 reload" invece di "pm2 restart"
+- reload: ricarica gradualmente (potrebbe non applicare tutte le modifiche)
+- restart: riavvio completo (applica tutte le modifiche)
+
+CORREZIONE SCRIPT DEPLOY:
+Cambiare la riga 28 da:
+pm2 reload highlander
+
+A:
+pm2 restart highlander
+
+Questo garantisce che tutte le modifiche al codice vengano applicate completamente.

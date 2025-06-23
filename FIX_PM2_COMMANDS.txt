@@ -1,50 +1,41 @@
-RISOLUZIONE PUSH GITHUB - FILE TROPPO GRANDI
-===========================================
+AGGIORNAMENTO IMMEDIATO DEL SERVER
+=================================
 
-Il problema: GitHub rifiuta file > 100MB (highlander.tar.gz, backup files)
-
-SOLUZIONE IMMEDIATA:
-
+STEP 1 - AGGIORNAMENTO MANUALE:
 ```bash
-# 1. Rimuovi file troppo grandi dal tracking Git
-git rm --cached highlander*.tar.gz *backup*.tar.gz
+ssh root@78.47.123.128
+cd /home/highlander/app
 
-# 2. Rimuovi file dalla directory (se ancora presenti)
-rm -f highlander*.tar.gz *backup*.tar.gz
+# Forza sincronizzazione con repository
+git fetch origin
+git reset --hard origin/main
 
-# 3. Aggiorna .gitignore (già fatto)
-git add .gitignore
+# Reinstalla e rebuilda
+npm install
+npm run build
 
-# 4. Commit la rimozione
-git commit -m "Remove large archive files from Git tracking"
-
-# 5. Push su GitHub
-git push origin main
+# Restart completo PM2
+pm2 restart highlander
+pm2 status
+pm2 logs highlander --lines 10
 ```
 
-ALTERNATIVA SE ANCORA PROBLEMI:
-
+STEP 2 - AGGIORNA SCRIPT DEPLOY SUL SERVER:
 ```bash
-# Reset dell'ultimo commit problematico
-git reset --soft HEAD~1
+# Modifica il deploy script
+nano /home/highlander/deploy.sh
 
-# Rimuovi file grandi
-rm -f *.tar.gz
+# Cambia la riga:
+# pm2 reload highlander
+# Con:
+# pm2 restart highlander
 
-# Aggiungi solo file necessari
-git add client/ server/ shared/ package.json ecosystem.config.cjs .gitignore
-
-# Nuovo commit
-git commit -m "Fix: Login bug risolto e PM2 configurato"
-
-# Push
-git push origin main
+# Salva (Ctrl+X, Y, Enter)
 ```
 
-VERIFICA:
-```bash
-git status
-git ls-files | grep -E "\\.tar\\.gz$"  # Dovrebbe essere vuoto
-```
+STEP 3 - TESTA LA FUNZIONALITÀ:
+Vai su https://highlandergame.it/forgot-username
+Apri console del browser
+Inserisci email e verifica i log
 
-I file .gitignore sono stati aggiornati per evitare questo problema in futuro.
+Il problema era che pm2 reload non applica completamente le modifiche al codice, mentre pm2 restart garantisce un riavvio completo dell'applicazione.
