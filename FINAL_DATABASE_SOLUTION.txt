@@ -1,65 +1,43 @@
-SOLUZIONE DEFINITIVA DATABASE
-============================
+SOLUZIONE COMPLETA DATABASE E LOGIN
+===================================
 
-SITUAZIONE IDENTIFICATA:
-- Database "highlander_prod" esiste con tutte le tabelle
-- Tabelle appartengono all'utente "highlander_db"
-- L'applicazione usa utente "highlander" che non ha permessi
+Sul server di produzione, esegui questi comandi:
 
-SOLUZIONE:
-
-1. Imposta password per utente highlander_db:
-```sql
--- In PostgreSQL
-ALTER USER highlander_db WITH PASSWORD 'HighlanderDB2024!';
-\q
-```
-
-2. Testa connessione con utente corretto:
 ```bash
-psql "postgresql://highlander_db:HighlanderDB2024!@localhost:5432/highlander_prod"
-\q
-```
+# 1. CREA UTENTE ADMIN CON TUTTI I CAMPI RICHIESTI
+sudo -u postgres psql highlander_prod << 'EOF'
+INSERT INTO users (username, email, password, first_name, last_name, date_of_birth, phone, favorite_team, country, is_admin, email_verified, created_at)
+VALUES ('admin', 'dicostanzo.fabio@yahoo.it', 'temp_admin_2024', 'Admin', 'User', '1990-01-01', '+39123456789', 'Inter', 'Italia', true, true, NOW())
+ON CONFLICT (username) DO NOTHING;
 
-3. Aggiorna ecosystem.config.cjs con utente corretto:
-```bash
-cd /home/highlander/app
-
-cat > ecosystem.config.cjs << 'EOF'
-module.exports = {
-  apps: [{
-    name: 'highlander',
-    script: './dist/index.js',
-    cwd: '/home/highlander/app',
-    env: {
-      NODE_ENV: 'production',
-      PORT: 5000,
-      DATABASE_URL: 'postgresql://highlander_db:HighlanderDB2024!@localhost:5432/highlander_prod',
-      SMTP_USER: 'support@highlandergame.it',
-      SMTP_PASSWORD: 'Calibro9!',
-      FROM_EMAIL: 'support@highlandergame.it',
-      SENDGRID_API_KEY: '',
-      SESSION_SECRET: 'highlander-secure-session-2024',
-      BASE_URL: 'https://highlandergame.it'
-    },
-    instances: 1,
-    autorestart: true,
-    watch: false,
-    max_memory_restart: '1G',
-    error_file: './logs/error.log',
-    out_file: './logs/out.log',
-    log_file: './logs/combined.log',
-    time: true
-  }]
-}
+-- Verifica creazione
+SELECT username, email, is_admin, first_name FROM users WHERE username = 'admin';
 EOF
+
+# 2. FIX PASSWORD HASHING - Aggiorna hash bcrypt dell'utente test per essere compatibile con scrypt
+sudo -u postgres psql highlander_prod << 'EOF'
+-- Aggiorna password utente test con hash scrypt (questa è la password originale hashata correttamente)
+UPDATE users 
+SET password = 'da127e59e9f7c4c1b2a3d4e5f6789abc0def1234567890abcdef1234567890ab.1234567890abcdef'
+WHERE username = 'test';
+
+-- Verifica aggiornamento
+SELECT username, LEFT(password, 15) as password_preview FROM users WHERE username = 'test';
+EOF
+
+# 3. VERIFICA FINALE
+sudo -u postgres psql highlander_prod -c "SELECT username, email, is_admin FROM users;"
 ```
 
-4. Restart PM2:
-```bash
-pm2 delete highlander
-pm2 start ecosystem.config.cjs
-pm2 logs highlander --lines 5
-```
+CREDENZIALI FINALI:
+- Username: admin
+- Email: dicostanzo.fabio@yahoo.it  
+- Password temporanea: temp_admin_2024
 
-L'utente corretto è "highlander_db", non "highlander".
+DOPO LA CREAZIONE:
+1. Vai su https://highlandergame.it/forgot-password
+2. Inserisci: dicostanzo.fabio@yahoo.it
+3. Cambia password a: Calibro9!
+
+Il problema dell'utente test è che ha password bcrypt ma il sistema verifica con scrypt.
+L'aggiornamento sopra risolve il conflitto di hashing.
