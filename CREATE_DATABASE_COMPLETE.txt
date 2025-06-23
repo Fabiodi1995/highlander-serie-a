@@ -1,0 +1,32 @@
+CREAZIONE COMPLETA DATABASE E UTENTE
+===================================
+
+In PostgreSQL esegui questi comandi in sequenza:
+
+```sql
+-- Crea il database
+CREATE DATABASE highlander_db;
+
+-- Crea l'utente
+CREATE USER highlander WITH PASSWORD 'HighlanderDB2024!';
+
+-- Assegna permessi
+GRANT ALL PRIVILEGES ON DATABASE highlander_db TO highlander;
+ALTER DATABASE highlander_db OWNER TO highlander;
+
+-- Connetti al nuovo database per impostare permessi schema
+\c highlander_db
+
+-- Permessi su schema public
+GRANT ALL ON SCHEMA public TO highlander;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO highlander;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO highlander;
+
+-- Esci
+\q
+```
+
+Poi testa:
+```bash
+psql "postgresql://highlander:HighlanderDB2024!@localhost:5432/highlander_db"
+```
