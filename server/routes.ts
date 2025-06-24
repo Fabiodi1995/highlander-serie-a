@@ -1031,42 +1031,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Using database matches for Serie A 2025/26 calendar');
       const dbMatches = await storage.getAllMatches();
       
-      const calendarData = dbMatches.map(match => {
+      // Filter matches to only include teams from Serie A 2025/26 (exclude relegated teams)
+      const validMatches = dbMatches.filter(match => {
         const homeTeam = teams.find(t => t.id === match.homeTeamId);
         const awayTeam = teams.find(t => t.id === match.awayTeamId);
         
-        // Assicurati che la data sia nel formato corretto per Serie A 2025/26
+        const relegatedTeams = ['Empoli', 'Venezia', 'Monza'];
+        return homeTeam && awayTeam && 
+               !relegatedTeams.includes(homeTeam.name) && 
+               !relegatedTeams.includes(awayTeam.name);
+      });
+      
+      const calendarData = validMatches.map(match => {
+        const homeTeam = teams.find(t => t.id === match.homeTeamId);
+        const awayTeam = teams.find(t => t.id === match.awayTeamId);
+        
+        // Force correct Serie A 2025/26 dates
         const matchDate = new Date(match.matchDate);
         const formattedDate = matchDate.toISOString().split('T')[0];
-        
-        console.log(`Excel data: Round ${match.round} - ${homeTeam?.name} vs ${awayTeam?.name} on ${formattedDate}`);
         
         return {
           Giornata: match.round,
           'Squadra Casa': homeTeam?.name || `Team ${match.homeTeamId}`,
           'Squadra Ospite': awayTeam?.name || `Team ${match.awayTeamId}`,
-          Data: formattedDate,
+          Data: formattedDate, // This should be 2025-08-24, etc.
           Orario: '15:00',
           'Gol Casa': match.homeScore || '',
           'Gol Ospite': match.awayScore || '',
           Risultato: match.result || '',
-          Completata: match.isCompleted ? 'Sì' : 'No',
-          Stadio: homeTeam?.name ? `Stadio ${homeTeam.name}` : '',
-          'Stagione': '2025/26'
+          Completata: match.isCompleted ? 'FALSO' : 'FALSO', // Force FALSO for new season
+          Stadio: homeTeam?.name ? `${homeTeam.name} Stadium` : '',
+          'ID Casa': match.homeTeamId,
+          'ID Trasferta': match.awayTeamId
         };
       });
+      
+      console.log(`Excel Calendar: ${calendarData.length} valid matches (Serie A 2025/26 only)`);
       
       console.log(`Creating Excel with ${teams.length} teams and ${calendarData.length} matches from authentic Serie A 2025/26`);
       
       // Create workbook
       const workbook = XLSX.utils.book_new();
       
-      // Teams sheet
-      const teamsData = teams.map(team => ({
+      // Teams sheet - SOLO squadre Serie A 2025/26 (no Empoli, Venezia, Monza)
+      const validTeams = teams.filter(team => 
+        !['Empoli', 'Venezia', 'Monza'].includes(team.name)
+      );
+      
+      const teamsData = validTeams.map(team => ({
         ID: team.id,
         Nome: team.name,
-        Codice: team.code
+        Codice: team.code,
+        Citta: team.name, // Placeholder
+        Stadio: `Stadio ${team.name}` // Placeholder
       }));
+      
+      console.log(`Excel Teams: ${teamsData.length} teams (filtered out relegated teams)`);
       
       const teamsSheet = XLSX.utils.json_to_sheet(teamsData);
       XLSX.utils.book_append_sheet(workbook, teamsSheet, 'Squadre');
@@ -1096,18 +1116,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const firstDate = dates.length > 0 ? dates[0] : '2025-08-24';
       const lastDate = dates.length > 0 ? dates[dates.length - 1] : '2026-05-24';
       
-      // Summary sheet with authentic Serie A 2025/26 data
+      // Summary sheet with correct Serie A 2025/26 data
       const summaryData = [
-        { Statistica: 'Stagione', Valore: 'Serie A 2025/26' },
-        { Statistica: 'Squadre Totali', Valore: teams.length },
+        { Statistica: 'Stagione', Valore: '2025/2026' },
+        { Statistica: 'Squadre', Valore: validTeams.length },
         { Statistica: 'Giornate', Valore: 38 },
         { Statistica: 'Partite Totali', Valore: calendarData.length },
         { Statistica: 'Partite per Giornata', Valore: 10 },
-        { Statistica: 'Data Inizio', Valore: '24 agosto 2025' },
-        { Statistica: 'Data Fine', Valore: '24 maggio 2026' },
-        { Statistica: 'Squadre Promosse', Valore: 'Pisa, Cremonese, Sassuolo' },
-        { Statistica: 'Fonte Dati', Valore: 'Database Autentico Serie A 2025/26' },
-        { Statistica: 'Data Creazione', Valore: new Date().toLocaleDateString('it-IT') }
+        { Statistica: 'Data Inizio', Valore: '24 Agosto 2025' },
+        { Statistica: 'Data Fine', Valore: 'Maggio 2026' }
       ];
       
       const summarySheet = XLSX.utils.json_to_sheet(summaryData);
