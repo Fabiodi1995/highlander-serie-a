@@ -1641,28 +1641,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const XLSX = await import('xlsx');
       
-      // Create Serie A 2025/26 teams manually (correct ones only)
+      // Create Serie A 2025/26 teams with authentic stadium names
       const correctTeams = [
-        { id: 21, name: 'Atalanta', code: 'ATA' },
-        { id: 22, name: 'Bologna', code: 'BOL' },
-        { id: 23, name: 'Cagliari', code: 'CAG' },
-        { id: 24, name: 'Como', code: 'COM' },
-        { id: 34, name: 'Cremonese', code: 'CRE' },
-        { id: 26, name: 'Fiorentina', code: 'FIO' },
-        { id: 27, name: 'Genoa', code: 'GEN' },
-        { id: 28, name: 'Hellas Verona', code: 'VER' },
-        { id: 29, name: 'Inter', code: 'INT' },
-        { id: 30, name: 'Juventus', code: 'JUV' },
-        { id: 31, name: 'Lazio', code: 'LAZ' },
-        { id: 32, name: 'Lecce', code: 'LEC' },
-        { id: 33, name: 'Milan', code: 'MIL' },
-        { id: 35, name: 'Napoli', code: 'NAP' },
-        { id: 36, name: 'Parma', code: 'PAR' },
-        { id: 25, name: 'Pisa', code: 'PIS' },
-        { id: 37, name: 'Roma', code: 'ROM' },
-        { id: 40, name: 'Sassuolo', code: 'SAS' },
-        { id: 38, name: 'Torino', code: 'TOR' },
-        { id: 39, name: 'Udinese', code: 'UDI' }
+        { id: 21, name: 'Atalanta', code: 'ATA', stadium: 'Gewiss Stadium' },
+        { id: 22, name: 'Bologna', code: 'BOL', stadium: "Renato Dall'Ara" },
+        { id: 23, name: 'Cagliari', code: 'CAG', stadium: 'Unipol Domus' },
+        { id: 24, name: 'Como', code: 'COM', stadium: 'Giuseppe Sinigaglia' },
+        { id: 34, name: 'Cremonese', code: 'CRE', stadium: 'Stadio Giovanni Zini' },
+        { id: 26, name: 'Fiorentina', code: 'FIO', stadium: 'Artemio Franchi' },
+        { id: 27, name: 'Genoa', code: 'GEN', stadium: 'Luigi Ferraris' },
+        { id: 28, name: 'Hellas Verona', code: 'VER', stadium: 'Marcantonio Bentegodi' },
+        { id: 29, name: 'Inter', code: 'INT', stadium: 'San Siro' },
+        { id: 30, name: 'Juventus', code: 'JUV', stadium: 'Allianz Stadium' },
+        { id: 31, name: 'Lazio', code: 'LAZ', stadium: 'Stadio Olimpico' },
+        { id: 32, name: 'Lecce', code: 'LEC', stadium: 'Via del Mare' },
+        { id: 33, name: 'Milan', code: 'MIL', stadium: 'San Siro' },
+        { id: 35, name: 'Napoli', code: 'NAP', stadium: 'Diego Armando Maradona' },
+        { id: 36, name: 'Parma', code: 'PAR', stadium: 'Ennio Tardini' },
+        { id: 25, name: 'Pisa', code: 'PIS', stadium: 'Arena Garibaldi' },
+        { id: 37, name: 'Roma', code: 'ROM', stadium: 'Stadio Olimpico' },
+        { id: 40, name: 'Sassuolo', code: 'SAS', stadium: 'Mapei Stadium' },
+        { id: 38, name: 'Torino', code: 'TOR', stadium: 'Olimpico Grande Torino' },
+        { id: 39, name: 'Udinese', code: 'UDI', stadium: 'Bluenergy Stadium' }
       ];
 
       // Get authentic matches from database
@@ -1682,13 +1682,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create workbook
       const workbook = XLSX.utils.book_new();
       
-      // Teams sheet
+      // Teams sheet with authentic stadium names
       const teamsData = correctTeams.map(team => ({
         ID: team.id,
         Nome: team.name,
         Codice: team.code,
         Citta: team.name,
-        Stadio: `Stadio ${team.name}`
+        Stadio: team.stadium
       }));
       
       const teamsSheet = XLSX.utils.json_to_sheet(teamsData);
@@ -1708,7 +1708,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           'Gol Casa': '',
           'Gol Trasferta': '',
           Completata: 'FALSO',
-          Stadio: `${homeTeam?.name} Stadium`,
+          Stadio: homeTeam?.stadium || '',
           'ID Casa': match.homeTeamId,
           'ID Trasferta': match.awayTeamId
         };
