@@ -1266,19 +1266,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Starting database update: clearing ${await db.select().from(matches).then(m => m.length)} existing matches`);
       
-      // TRANSACTION: Clear existing matches and insert new ones atomically
-      await db.transaction(async (tx) => {
-        // Clear all existing matches
-        await tx.delete(matches);
-        
-        // Insert new matches in batches
-        const batchSize = 50; // Smaller batches for better reliability
-        for (let i = 0; i < matchUpdates.length; i += batchSize) {
-          const batch = matchUpdates.slice(i, i + batchSize);
-          await tx.insert(matches).values(batch);
-          console.log(`Inserted batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(matchUpdates.length/batchSize)}`);
-        }
-      });
+      // Clear all existing matches first
+      await db.delete(matches);
+      console.log('All existing matches cleared');
+      
+      // Insert new matches in batches
+      const batchSize = 50;
+      for (let i = 0; i < matchUpdates.length; i += batchSize) {
+        const batch = matchUpdates.slice(i, i + batchSize);
+        await db.insert(matches).values(batch);
+        console.log(`Inserted batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(matchUpdates.length/batchSize)} (${batch.length} matches)`);
+      }
       
       // Clean up temporary file
       fs.unlinkSync(req.file.path);
