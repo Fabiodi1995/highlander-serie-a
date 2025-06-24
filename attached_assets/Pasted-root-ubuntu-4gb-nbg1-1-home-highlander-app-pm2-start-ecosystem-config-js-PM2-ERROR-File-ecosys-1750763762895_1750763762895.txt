@@ -1,0 +1,56 @@
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# pm2 start ecosystem.config.js
+[PM2][ERROR] File ecosystem.config.js malformated
+ReferenceError: module is not defined
+    at file:///home/highlander/app/ecosystem.config.js:1:1
+    at ModuleJobSync.runSync (node:internal/modules/esm/module_job:387:35)
+    at ModuleLoader.importSyncForRequire (node:internal/modules/esm/loader:323:47)
+    at loadESMFromCJS (node:internal/modules/cjs/loader:1371:24)
+    at Module._compile (node:internal/modules/cjs/loader:1511:5)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1572:16)
+    at Module.load (node:internal/modules/cjs/loader:1275:32)
+    at Module._load (node:internal/modules/cjs/loader:1096:12)
+    at Module.require (node:internal/modules/cjs/loader:1298:19)
+    at require (node:internal/modules/helpers:182:18)
+root@ubuntu-4gb-nbg1-1:/home/highlander/app#
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# # 4. Se il comando sopra non funziona, prova questo metodo alternativo:
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# pm2 start dist/index.js --name highlander --env production
+[PM2] Starting /home/highlander/app/dist/index.js in fork_mode (1 instance)
+[PM2] Done.
+┌────┬───────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name          │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼───────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ highlander    │ default     │ 1.0.0   │ fork    │ 748814   │ 0s     │ 0    │ online    │ 0%       │ 26.0mb   │ root     │ disabled │
+└────┴───────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+root@ubuntu-4gb-nbg1-1:/home/highlander/app#
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# # 5. Verifica lo status
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# pm2 status
+┌────┬───────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name          │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼───────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ highlander    │ default     │ 1.0.0   │ fork    │ 748814   │ 0s     │ 0    │ online    │ 0%       │ 53.5mb   │ root     │ disabled │
+└────┴───────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# pm2 logs highlander --lines 20
+[TAILING] Tailing last 20 lines for [highlander] process (change the value with --lines option)
+/root/.pm2/logs/highlander-out.log last 20 lines:
+/root/.pm2/logs/highlander-error.log last 20 lines:
+0|highland | Error: DATABASE_URL must be set. Did you forget to provision a database?
+0|highland |     at server/db.ts (file:///home/highlander/app/dist/index.js:424:13)
+0|highland |     at __init (file:///home/highlander/app/dist/index.js:4:56)
+0|highland |     at server/storage.ts (file:///home/highlander/app/dist/index.js:481:5)
+0|highland |     at __init (file:///home/highlander/app/dist/index.js:4:56)
+0|highland |     at file:///home/highlander/app/dist/index.js:1750:1
+0|highland |     at ModuleJob.run (node:internal/modules/esm/module_job:263:25)
+0|highland |     at async ModuleLoader.import (node:internal/modules/esm/loader:540:24)
+
+^C
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# node -c ecosystem.config.js
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# pm2 start dist/index.js \
+>   --name highlander \
+>   --env production \
+>   --max-memory-restart 1G \
+>   --error ./logs/error.log \
+>   --output ./logs/out.log \
+>   --log ./logs/combined.log \
+>   --time
+[PM2][ERROR] Script already launched, add -f option to force re-execution
+root@ubuntu-4gb-nbg1-1:/home/highlander/app#
