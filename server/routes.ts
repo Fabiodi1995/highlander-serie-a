@@ -1634,6 +1634,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   }
 
+  // NEW: Correct Serie A 2025/26 calendar download
+  app.get("/api/admin/new-calendar", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user!.isAdmin) return res.sendStatus(403);
+    
+    try {
+      const XLSX = await import('xlsx');
+      
+      // Create Serie A 2025/26 teams manually (correct ones only)
+      const correctTeams = [
+        { id: 21, name: 'Atalanta', code: 'ATA' },
+        { id: 22, name: 'Bologna', code: 'BOL' },
+        { id: 23, name: 'Cagliari', code: 'CAG' },
+        { id: 24, name: 'Como', code: 'COM' },
+        { id: 34, name: 'Cremonese', code: 'CRE' },
+        { id: 26, name: 'Fiorentina', code: 'FIO' },
+        { id: 27, name: 'Genoa', code: 'GEN' },
+        { id: 28, name: 'Hellas Verona', code: 'VER' },
+        { id: 29, name: 'Inter', code: 'INT' },
+        { id: 30, name: 'Juventus', code: 'JUV' },
+        { id: 31, name: 'Lazio', code: 'LAZ' },
+        { id: 32, name: 'Lecce', code: 'LEC' },
+        { id: 33, name: 'Milan', code: 'MIL' },
+        { id: 35, name: 'Napoli', code: 'NAP' },
+        { id: 36, name: 'Parma', code: 'PAR' },
+        { id: 25, name: 'Pisa', code: 'PIS' },
+        { id: 37, name: 'Roma', code: 'ROM' },
+        { id: 40, name: 'Sassuolo', code: 'SAS' },
+        { id: 38, name: 'Torino', code: 'TOR' },
+        { id: 39, name: 'Udinese', code: 'UDI' }
+      ];
+
+      // Get authentic matches from database
+      const dbMatches = await storage.getAllMatches();
+      
+      // Filter only matches between correct teams
+      const validMatches = dbMatches.filter(match => {
+        const homeTeam = correctTeams.find(t => t.id === match.homeTeamId);
+        const awayTeam = correctTeams.find(t => t.id === match.awayTeamId);
+        return homeTeam && awayTeam;
+      });
+
+      console.log(`New Calendar: ${correctTeams.length} teams, ${validMatches.length} matches`);
+
+      // Create workbook
+      const workbook = XLSX.utils.book_new();
+      
+      // Teams sheet
+      const teamsData = correctTeams.map(team => ({
+        ID: team.id,
+        Nome: team.name,
+        Codice: team.code,
+        Citta: team.name,
+        Stadio: `Stadio ${team.name}`
+      }));
+      
+      const teamsSheet = XLSX.utils.json_to_sheet(teamsData);
+      XLSX.utils.book_append_sheet(workbook, teamsSheet, 'Squadre');
+      
+      // Calendar sheet
+      const calendarData = validMatches.map((match, index) => {
+        const homeTeam = correctTeams.find(t => t.id === match.homeTeamId);
+        const awayTeam = correctTeams.find(t => t.id === match.awayTeamId);
+        
+        return {
+          Giornata: match.round,
+          'Squadra Casa': homeTeam?.name || '',
+          'Squadra Trasferta': awayTeam?.name || '',
+          Data: match.matchDate.toISOString().split('T')[0],
+          Orario: '15:00',
+          'Gol Casa': '',
+          'Gol Trasferta': '',
+          Completata: 'FALSO',
+          Stadio: `${homeTeam?.name} Stadium`,
+          'ID Casa': match.homeTeamId,
+          'ID Trasferta': match.awayTeamId
+        };
+      });
+      
+      const calendarSheet = XLSX.utils.json_to_sheet(calendarData);
+      XLSX.utils.book_append_sheet(workbook, calendarSheet, 'Calendario');
+      
+      // Statistics sheet
+      const statsData = [
+        { Statistica: 'Stagione', Valore: '2025/2026' },
+        { Statistica: 'Squadre', Valore: 20 },
+        { Statistica: 'Giornate', Valore: 38 },
+        { Statistica: 'Partite Totali', Valore: calendarData.length },
+        { Statistica: 'Partite per Giornata', Valore: 10 },
+        { Statistica: 'Data Inizio', Valore: '24 Agosto 2025' },
+        { Statistica: 'Data Fine', Valore: 'Maggio 2026' }
+      ];
+      
+      const statsSheet = XLSX.utils.json_to_sheet(statsData);
+      XLSX.utils.book_append_sheet(workbook, statsSheet, 'Statistica');
+      
+      // Generate and send file
+      const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+      const filename = `Serie_A_2025-2026_Calendario_Autentico_${new Date().toISOString().split('T')[0]}.xlsx`;
+      
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Length', buffer.length);
+      
+      console.log(`New Calendar Download: ${filename} - ${correctTeams.length} teams, ${calendarData.length} matches`);
+      res.send(buffer);
+      
+    } catch (error) {
+      console.error("Error generating new calendar:", error);
+      res.status(500).json({ message: "Failed to generate calendar" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

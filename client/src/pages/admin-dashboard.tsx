@@ -1825,19 +1825,20 @@ export default function AdminDashboard() {
 
                 {/* Serie A Calendar Management */}
                 <div className="mt-6">
-                  <h4 className="text-lg font-medium mb-4">Gestione Calendario Serie A</h4>
+                  <h4 className="text-lg font-medium mb-4">Gestione Calendario Serie A 2025/26</h4>
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <p className="text-sm text-gray-600 mb-4">
-                      Scarica il file Excel del calendario Serie A 2024/2025 per modificarlo manualmente.
-                      Puoi aggiornare date, orari e risultati delle partite.
+                      Scarica il file Excel del calendario Serie A 2025/2026 autentico.
+                      Include solo le 20 squadre corrette (Pisa, Cremonese, Sassuolo promosse).
                     </p>
                     <div className="flex space-x-2">
                       <Button 
                         variant="outline" 
-                        onClick={() => window.open('/api/admin/excel-calendar', '_blank')}
+                        onClick={() => window.open('/api/admin/new-calendar', '_blank')}
+                        className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
                       >
-                        <Trophy className="h-4 w-4 mr-2" />
-                        Scarica Calendario Excel
+                        <Download className="h-4 w-4 mr-2" />
+                        Scarica Calendario
                       </Button>
                       <Button 
                         variant="outline"
