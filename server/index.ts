@@ -7,47 +7,33 @@ import { testEmailConfiguration } from "./test-email";
 
 const app = express();
 
-// Edge compatibility and SSL security middleware
+// Replit Deploy compatibility middleware
 app.use((req, res, next) => {
-  // Set trust proxy for proper protocol detection
+  // Set trust proxy for Replit Deploy
   app.set('trust proxy', 1);
   
-  // Edge-specific headers for private browsing compatibility
-  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '0');
+  // Detect if running on Replit Deploy vs development
+  const isReplitDeploy = req.header('host')?.includes('replit.app') || 
+                         req.header('host')?.includes('highlandergame.it') ||
+                         process.env.REPLIT_DEPLOYMENT === 'true';
   
-  // Force HTTPS in production with multiple detection methods
-  if (process.env.NODE_ENV === 'production') {
-    const isHttps = req.header('x-forwarded-proto') === 'https' || 
-                    req.header('x-forwarded-ssl') === 'on' ||
-                    req.protocol === 'https' ||
-                    req.secure;
-    
-    if (!isHttps) {
-      return res.redirect(301, `https://${req.header('host')}${req.url}`);
-    }
-    
-    // Enhanced security headers for Edge compatibility
-    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  // Only apply strict security in actual production, not on Replit Deploy
+  if (isReplitDeploy && process.env.NODE_ENV !== 'development') {
+    // Minimal headers for Replit Deploy compatibility
     res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('X-Frame-Options', 'SAMEORIGIN'); // Changed from DENY for Edge compatibility
-    res.setHeader('X-XSS-Protection', '1; mode=block');
-    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
     
-    // Relaxed CSP for Edge compatibility while maintaining security
+    // Very permissive CSP for Replit Deploy
     res.setHeader('Content-Security-Policy', 
-      "default-src 'self'; " +
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://replit.com https://*.replit.com; " +
-      "style-src 'self' 'unsafe-inline' https:; " +
+      "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https: wss: ws:; " +
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https: data:; " +
+      "style-src 'self' 'unsafe-inline' https: data:; " +
       "img-src 'self' data: https: blob:; " +
-      "font-src 'self' data: https:; " +
-      "connect-src 'self' https: wss: ws:; " +
-      "frame-src 'self' https:;"
+      "connect-src 'self' https: wss: ws: data:;"
     );
   }
   
-  // Redirect non-www to www
+  // Redirect non-www to www only for custom domain
   if (req.header('host') === 'highlandergame.it') {
     return res.redirect(301, `https://www.highlandergame.it${req.url}`);
   }
