@@ -120,7 +120,8 @@ Highlander Serie A is a multiplayer elimination game based on Serie A 2025/26 fo
 
 ## Changelog
 
-- June 23, 2025. Initial setup
+- June 24, 2025: Created complete production database synchronization with authentic Serie A 2025/26 calendar (380 matches), implemented dual bcrypt/scrypt authentication support, resolved production deployment issues
+- June 23, 2025: Initial setup
 
 ## User Preferences
 

@@ -1,0 +1,59 @@
+COMANDO COMPLETO 380 MATCHES SERIE A 2025/26 PRODUZIONE
+=====================================================
+
+Sul server, esegui questo comando completo:
+
+cd /home/highlander/app
+
+# 1. PULIZIA TOTALE
+cat > clean_and_sync_all.sql << 'EOF'
+-- Pulizia completa (eccetto users)
+DELETE FROM team_selections;
+DELETE FROM tickets;
+DELETE FROM games;
+DELETE FROM matches;
+DELETE FROM teams;
+DELETE FROM achievements;
+DELETE FROM user_achievements;
+DELETE FROM email_verification_tokens;
+
+-- Reset sequences
+ALTER SEQUENCE teams_id_seq RESTART WITH 21;
+ALTER SEQUENCE matches_id_seq RESTART WITH 1586;
+ALTER SEQUENCE games_id_seq RESTART WITH 29;
+ALTER SEQUENCE tickets_id_seq RESTART WITH 1;
+ALTER SEQUENCE team_selections_id_seq RESTART WITH 1;
+
+-- Teams esatti (ID 21-40)
+INSERT INTO teams (id, name, code) VALUES
+(21, 'Atalanta', 'ATA'),
+(22, 'Bologna', 'BOL'),
+(23, 'Cagliari', 'CAG'),
+(24, 'Como', 'COM'),
+(25, 'Pisa', 'PIS'),
+(26, 'Fiorentina', 'FIO'),
+(27, 'Genoa', 'GEN'),
+(28, 'Hellas Verona', 'VER'),
+(29, 'Inter', 'INT'),
+(30, 'Juventus', 'JUV'),
+(31, 'Lazio', 'LAZ'),
+(32, 'Lecce', 'LEC'),
+(33, 'Milan', 'MIL'),
+(34, 'Cremonese', 'CRE'),
+(35, 'Napoli', 'NAP'),
+(36, 'Parma', 'PAR'),
+(37, 'Roma', 'ROM'),
+(38, 'Torino', 'TOR'),
+(39, 'Udinese', 'UDI'),
+(40, 'Sassuolo', 'SAS');
+
+-- Games reali
+INSERT INTO games (id, name, description, start_round, current_round, status, created_by, created_at, round_status, selection_deadline) VALUES
+(29, 'test4', '', 1, 3, 'completed', 1, '2025-06-19 00:50:52.28216', 'selection_locked', NULL),
+(30, 'test5', '', 1, 5, 'active', 1, '2025-06-19 01:03:57.006287', 'selection_locked', NULL),
+(32, 'test3gior', '', 3, 4, 'active', 1, '2025-06-19 15:02:47.69', 'selection_locked', '2025-06-19 17:04:00');
+EOF
+
+sudo -u postgres psql highlander_prod -f clean_and_sync_all.sql
+
+# 2. ATTENDO LA GENERAZIONE AUTOMATICA DELLE 380 PARTITE...
