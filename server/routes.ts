@@ -1113,6 +1113,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
       res.setHeader('Content-Length', buffer.length);
       
+      console.log(`Download Excel: ${filename} with ${calendarData.length} matches Serie A 2025/26`);
+      
       res.send(buffer);
     } catch (error) {
       console.error("Error generating Excel calendar:", error);
