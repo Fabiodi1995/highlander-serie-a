@@ -1,0 +1,49 @@
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# # 1. Ferma il processo corrente
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# pm2 delete ecosystem.production
+
+# 2. Rinomina il file con estensione .cjs per CommonJS
+mv ecosystem.production.js ecosystem.production.cjs
+
+# 3. Avvia con il file corretto
+pm2 start ecosystem.production.cjs
+
+# 4. Verifica lo status
+pm2 status
+
+# 5. Controlla i log
+pm2 logs highlander --lines 10
+
+# 6. Testa la connessione
+curl -I http://localhost:5000
+curl -I https://highlandergame.it[PM2] Applying action deleteProcessId on app [ecosystem.production](ids: [ 0 ])
+[PM2] [ecosystem.production](0) ✓
+┌────┬───────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name      │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+└────┴───────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+root@ubuntu-4gb-nbg1-1:/home/highlander/app#
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# # 2. Rinomina il file con estensione .cjs per CommonJS
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# mv ecosystem.production.js ecosystem.production.cjs
+root@ubuntu-4gb-nbg1-1:/home/highlander/app#
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# # 3. Avvia con il file corretto
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# pm2 start ecosystem.production.cjs
+[PM2] Starting /home/highlander/app/ecosystem.production.cjs in fork_mode (1 instance)
+[PM2] Done.
+┌────┬─────────────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name                    │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼─────────────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ ecosystem.production    │ default     │ 1.0.0   │ fork    │ 782189   │ 0s     │ 0    │ online    │ 0%       │ 16.9mb   │ root     │ disabled │
+└────┴─────────────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+root@ubuntu-4gb-nbg1-1:/home/highlander/app#
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# # 4. Verifica lo status
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# pm2 status
+┌────┬─────────────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name                    │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼─────────────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ ecosystem.production    │ default     │ 1.0.0   │ fork    │ 782189   │ 0s     │ 0    │ online    │ 0%       │ 51.5mb   │ root     │ disabled │
+└────┴─────────────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+root@ubuntu-4gb-nbg1-1:/home/highlander/app#
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# # 5. Controlla i log
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# pm2 logs highlander --lines 10
+[TAILING] Tailing last 10 lines for [highlander] process (change the value with --lines option)
+
+
