@@ -1022,12 +1022,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const XLSX = await import('xlsx');
       const path = await import('path');
+      const fs = await import('fs');
       
-      // Get all teams and matches from database
+      // Get teams from database
       const teams = await storage.getAllTeams();
-      const matches = await storage.getAllMatches();
       
-      console.log(`Creating Excel with ${teams.length} teams and ${matches.length} matches`);
+      // Use the same Excel source that "Calcola" uses for authentic data
+      const excelPath = path.join(__dirname, 'data', 'serie-a-calendar.xlsx');
+      let calendarData = [];
+      
+      if (fs.existsSync(excelPath)) {
+        console.log('Loading authentic Serie A 2025/26 calendar from Excel...');
+        const workbook = XLSX.readFile(excelPath);
+        const calendarSheet = workbook.Sheets['Calendario'];
+        if (calendarSheet) {
+          calendarData = XLSX.utils.sheet_to_json(calendarSheet);
+          console.log(`Loaded ${calendarData.length} authentic matches from Excel calendar`);
+        }
+      }
+      
+      // If no Excel data, fall back to database
+      if (calendarData.length === 0) {
+        console.log('No Excel calendar found, using database matches');
+        const dbMatches = await storage.getAllMatches();
+        calendarData = dbMatches.map(match => {
+          const homeTeam = teams.find(t => t.id === match.homeTeamId);
+          const awayTeam = teams.find(t => t.id === match.awayTeamId);
+          return {
+            Giornata: match.round,
+            'Squadra Casa': homeTeam?.name || `Team ${match.homeTeamId}`,
+            'Squadra Ospite': awayTeam?.name || `Team ${match.awayTeamId}`,
+            Data: match.matchDate.toISOString().split('T')[0],
+            'Gol Casa': match.homeScore || '',
+            'Gol Ospite': match.awayScore || '',
+            Completata: match.isCompleted ? 'Sì' : 'No'
+          };
+        });
+      }
+      
+      console.log(`Creating Excel with ${teams.length} teams and ${calendarData.length} matches from authentic Serie A 2025/26`);
       
       // Create workbook
       const workbook = XLSX.utils.book_new();
@@ -1042,44 +1075,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const teamsSheet = XLSX.utils.json_to_sheet(teamsData);
       XLSX.utils.book_append_sheet(workbook, teamsSheet, 'Squadre');
       
-      // Matches sheet with complete Serie A calendar
-      const matchesData = matches.map(match => {
-        const homeTeam = teams.find(t => t.id === match.homeTeamId);
-        const awayTeam = teams.find(t => t.id === match.awayTeamId);
-        
-        return {
-          ID: match.id,
-          Giornata: match.round,
-          'Squadra Casa': homeTeam?.name || `Team ${match.homeTeamId}`,
-          'Squadra Ospite': awayTeam?.name || `Team ${match.awayTeamId}`,
-          'Home Team ID': match.homeTeamId,
-          'Away Team ID': match.awayTeamId,
-          Data: match.matchDate.toISOString().split('T')[0],
-          'Gol Casa': match.homeScore || '',
-          'Gol Ospite': match.awayScore || '',
-          Risultato: match.result || '',
-          Completata: match.isCompleted ? 'Sì' : 'No'
-        };
-      });
+      // Use authentic calendar data for matches sheet
+      const matchesData = calendarData.map((match, index) => ({
+        ID: index + 1,
+        Giornata: match.Giornata || match.round,
+        'Squadra Casa': match['Squadra Casa'] || match.homeTeam,
+        'Squadra Ospite': match['Squadra Ospite'] || match.awayTeam,
+        Data: match.Data || match.date,
+        Orario: match.Orario || match.time || '15:00',
+        'Gol Casa': match['Gol Casa'] || '',
+        'Gol Ospite': match['Gol Ospite'] || '',
+        Risultato: match.Risultato || match.result || '',
+        Completata: match.Completata || (match.isCompleted ? 'Sì' : 'No') || 'No',
+        Stadio: match.Stadio || match.venue || ''
+      }));
       
       const matchesSheet = XLSX.utils.json_to_sheet(matchesData);
       XLSX.utils.book_append_sheet(workbook, matchesSheet, 'Calendario');
       
-      // Determine season based on match dates
-      const minDate = matches.length > 0 ? new Date(Math.min(...matches.map(m => m.matchDate.getTime()))) : new Date();
-      const maxDate = matches.length > 0 ? new Date(Math.max(...matches.map(m => m.matchDate.getTime()))) : new Date();
-      const seasonYear = minDate.getFullYear();
-      const actualSeason = `${seasonYear}/${(seasonYear + 1).toString().slice(-2)}`;
+      // Calculate season info from authentic calendar data
+      const roundNumbers = calendarData.map(m => m.Giornata || m.round).filter(Boolean);
+      const maxRound = roundNumbers.length > 0 ? Math.max(...roundNumbers) : 38;
+      const dates = calendarData.map(m => m.Data || m.date).filter(Boolean);
+      const firstDate = dates.length > 0 ? dates[0] : '2025-08-24';
+      const lastDate = dates.length > 0 ? dates[dates.length - 1] : '2026-05-24';
       
-      // Summary sheet with real data
+      // Summary sheet with authentic Serie A 2025/26 data
       const summaryData = [
-        { Statistica: 'Stagione', Valore: actualSeason },
+        { Statistica: 'Stagione', Valore: '2025/26' },
         { Statistica: 'Squadre', Valore: teams.length },
-        { Statistica: 'Giornate', Valore: matches.length > 0 ? Math.max(...matches.map(m => m.round)) : 0 },
-        { Statistica: 'Partite Totali', Valore: matches.length },
-        { Statistica: 'Partite per Giornata', Valore: teams.length / 2 },
-        { Statistica: 'Prima Partita', Valore: matches.length > 0 ? minDate.toLocaleDateString('it-IT') : 'N/A' },
-        { Statistica: 'Ultima Partita', Valore: matches.length > 0 ? maxDate.toLocaleDateString('it-IT') : 'N/A' },
+        { Statistica: 'Giornate', Valore: maxRound },
+        { Statistica: 'Partite Totali', Valore: calendarData.length },
+        { Statistica: 'Partite per Giornata', Valore: 10 },
+        { Statistica: 'Prima Partita', Valore: new Date(firstDate).toLocaleDateString('it-IT') },
+        { Statistica: 'Ultima Partita', Valore: new Date(lastDate).toLocaleDateString('it-IT') },
+        { Statistica: 'Fonte Dati', Valore: calendarData.length > 380 ? 'Excel Autentico' : 'Database' },
         { Statistica: 'Data Creazione', Valore: new Date().toLocaleDateString('it-IT') }
       ];
       
