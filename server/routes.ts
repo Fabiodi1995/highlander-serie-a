@@ -1027,38 +1027,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get teams from database
       const teams = await storage.getAllTeams();
       
-      // Use the same Excel source that "Calcola" uses for authentic data
-      const excelPath = path.join(__dirname, 'data', 'serie-a-calendar.xlsx');
-      let calendarData = [];
+      // Use database data directly (already contains correct Serie A 2025/26 data)
+      console.log('Using database matches for Serie A 2025/26 calendar');
+      const dbMatches = await storage.getAllMatches();
       
-      if (fs.existsSync(excelPath)) {
-        console.log('Loading authentic Serie A 2025/26 calendar from Excel...');
-        const workbook = XLSX.readFile(excelPath);
-        const calendarSheet = workbook.Sheets['Calendario'];
-        if (calendarSheet) {
-          calendarData = XLSX.utils.sheet_to_json(calendarSheet);
-          console.log(`Loaded ${calendarData.length} authentic matches from Excel calendar`);
-        }
-      }
-      
-      // If no Excel data, fall back to database
-      if (calendarData.length === 0) {
-        console.log('No Excel calendar found, using database matches');
-        const dbMatches = await storage.getAllMatches();
-        calendarData = dbMatches.map(match => {
-          const homeTeam = teams.find(t => t.id === match.homeTeamId);
-          const awayTeam = teams.find(t => t.id === match.awayTeamId);
-          return {
-            Giornata: match.round,
-            'Squadra Casa': homeTeam?.name || `Team ${match.homeTeamId}`,
-            'Squadra Ospite': awayTeam?.name || `Team ${match.awayTeamId}`,
-            Data: match.matchDate.toISOString().split('T')[0],
-            'Gol Casa': match.homeScore || '',
-            'Gol Ospite': match.awayScore || '',
-            Completata: match.isCompleted ? 'Sì' : 'No'
-          };
-        });
-      }
+      const calendarData = dbMatches.map(match => {
+        const homeTeam = teams.find(t => t.id === match.homeTeamId);
+        const awayTeam = teams.find(t => t.id === match.awayTeamId);
+        return {
+          Giornata: match.round,
+          'Squadra Casa': homeTeam?.name || `Team ${match.homeTeamId}`,
+          'Squadra Ospite': awayTeam?.name || `Team ${match.awayTeamId}`,
+          Data: match.matchDate.toISOString().split('T')[0],
+          Orario: '15:00', // Default time
+          'Gol Casa': match.homeScore || '',
+          'Gol Ospite': match.awayScore || '',
+          Risultato: match.result || '',
+          Completata: match.isCompleted ? 'Sì' : 'No',
+          Stadio: ''
+        };
+      });
       
       console.log(`Creating Excel with ${teams.length} teams and ${calendarData.length} matches from authentic Serie A 2025/26`);
       
@@ -1119,8 +1107,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate Excel buffer
       const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
       
-      // Set headers for download
-      const filename = `Serie_A_2025-26_Calendario_${new Date().toISOString().split('T')[0]}.xlsx`;
+      // Set headers for download with correct 2025/26 filename
+      const filename = `Serie_A_2025-2026_Calendario_Completo_${new Date().toISOString().split('T')[0]}.xlsx`;
       res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
       res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
       res.setHeader('Content-Length', buffer.length);
