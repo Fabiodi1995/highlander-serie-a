@@ -1879,6 +1879,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // SEO Routes for Google indexing
+  app.get('/robots.txt', (req, res) => {
+    res.type('text/plain');
+    res.send(`User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://www.highlandergame.it/sitemap.xml
+
+# Disallow admin pages from indexing
+Disallow: /admin/
+Disallow: /api/
+Disallow: /*.json$
+
+# Allow important pages
+Allow: /
+Allow: /login
+Allow: /register
+Allow: /forgot-password
+Allow: /games
+Allow: /dashboard
+
+# Crawl delay
+Crawl-delay: 1`);
+  });
+
+  app.get('/sitemap.xml', (req, res) => {
+    res.type('application/xml');
+    const currentDate = new Date().toISOString().split('T')[0];
+    res.send(`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://www.highlandergame.it/</loc>
+    <lastmod>${currentDate}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://www.highlandergame.it/register</loc>
+    <lastmod>${currentDate}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.highlandergame.it/login</loc>
+    <lastmod>${currentDate}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.highlandergame.it/dashboard</loc>
+    <lastmod>${currentDate}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.highlandergame.it/games</loc>
+    <lastmod>${currentDate}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+</urlset>`);
+  });
+
+  // Security.txt for security researchers
+  app.get('/.well-known/security.txt', (req, res) => {
+    res.type('text/plain');
+    res.send(`Contact: mailto:support@highlandergame.it
+Expires: 2026-12-31T23:59:59.000Z
+Preferred-Languages: it, en
+Canonical: https://www.highlandergame.it/.well-known/security.txt
+
+# Security Policy
+# If you find any security vulnerabilities, please contact us at support@highlandergame.it
+# We take security seriously and will respond to legitimate reports promptly.`);
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

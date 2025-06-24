@@ -1,0 +1,8 @@
+Contact: mailto:support@highlandergame.it
+Expires: 2026-12-31T23:59:59.000Z
+Preferred-Languages: it, en
+Canonical: https://www.highlandergame.it/.well-known/security.txt
+
+# Security Policy
+# If you find any security vulnerabilities, please contact us at support@highlandergame.it
+# We take security seriously and will respond to legitimate reports promptly.
