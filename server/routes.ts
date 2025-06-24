@@ -1065,13 +1065,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const matchesSheet = XLSX.utils.json_to_sheet(matchesData);
       XLSX.utils.book_append_sheet(workbook, matchesSheet, 'Calendario');
       
-      // Summary sheet
+      // Determine season based on match dates
+      const minDate = matches.length > 0 ? new Date(Math.min(...matches.map(m => m.matchDate.getTime()))) : new Date();
+      const maxDate = matches.length > 0 ? new Date(Math.max(...matches.map(m => m.matchDate.getTime()))) : new Date();
+      const seasonYear = minDate.getFullYear();
+      const actualSeason = `${seasonYear}/${(seasonYear + 1).toString().slice(-2)}`;
+      
+      // Summary sheet with real data
       const summaryData = [
-        { Statistica: 'Stagione', Valore: '2025/2026' },
+        { Statistica: 'Stagione', Valore: actualSeason },
         { Statistica: 'Squadre', Valore: teams.length },
         { Statistica: 'Giornate', Valore: matches.length > 0 ? Math.max(...matches.map(m => m.round)) : 0 },
         { Statistica: 'Partite Totali', Valore: matches.length },
         { Statistica: 'Partite per Giornata', Valore: teams.length / 2 },
+        { Statistica: 'Prima Partita', Valore: matches.length > 0 ? minDate.toLocaleDateString('it-IT') : 'N/A' },
+        { Statistica: 'Ultima Partita', Valore: matches.length > 0 ? maxDate.toLocaleDateString('it-IT') : 'N/A' },
         { Statistica: 'Data Creazione', Valore: new Date().toLocaleDateString('it-IT') }
       ];
       
