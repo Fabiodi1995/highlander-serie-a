@@ -1,0 +1,79 @@
+root@ubuntu-4gb-nbg1-1:~# # Vai nella directory corretta
+root@ubuntu-4gb-nbg1-1:~# cd /home/highlander/app
+root@ubuntu-4gb-nbg1-1:/home/highlander/app#
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# # Avvia l'app con le variabili corrette
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# NODE_ENV=production \
+> DATABASE_URL='postgresql://highlander:P3CQeyzh/YLiyxabFSMgwoxRpUPW5qw4@localhost:5432/highlander_prod' \
+> SMTP_USER='support@highlandergame.it' \
+> SMTP_PASSWORD='Calibro9!' \
+> SESSION_SECRET='your-session-secret-here' \
+> BASE_URL='https://highlandergame.it' \
+> pm2 start dist/index.js --name highlander
+
+# Verifica lo status
+pm2 status
+pm2 logs highlander --lines 10[PM2] Starting /home/highlander/app/dist/index.js in fork_mode (1 instance)
+[PM2] Done.
+┌────┬───────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name          │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼───────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ highlander    │ default     │ 1.0.0   │ fork    │ 778333   │ 0s     │ 0    │ online    │ 0%       │ 16.8mb   │ root     │ disabled │
+└────┴───────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+root@ubuntu-4gb-nbg1-1:/home/highlander/app#
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# # Verifica lo status
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# pm2 status
+┌────┬───────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name          │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼───────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ highlander    │ default     │ 1.0.0   │ fork    │ 778333   │ 0s     │ 0    │ online    │ 0%       │ 59.0mb   │ root     │ disabled │
+└────┴───────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# pm2 logs highlander --lines 10
+[TAILING] Tailing last 10 lines for [highlander] process (change the value with --lines option)
+/root/.pm2/logs/highlander-out.log last 10 lines:
+0|highland | Database mode: Local PostgreSQL
+0|highland | Database mode: Local PostgreSQL
+0|highland | Database mode: Local PostgreSQL
+0|highland | Database mode: Local PostgreSQL
+0|highland | Database mode: Local PostgreSQL
+0|highland | Database mode: Local PostgreSQL
+0|highland | Database mode: Local PostgreSQL
+0|highland | Database mode: Local PostgreSQL
+0|highland | Database mode: Local PostgreSQL
+0|highland | Database mode: Local PostgreSQL
+
+/root/.pm2/logs/highlander-error.log last 10 lines:
+0|highland |     at parse (/home/highlander/app/node_modules/pg-connection-string/index.js:39:30)
+0|highland |     at new ConnectionParameters (/home/highlander/app/node_modules/pg/lib/connection-parameters.js:56:42)
+0|highland |     at new Client (/home/highlander/app/node_modules/pg/lib/client.js:18:33)
+0|highland |     at BoundPool.newClient (/home/highlander/app/node_modules/pg-pool/index.js:233:20)
+0|highland |     at BoundPool.connect (/home/highlander/app/node_modules/pg-pool/index.js:227:10)
+0|highland |     at server/db.ts (file:///home/highlander/app/dist/index.js:438:12)
+0|highland |     at __init (file:///home/highlander/app/dist/index.js:4:56)
+0|highland |     at server/storage.ts (file:///home/highlander/app/dist/index.js:481:5)
+0|highland |     at __init (file:///home/highlander/app/dist/index.js:4:56)
+0|highland |     at file:///home/highlander/app/dist/index.js:1750:1
+
+0|highlander  | Database mode: Local PostgreSQL
+0|highlander  | TypeError: Cannot read properties of undefined (reading 'searchParams')
+0|highlander  |     at parse (/home/highlander/app/node_modules/pg-connection-string/index.js:39:30)
+0|highlander  |     at new ConnectionParameters (/home/highlander/app/node_modules/pg/lib/connection-parameters.js:56:42)
+0|highlander  |     at new Client (/home/highlander/app/node_modules/pg/lib/client.js:18:33)
+0|highlander  |     at BoundPool.newClient (/home/highlander/app/node_modules/pg-pool/index.js:233:20)
+0|highlander  |     at BoundPool.connect (/home/highlander/app/node_modules/pg-pool/index.js:227:10)
+0|highlander  |     at server/db.ts (file:///home/highlander/app/dist/index.js:438:12)
+0|highlander  |     at __init (file:///home/highlander/app/dist/index.js:4:56)
+0|highlander  |     at server/storage.ts (file:///home/highlander/app/dist/index.js:481:5)
+0|highlander  |     at __init (file:///home/highlander/app/dist/index.js:4:56)
+0|highlander  |     at file:///home/highlander/app/dist/index.js:1750:1
+0|highlander  | Database mode: Local PostgreSQL
+0|highlander  | TypeError: Cannot read properties of undefined (reading 'searchParams')
+0|highlander  |     at parse (/home/highlander/app/node_modules/pg-connection-string/index.js:39:30)
+0|highlander  |     at new ConnectionParameters (/home/highlander/app/node_modules/pg/lib/connection-parameters.js:56:42)
+0|highlander  |     at new Client (/home/highlander/app/node_modules/pg/lib/client.js:18:33)
+0|highlander  |     at BoundPool.newClient (/home/highlander/app/node_modules/pg-pool/index.js:233:20)
+0|highlander  |     at BoundPool.connect (/home/highlander/app/node_modules/pg-pool/index.js:227:10)
+0|highlander  |     at server/db.ts (file:///home/highlander/app/dist/index.js:438:12)
+0|highlander  |     at __init (file:///home/highlander/app/dist/index.js:4:56)
+0|highlander  |     at server/storage.ts (file:///home/highlander/app/dist/index.js:481:5)
+0|highlander  |     at __init (file:///home/highlander/app/dist/index.js:4:56)
+0|highlander  |     at file:///home/highlander/app/dist/index.js:1750:1

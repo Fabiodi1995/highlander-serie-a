@@ -1,0 +1,67 @@
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# # Sul server, crea un nuovo file ecosystem con le variabili corrette
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# cd /home/highlander/app
+root@ubuntu-4gb-nbg1-1:/home/highlander/app#
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# cat > ecosystem.production.js << 'EOF'
+module.exports = {
+> module.exports = {
+>   apps: [{
+>     name: 'highlander',
+>     script: './dist/index.js',
+>     cwd: '/home/highlander/app',
+>     env: {
+>       NODE_ENV: 'production',
+>       PORT: 5000,
+>       DATABASE_URL: 'postgresql://highlander:P3CQeyzh/YLiyxabFSMgwoxRpUPW5qw4@localhost:5432/highlander_prod',
+>       SMTP_USER: 'support@highlandergame.it',
+>       SMTP_PASSWORD: 'Calibro9!',
+>       SESSION_SECRET: 'your-session-secret-here',
+>       BASE_URL: 'https://highlandergame.it'
+>     },
+>     instances: 1,
+>     autorestart: true,
+>     watch: false,
+>     max_memory_restart: '1G',
+>     error_file: './logs/error.log',
+>     out_file: './logs/out.log',
+>     log_file: './logs/combined.log',
+>     time: true
+>   }]
+> };
+> EOF
+
+# Ferma l'app corrente
+pm2 delete highlander
+root@ubuntu-4gb-nbg1-1:/home/highlander/app#
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# # Ferma l'app corrente
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# pm2 delete highlander
+# Avvia con il nuovo file di configurazione
+pm2 start ecosystem.production.js
+
+# Verifica che funzioni
+pm2 status
+pm2 logs highlander --lines 15[PM2] Applying action deleteProcessId on app [highlander](ids: [ 0 ])
+[PM2] [highlander](0) ✓
+┌────┬───────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name      │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+└────┴───────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+root@ubuntu-4gb-nbg1-1:/home/highlander/app#
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# # Avvia con il nuovo file di configurazione
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# pm2 start ecosystem.production.js
+[PM2] Starting /home/highlander/app/ecosystem.production.js in fork_mode (1 instance)
+[PM2] Done.
+┌────┬─────────────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name                    │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼─────────────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ ecosystem.production    │ default     │ 1.0.0   │ fork    │ 779686   │ 0s     │ 0    │ online    │ 0%       │ 16.8mb   │ root     │ disabled │
+└────┴─────────────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+root@ubuntu-4gb-nbg1-1:/home/highlander/app#
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# # Verifica che funzioni
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# pm2 status
+┌────┬─────────────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name                    │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼─────────────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ ecosystem.production    │ default     │ 1.0.0   │ fork    │ 779686   │ 0s     │ 0    │ online    │ 0%       │ 51.9mb   │ root     │ disabled │
+└────┴─────────────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# pm2 logs highlander --lines 15
+[TAILING] Tailing last 15 lines for [highlander] process (change the value with --lines option)
+

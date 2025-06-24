@@ -1,0 +1,68 @@
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# # Ferma il processo corrente
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# pm2 delete ecosystem.production
+
+# Avvia correttamente specificando il file di configurazione
+pm2 start ecosystem.production.js --env production
+
+# Verifica lo status
+pm2 status
+
+# Controlla i log per l'app highlander
+pm2 logs highlander --lines 15
+
+# Se non vedi "highlander" negli status, prova questo:
+pm2 list[PM2] Applying action deleteProcessId on app [ecosystem.production](ids: [ 0 ])
+[PM2] [ecosystem.production](0) ✓
+┌────┬───────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name      │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+└────┴───────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+root@ubuntu-4gb-nbg1-1:/home/highlander/app#
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# # Avvia correttamente specificando il file di configurazione
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# pm2 start ecosystem.production.js --env production
+[PM2] Starting /home/highlander/app/ecosystem.production.js in fork_mode (1 instance)
+[PM2] Done.
+┌────┬─────────────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name                    │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼─────────────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ ecosystem.production    │ default     │ 1.0.0   │ fork    │ 780581   │ 0s     │ 0    │ online    │ 0%       │ 34.6mb   │ root     │ disabled │
+└────┴─────────────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+root@ubuntu-4gb-nbg1-1:/home/highlander/app#
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# # Verifica lo status
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# pm2 status
+┌────┬─────────────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name                    │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼─────────────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ ecosystem.production    │ default     │ 1.0.0   │ fork    │ 780581   │ 0s     │ 0    │ online    │ 0%       │ 51.7mb   │ root     │ disabled │
+└────┴─────────────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+root@ubuntu-4gb-nbg1-1:/home/highlander/app#
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# # Controlla i log per l'app highlander
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# pm2 logs highlander --lines 15
+[TAILING] Tailing last 15 lines for [highlander] process (change the value with --lines option)
+
+^C
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# cat ecosystem.production.js
+module.exports = {
+  apps: [{
+    name: 'highlander',
+    script: './dist/index.js',
+    cwd: '/home/highlander/app',
+    env: {
+      NODE_ENV: 'production',
+      PORT: 5000,
+      DATABASE_URL: 'postgresql://highlander:P3CQeyzh/YLiyxabFSMgwoxRpUPW5qw4@localhost:5432/highlander_prod',
+      SMTP_USER: 'support@highlandergame.it',
+      SMTP_PASSWORD: 'Calibro9!',
+      SESSION_SECRET: 'your-session-secret-here',
+      BASE_URL: 'https://highlandergame.it'
+    },
+    instances: 1,
+    autorestart: true,
+    watch: false,
+    max_memory_restart: '1G',
+    error_file: './logs/error.log',
+    out_file: './logs/out.log',
+    log_file: './logs/combined.log',
+    time: true
+  }]
+};
+root@ubuntu-4gb-nbg1-1:/home/highlander/app#
