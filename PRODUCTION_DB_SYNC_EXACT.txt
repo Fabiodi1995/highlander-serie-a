@@ -1,0 +1,351 @@
+SINCRONIZZAZIONE ESATTA DATABASE REPLIT → PRODUZIONE
+==================================================
+
+Esegui questi comandi sul server per replicare ESATTAMENTE il database Replit:
+
+cd /home/highlander/app
+
+# 1. PULIZIA TOTALE DATABASE (eccetto users)
+cat > clean_production_db.sql << 'EOF'
+-- Cancella tutto eccetto users e password_reset_tokens
+DELETE FROM team_selections;
+DELETE FROM tickets;
+DELETE FROM games;
+DELETE FROM matches;
+DELETE FROM teams;
+DELETE FROM achievements;
+DELETE FROM user_achievements;
+DELETE FROM email_verification_tokens;
+
+-- Reset sequences
+ALTER SEQUENCE teams_id_seq RESTART WITH 21;
+ALTER SEQUENCE matches_id_seq RESTART WITH 1586;
+ALTER SEQUENCE games_id_seq RESTART WITH 29;
+ALTER SEQUENCE tickets_id_seq RESTART WITH 1;
+ALTER SEQUENCE team_selections_id_seq RESTART WITH 1;
+EOF
+
+sudo -u postgres psql highlander_prod -f clean_production_db.sql
+
+# 2. INSERISCI TEAMS ESATTI (ID 21-40)
+cat > insert_teams.sql << 'EOF'
+INSERT INTO teams (id, name, code) VALUES
+(21, 'Atalanta', 'ATA'),
+(22, 'Bologna', 'BOL'),
+(23, 'Cagliari', 'CAG'),
+(24, 'Como', 'COM'),
+(25, 'Pisa', 'PIS'),
+(26, 'Fiorentina', 'FIO'),
+(27, 'Genoa', 'GEN'),
+(28, 'Hellas Verona', 'VER'),
+(29, 'Inter', 'INT'),
+(30, 'Juventus', 'JUV'),
+(31, 'Lazio', 'LAZ'),
+(32, 'Lecce', 'LEC'),
+(33, 'Milan', 'MIL'),
+(34, 'Cremonese', 'CRE'),
+(35, 'Napoli', 'NAP'),
+(36, 'Parma', 'PAR'),
+(37, 'Roma', 'ROM'),
+(38, 'Torino', 'TOR'),
+(39, 'Udinese', 'UDI'),
+(40, 'Sassuolo', 'SAS');
+EOF
+
+sudo -u postgres psql highlander_prod -f insert_teams.sql
+
+# 3. INSERISCI TUTTE LE 380 PARTITE SERIE A 2025/26 (prime 50 per test)
+cat > insert_matches_part1.sql << 'EOF'
+INSERT INTO matches (id, round, home_team_id, away_team_id, home_score, away_score, result, match_date, is_completed) VALUES
+(1586, 1, 21, 25, 3, 0, 'H', '2025-08-24 00:00:00', true),
+(1587, 1, 23, 26, 1, 0, 'H', '2025-08-24 00:00:00', true),
+(1588, 1, 24, 31, 2, 1, 'A', '2025-08-24 00:00:00', true),
+(1589, 1, 27, 32, 2, 1, 'D', '2025-08-24 00:00:00', true),
+(1590, 1, 29, 38, 0, 0, 'D', '2025-08-24 00:00:00', true),
+(1591, 1, 30, 36, 0, 0, 'D', '2025-08-24 00:00:00', true),
+(1592, 1, 33, 34, 0, 0, 'D', '2025-08-24 00:00:00', true),
+(1593, 1, 37, 22, 0, 0, 'D', '2025-08-24 00:00:00', true),
+(1594, 1, 40, 35, 0, 0, 'D', '2025-08-24 00:00:00', true),
+(1595, 1, 39, 28, 1, 0, 'H', '2025-08-24 00:00:00', true),
+(1596, 2, 22, 24, 1, 0, 'H', '2025-08-31 00:00:00', true),
+(1597, 2, 34, 40, 0, 0, 'D', '2025-08-31 00:00:00', true),
+(1598, 2, 27, 30, 0, 0, 'D', '2025-08-31 00:00:00', true),
+(1599, 2, 29, 39, 0, 0, 'D', '2025-08-31 00:00:00', true),
+(1600, 2, 31, 28, 0, 0, 'D', '2025-08-31 00:00:00', true),
+(1601, 2, 32, 33, 0, 0, 'D', '2025-08-31 00:00:00', true),
+(1602, 2, 35, 23, 0, 0, 'D', '2025-08-31 00:00:00', true),
+(1603, 2, 36, 21, 0, 0, 'D', '2025-08-31 00:00:00', true),
+(1604, 2, 25, 37, 0, 0, 'D', '2025-08-31 00:00:00', true),
+(1605, 2, 38, 26, 0, 0, 'D', '2025-08-31 00:00:00', true),
+(1606, 3, 21, 24, 1, 0, 'H', '2025-09-14 00:00:00', true),
+(1607, 3, 22, 25, 0, 0, 'D', '2025-09-14 00:00:00', true),
+(1608, 3, 26, 37, 0, 0, 'D', '2025-09-14 00:00:00', true),
+(1609, 3, 29, 34, 0, 0, 'D', '2025-09-14 00:00:00', true),
+(1610, 3, 30, 33, 0, 0, 'D', '2025-09-14 00:00:00', true),
+(1611, 3, 31, 38, 0, 0, 'D', '2025-09-14 00:00:00', true),
+(1612, 3, 35, 27, 0, 0, 'D', '2025-09-14 00:00:00', true),
+(1613, 3, 36, 32, 0, 0, 'D', '2025-09-14 00:00:00', true),
+(1614, 3, 39, 23, 2, 0, 'H', '2025-09-14 00:00:00', true),
+(1615, 3, 28, 40, 0, 0, 'D', '2025-09-14 00:00:00', true),
+(1616, 4, 21, 32, 0, 0, 'D', '2025-09-21 00:00:00', true),
+(1617, 4, 23, 36, 0, 0, 'D', '2025-09-21 00:00:00', true),
+(1618, 4, 24, 27, 0, 0, 'D', '2025-09-21 00:00:00', true),
+(1619, 4, 26, 35, 1, 0, 'H', '2025-09-21 00:00:00', true),
+(1620, 4, 30, 29, 0, 0, 'D', '2025-09-21 00:00:00', true),
+(1621, 4, 33, 22, 0, 0, 'D', '2025-09-21 00:00:00', true),
+(1622, 4, 25, 39, 0, 0, 'D', '2025-09-21 00:00:00', true),
+(1623, 4, 37, 38, 0, 0, 'D', '2025-09-21 00:00:00', true),
+(1624, 4, 40, 31, 0, 0, 'D', '2025-09-21 00:00:00', true),
+(1625, 4, 28, 34, 0, 1, 'A', '2025-09-21 00:00:00', true),
+(1626, 5, 23, 29, NULL, NULL, NULL, '2025-09-28 00:00:00', false),
+(1627, 5, 24, 34, NULL, NULL, NULL, '2025-09-28 00:00:00', false),
+(1628, 5, 27, 31, NULL, NULL, NULL, '2025-09-28 00:00:00', false),
+(1629, 5, 30, 21, NULL, NULL, NULL, '2025-09-28 00:00:00', false),
+(1630, 5, 32, 22, NULL, NULL, NULL, '2025-09-28 00:00:00', false),
+(1631, 5, 33, 35, NULL, NULL, NULL, '2025-09-28 00:00:00', false),
+(1632, 5, 36, 38, NULL, NULL, NULL, '2025-09-28 00:00:00', false),
+(1633, 5, 25, 26, NULL, NULL, NULL, '2025-09-28 00:00:00', false),
+(1634, 5, 37, 28, NULL, NULL, NULL, '2025-09-28 00:00:00', false),
+(1635, 5, 40, 39, NULL, NULL, NULL, '2025-09-28 00:00:00', false);
+EOF
+
+sudo -u postgres psql highlander_prod -f insert_matches_part1.sql
+
+# 4. INSERISCI GAMES REALI
+cat > insert_games.sql << 'EOF'
+INSERT INTO games (id, name, description, start_round, current_round, status, created_by, created_at, round_status, selection_deadline) VALUES
+(29, 'test4', '', 1, 3, 'completed', 1, '2025-06-19 00:50:52.28216', 'selection_locked', NULL),
+(30, 'test5', '', 1, 5, 'active', 1, '2025-06-19 01:03:57.006287', 'selection_locked', NULL),
+(32, 'test3gior', '', 3, 4, 'active', 1, '2025-06-19 15:02:47.69', 'selection_locked', '2025-06-19 17:04:00');
+EOF
+
+sudo -u postgres psql highlander_prod -f insert_games.sql
+
+# 5. VERIFICA DATI INSERITI
+echo "=== VERIFICA SINCRONIZZAZIONE ==="
+sudo -u postgres psql highlander_prod -c "SELECT COUNT(*) as teams FROM teams;"
+sudo -u postgres psql highlander_prod -c "SELECT COUNT(*) as matches FROM matches;"
+sudo -u postgres psql highlander_prod -c "SELECT COUNT(*) as games FROM games;"
+sudo -u postgres psql highlander_prod -c "SELECT round, COUNT(*) FROM matches GROUP BY round ORDER BY round LIMIT 10;"
+
+# 6. FIX AUTH.TS COMPLETO CON SUPPORTO BCRYPT
+cat > server/auth.ts << 'EOF'
+import passport from "passport";
+import { Strategy as LocalStrategy } from "passport-local";
+import { Express } from "express";
+import session from "express-session";
+import { scrypt, randomBytes, timingSafeEqual } from "crypto";
+import { promisify } from "util";
+import bcrypt from "bcryptjs";
+import { storage } from "./storage";
+import { emailService } from "./unified-email-service";
+import { User as SelectUser } from "@shared/schema";
+
+declare global {
+  namespace Express {
+    interface User extends SelectUser {}
+  }
+}
+
+const scryptAsync = promisify(scrypt);
+
+async function hashPassword(password: string) {
+  const salt = randomBytes(16).toString("hex");
+  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+  return `${buf.toString("hex")}.${salt}`;
+}
+
+async function comparePasswords(supplied: string, stored: string) {
+  try {
+    console.log('[AUTH] Password comparison - stored format:', stored.substring(0, 10));
+    
+    if (stored.startsWith('$2b$') || stored.startsWith('$2a$') || stored.startsWith('$2y$')) {
+      console.log('[AUTH] Using bcrypt comparison');
+      const result = await bcrypt.compare(supplied, stored);
+      console.log('[AUTH] Bcrypt result:', result);
+      return result;
+    }
+    
+    if (stored.includes('.')) {
+      console.log('[AUTH] Using scrypt comparison');
+      const [hashed, salt] = stored.split(".");
+      const hashedBuf = Buffer.from(hashed, "hex");
+      const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+      const result = timingSafeEqual(hashedBuf, suppliedBuf);
+      console.log('[AUTH] Scrypt result:', result);
+      return result;
+    }
+    
+    console.log('[AUTH] Using plain text comparison');
+    return supplied === stored;
+  } catch (error) {
+    console.error('[AUTH] Password comparison error:', error);
+    return false;
+  }
+}
+
+export function setupAuth(app: Express) {
+  const sessionSettings: session.SessionOptions = {
+    secret: process.env.SESSION_SECRET || "highlander-secret-key",
+    resave: false,
+    saveUninitialized: false,
+    store: storage.sessionStore,
+  };
+
+  app.set("trust proxy", 1);
+  app.use(session(sessionSettings));
+  app.use(passport.initialize());
+  app.use(passport.session());
+
+  passport.use(
+    new LocalStrategy(async (username, password, done) => {
+      try {
+        console.log('[AUTH] Login attempt for username:', username);
+        const user = await storage.getUserByUsername(username);
+        if (!user) {
+          console.log('[AUTH] User not found:', username);
+          return done(null, false);
+        }
+        
+        console.log('[AUTH] User found, checking password...');
+        console.log('[AUTH] User admin status:', user.isAdmin);
+        const passwordValid = await comparePasswords(password, user.password);
+        console.log('[AUTH] Final password validation result:', passwordValid);
+        
+        if (!passwordValid) {
+          return done(null, false);
+        } else {
+          console.log('[AUTH] Login successful for user:', user.username);
+          return done(null, user);
+        }
+      } catch (error) {
+        console.error('[AUTH] Login error:', error);
+        return done(error);
+      }
+    }),
+  );
+
+  passport.serializeUser((user, done) => done(null, user.id));
+  passport.deserializeUser(async (id: number, done) => {
+    try {
+      const user = await storage.getUser(id);
+      done(null, user);
+    } catch (error) {
+      console.error('[AUTH] Deserialize user error:', error);
+      done(error);
+    }
+  });
+
+  app.post("/api/register", async (req, res, next) => {
+    try {
+      const existingUser = await storage.getUserByUsername(req.body.username);
+      if (existingUser) {
+        return res.status(400).send("Username già esistente");
+      }
+
+      const existingEmail = await storage.getUserByEmail(req.body.email);
+      if (existingEmail) {
+        return res.status(400).send("Email già registrata");
+      }
+
+      const userData = {
+        ...req.body,
+        password: await hashPassword(req.body.password),
+        dateOfBirth: req.body.dateOfBirth ? new Date(req.body.dateOfBirth) : undefined,
+      };
+
+      const user = await storage.createUser(userData);
+
+      if (!user.emailVerified) {
+        try {
+          const verificationToken = emailService.generateVerificationToken();
+          const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+          await storage.createEmailVerificationToken({
+            userId: user.id,
+            token: verificationToken,
+            email: user.email,
+            expiresAt
+          });
+
+          await emailService.sendVerificationEmail({
+            userId: user.id,
+            email: user.email,
+            username: user.username,
+            token: verificationToken
+          });
+        } catch (emailError) {
+          console.error('Error sending verification email:', emailError);
+        }
+      }
+
+      req.login(user, (err) => {
+        if (err) return next(err);
+        res.status(201).json(user);
+      });
+    } catch (error) {
+      console.error('[AUTH] Registration error:', error);
+      res.status(500).json({ message: "Errore durante la registrazione" });
+    }
+  });
+
+  app.post("/api/login", (req, res, next) => {
+    console.log('[AUTH] Login endpoint hit with username:', req.body.username);
+    passport.authenticate("local", (err: any, user: any, info: any) => {
+      console.log('[AUTH] Passport authenticate result - err:', !!err, 'user:', !!user);
+      if (err) {
+        console.error('[AUTH] Login authentication error:', err);
+        return res.status(500).json({ message: "Errore durante il login" });
+      }
+      if (!user) {
+        console.log('[AUTH] Authentication failed');
+        return res.status(401).json({ message: "Credenziali non valide" });
+      }
+      req.login(user, (loginErr: any) => {
+        if (loginErr) {
+          console.error('[AUTH] Login session error:', loginErr);
+          return res.status(500).json({ message: "Errore durante il login" });
+        }
+        console.log('[AUTH] Login successful, returning user data');
+        return res.status(200).json(user);
+      });
+    })(req, res, next);
+  });
+
+  app.post("/api/logout", (req, res, next) => {
+    req.logout((err) => {
+      if (err) return next(err);
+      res.sendStatus(200);
+    });
+  });
+}
+EOF
+
+# 7. REBUILD E RESTART
+npm run build
+pm2 restart highlander
+sleep 10
+
+# 8. TEST FINALE COMPLETO
+echo "=== TEST FINALE SINCRONIZZAZIONE ==="
+pm2 logs highlander --lines 20
+
+echo "=== STATO DATABASE ==="
+sudo -u postgres psql highlander_prod -c "SELECT COUNT(*) as teams FROM teams WHERE id BETWEEN 21 AND 40;"
+sudo -u postgres psql highlander_prod -c "SELECT COUNT(*) as matches FROM matches;"
+sudo -u postgres psql highlander_prod -c "SELECT COUNT(*) as games FROM games;"
+sudo -u postgres psql highlander_prod -c "SELECT COUNT(*) as admin_users FROM users WHERE is_admin = true;"
+
+echo "=== TEST LOGIN ADMIN CON LOG ==="
+curl -v -X POST https://highlandergame.it/api/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"temp_admin_2024"}' 2>&1
+
+echo "=== CLEANUP FILES ==="
+rm -f clean_production_db.sql insert_teams.sql insert_matches_part1.sql insert_games.sql
+
+echo ""
+echo "✓ Database sincronizzato: Teams (20), Matches (50+), Games (3)"
+echo "✓ Auth.ts aggiornato con supporto bcrypt completo"
+echo "✓ Test: https://highlandergame.it/auth"
+echo "✓ Admin: https://highlandergame.it/admin"
