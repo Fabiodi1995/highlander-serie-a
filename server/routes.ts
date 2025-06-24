@@ -1160,24 +1160,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No file uploaded" });
       }
 
-      const { serieAManager } = await import('./serieAManager');
+      const XLSX = await import('xlsx');
+      const { db } = await import('./db');
+      const { matches, teams } = await import('../shared/schema');
       const fs = await import('fs');
-      const path = await import('path');
       
-      // Move uploaded file to replace the existing calendar
-      const targetPath = serieAManager.getExcelFilePath();
-      fs.copyFileSync(req.file.path, targetPath);
+      const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+      
+      // Read Calendar sheet
+      const calendarSheet = workbook.Sheets['Calendario'];
+      if (!calendarSheet) {
+        return res.status(400).json({ message: "Missing 'Calendario' sheet in Excel file" });
+      }
+      
+      const calendarData = XLSX.utils.sheet_to_json(calendarSheet);
+      console.log(`Processing ${calendarData.length} matches from uploaded Excel`);
+      
+      // Get existing teams to map names to IDs
+      const existingTeams = await db.select().from(teams);
+      const teamMap = new Map(existingTeams.map(t => [t.name, t.id]));
+      
+      // Process each match
+      const matchUpdates = [];
+      for (const row of calendarData as any[]) {
+        const homeTeamId = teamMap.get(row['Squadra Casa']);
+        const awayTeamId = teamMap.get(row['Squadra Trasferta']);
+        
+        if (!homeTeamId || !awayTeamId) {
+          console.warn(`Skipping match: ${row['Squadra Casa']} vs ${row['Squadra Trasferta']} - teams not found`);
+          continue;
+        }
+        
+        const matchDate = new Date(row['Data']);
+        const isCompleted = row['Completata'] === 'VERO' || row['Completata'] === true;
+        
+        matchUpdates.push({
+          round: parseInt(row['Giornata']),
+          homeTeamId,
+          awayTeamId,
+          matchDate,
+          homeScore: row['Gol Casa'] ? parseInt(row['Gol Casa']) : null,
+          awayScore: row['Gol Trasferta'] ? parseInt(row['Gol Trasferta']) : null,
+          result: row['Risultato'] || null,
+          isCompleted
+        });
+      }
+      
+      // Clear existing matches and insert new ones
+      await db.delete(matches);
+      
+      // Insert matches in batches
+      const batchSize = 100;
+      for (let i = 0; i < matchUpdates.length; i += batchSize) {
+        const batch = matchUpdates.slice(i, i + batchSize);
+        await db.insert(matches).values(batch);
+      }
       
       // Clean up temporary file
       fs.unlinkSync(req.file.path);
       
-      // Reload matches from the new Excel file
-      await serieAManager.loadMatchesFromExcel();
+      console.log(`Successfully uploaded ${matchUpdates.length} matches from Excel calendar`);
       
-      res.json({ message: "Calendar updated successfully" });
+      res.json({ 
+        message: "Calendar uploaded successfully", 
+        matchesProcessed: matchUpdates.length 
+      });
+      
     } catch (error) {
-      console.error("Error uploading Excel calendar:", error);
-      res.status(500).json({ message: "Failed to update calendar" });
+      console.error("Error processing Excel calendar:", error);
+      res.status(500).json({ message: "Failed to process calendar upload" });
     }
   });
 

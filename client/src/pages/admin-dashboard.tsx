@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, LogOut, Plus, Gamepad2, Play, Users, TicketIcon, Calculator, Settings, Trash2, Trophy, Target, CheckCircle, Shield, Download, Clock, Calendar, AlertCircle } from "lucide-react";
+import { User, LogOut, Plus, Gamepad2, Play, Users, TicketIcon, Calculator, Settings, Trash2, Trophy, Target, CheckCircle, Shield, Download, Upload, Clock, Calendar, AlertCircle } from "lucide-react";
 import { Link } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -1083,9 +1083,10 @@ export default function AdminDashboard() {
       });
 
       if (res.ok) {
+        const result = await res.json();
         toast({
           title: "Successo",
-          description: "Calendario Excel aggiornato con successo",
+          description: `Calendario caricato: ${result.matchesProcessed} partite processate`,
         });
         
         // Refresh data
@@ -1843,9 +1844,10 @@ export default function AdminDashboard() {
                       <Button 
                         variant="outline"
                         onClick={() => document.getElementById('excel-upload')?.click()}
+                        className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
                       >
-                        <Target className="h-4 w-4 mr-2" />
-                        Carica Calendario Modificato
+                        <Upload className="h-4 w-4 mr-2" />
+                        Carica Calendario
                       </Button>
                     </div>
                     <input
