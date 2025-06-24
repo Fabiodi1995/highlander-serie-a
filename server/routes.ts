@@ -1008,7 +1008,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await serieAManager.initializeSerieAData();
       }
       
-      res.download(filePath, 'serie-a-calendar-2024-2025.xlsx');
+      res.download(filePath, 'Serie_A_2025-2026_Calendario_Completo.xlsx');
     } catch (error) {
       console.error("Error downloading Excel calendar:", error);
       res.status(500).json({ message: "Failed to download calendar" });
