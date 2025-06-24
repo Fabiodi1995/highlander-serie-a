@@ -1165,7 +1165,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { matches, teams } = await import('../shared/schema');
       const fs = await import('fs');
       
-      const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+      // Read file from disk instead of buffer
+      const workbook = XLSX.readFile(req.file.path);
       
       // Read Calendar sheet
       const calendarSheet = workbook.Sheets['Calendario'];
