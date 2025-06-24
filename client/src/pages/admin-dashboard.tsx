@@ -1089,10 +1089,13 @@ export default function AdminDashboard() {
           description: `Calendario caricato: ${result.matchesProcessed} partite processate`,
         });
         
-        // Refresh data
+        // Refresh all data
         queryClient.invalidateQueries({ queryKey: ["/api/games"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/matches"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
       } else {
-        throw new Error("Upload failed");
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Upload failed");
       }
     } catch (error) {
       toast({

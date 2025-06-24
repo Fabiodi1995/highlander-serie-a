@@ -1157,79 +1157,153 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     try {
       if (!req.file) {
-        return res.status(400).json({ message: "No file uploaded" });
+        return res.status(400).json({ message: "Nessun file caricato" });
       }
+
+      console.log(`Calendar upload started - File: ${req.file.originalname}, Size: ${req.file.size} bytes`);
 
       const XLSX = await import('xlsx');
       const { db } = await import('./db');
       const { matches, teams } = await import('../shared/schema');
       const fs = await import('fs');
       
-      // Read file from disk instead of buffer
-      const workbook = XLSX.readFile(req.file.path);
-      
-      // Read Calendar sheet
-      const calendarSheet = workbook.Sheets['Calendario'];
-      if (!calendarSheet) {
-        return res.status(400).json({ message: "Missing 'Calendario' sheet in Excel file" });
+      // Verify file exists
+      if (!fs.existsSync(req.file.path)) {
+        return res.status(400).json({ message: "File temporaneo non trovato" });
       }
       
-      const calendarData = XLSX.utils.sheet_to_json(calendarSheet);
-      console.log(`Processing ${calendarData.length} matches from uploaded Excel`);
+      // Read Excel file
+      let workbook;
+      try {
+        workbook = XLSX.readFile(req.file.path);
+      } catch (excelError) {
+        console.error("Excel reading error:", excelError);
+        fs.unlinkSync(req.file.path); // Clean up
+        return res.status(400).json({ message: "File Excel non valido o corrotto" });
+      }
       
-      // Get existing teams to map names to IDs
+      // Verify required sheets exist
+      const sheetNames = Object.keys(workbook.Sheets);
+      console.log(`Excel sheets found: ${sheetNames.join(', ')}`);
+      
+      if (!workbook.Sheets['Calendario']) {
+        fs.unlinkSync(req.file.path); // Clean up
+        return res.status(400).json({ message: "Foglio 'Calendario' mancante nel file Excel" });
+      }
+      
+      // Read Calendar sheet data
+      const calendarData = XLSX.utils.sheet_to_json(workbook.Sheets['Calendario']);
+      console.log(`Found ${calendarData.length} rows in Calendar sheet`);
+      
+      if (calendarData.length === 0) {
+        fs.unlinkSync(req.file.path); // Clean up
+        return res.status(400).json({ message: "Foglio Calendario vuoto" });
+      }
+      
+      // Get existing teams for mapping
       const existingTeams = await db.select().from(teams);
       const teamMap = new Map(existingTeams.map(t => [t.name, t.id]));
+      console.log(`Database teams: ${existingTeams.map(t => t.name).join(', ')}`);
       
-      // Process each match
+      // Process and validate each match
       const matchUpdates = [];
-      for (const row of calendarData as any[]) {
+      const errors = [];
+      
+      for (let i = 0; i < calendarData.length; i++) {
+        const row = calendarData[i] as any;
+        
+        if (!row['Squadra Casa'] || !row['Squadra Trasferta'] || !row['Giornata'] || !row['Data']) {
+          errors.push(`Riga ${i + 2}: dati mancanti (Squadra Casa, Squadra Trasferta, Giornata, Data)`);
+          continue;
+        }
+        
         const homeTeamId = teamMap.get(row['Squadra Casa']);
         const awayTeamId = teamMap.get(row['Squadra Trasferta']);
         
         if (!homeTeamId || !awayTeamId) {
-          console.warn(`Skipping match: ${row['Squadra Casa']} vs ${row['Squadra Trasferta']} - teams not found`);
+          errors.push(`Riga ${i + 2}: squadre non trovate - ${row['Squadra Casa']} vs ${row['Squadra Trasferta']}`);
           continue;
         }
         
         const matchDate = new Date(row['Data']);
-        const isCompleted = row['Completata'] === 'VERO' || row['Completata'] === true;
+        if (isNaN(matchDate.getTime())) {
+          errors.push(`Riga ${i + 2}: data non valida - ${row['Data']}`);
+          continue;
+        }
+        
+        const isCompleted = row['Completata'] === 'VERO' || row['Completata'] === true || row['Completata'] === 'TRUE';
         
         matchUpdates.push({
           round: parseInt(row['Giornata']),
           homeTeamId,
           awayTeamId,
           matchDate,
-          homeScore: row['Gol Casa'] ? parseInt(row['Gol Casa']) : null,
-          awayScore: row['Gol Trasferta'] ? parseInt(row['Gol Trasferta']) : null,
+          homeScore: row['Gol Casa'] && row['Gol Casa'] !== '' ? parseInt(row['Gol Casa']) : null,
+          awayScore: row['Gol Trasferta'] && row['Gol Trasferta'] !== '' ? parseInt(row['Gol Trasferta']) : null,
           result: row['Risultato'] || null,
           isCompleted
         });
       }
       
-      // Clear existing matches and insert new ones
-      await db.delete(matches);
-      
-      // Insert matches in batches
-      const batchSize = 100;
-      for (let i = 0; i < matchUpdates.length; i += batchSize) {
-        const batch = matchUpdates.slice(i, i + batchSize);
-        await db.insert(matches).values(batch);
+      if (errors.length > 0) {
+        console.warn(`Validation errors: ${errors.join('; ')}`);
       }
+      
+      if (matchUpdates.length === 0) {
+        fs.unlinkSync(req.file.path); // Clean up
+        return res.status(400).json({ 
+          message: "Nessuna partita valida trovata nel file",
+          errors: errors.slice(0, 10) // Limit error display
+        });
+      }
+      
+      console.log(`Starting database update: clearing ${await db.select().from(matches).then(m => m.length)} existing matches`);
+      
+      // TRANSACTION: Clear existing matches and insert new ones atomically
+      await db.transaction(async (tx) => {
+        // Clear all existing matches
+        await tx.delete(matches);
+        
+        // Insert new matches in batches
+        const batchSize = 50; // Smaller batches for better reliability
+        for (let i = 0; i < matchUpdates.length; i += batchSize) {
+          const batch = matchUpdates.slice(i, i + batchSize);
+          await tx.insert(matches).values(batch);
+          console.log(`Inserted batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(matchUpdates.length/batchSize)}`);
+        }
+      });
       
       // Clean up temporary file
       fs.unlinkSync(req.file.path);
       
-      console.log(`Successfully uploaded ${matchUpdates.length} matches from Excel calendar`);
+      const successMessage = `Calendar uploaded successfully: ${matchUpdates.length} matches processed`;
+      console.log(successMessage);
       
       res.json({ 
-        message: "Calendar uploaded successfully", 
-        matchesProcessed: matchUpdates.length 
+        message: "Calendario caricato con successo", 
+        matchesProcessed: matchUpdates.length,
+        errors: errors.length > 0 ? errors.slice(0, 5) : undefined
       });
       
     } catch (error) {
       console.error("Error processing Excel calendar:", error);
-      res.status(500).json({ message: "Failed to process calendar upload" });
+      
+      // Clean up file if it exists
+      if (req.file?.path) {
+        try {
+          const fs = await import('fs');
+          if (fs.existsSync(req.file.path)) {
+            fs.unlinkSync(req.file.path);
+          }
+        } catch (cleanupError) {
+          console.error("Cleanup error:", cleanupError);
+        }
+      }
+      
+      res.status(500).json({ 
+        message: "Errore durante il caricamento del calendario",
+        error: error instanceof Error ? error.message : "Errore sconosciuto"
+      });
     }
   });
 
