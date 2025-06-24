@@ -1178,8 +1178,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         workbook = XLSX.readFile(req.file.path);
       } catch (excelError) {
         console.error("Excel reading error:", excelError);
-        fs.unlinkSync(req.file.path); // Clean up
-        return res.status(400).json({ message: "File Excel non valido o corrotto" });
+        // Try alternative method
+        try {
+          const fileBuffer = fs.readFileSync(req.file.path);
+          workbook = XLSX.read(fileBuffer, { type: 'buffer' });
+        } catch (altError) {
+          console.error("Alternative Excel reading error:", altError);
+          fs.unlinkSync(req.file.path); // Clean up
+          return res.status(400).json({ message: "File Excel non valido o corrotto" });
+        }
       }
       
       // Verify required sheets exist
