@@ -1666,7 +1666,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ];
 
       // Get authentic matches from database
-      const dbMatches = await storage.getAllMatches();
+      const { db } = await import('./db');
+      const { matches } = await import('../shared/schema');
+      const dbMatches = await db.select().from(matches).orderBy(matches.round, matches.id);
       
       // Filter only matches between correct teams
       const validMatches = dbMatches.filter(match => {
