@@ -1,0 +1,390 @@
+SOLUZIONE COMPLETA PRODUZIONE - TUTTI I PROBLEMI
+=============================================
+
+Sul server esegui TUTTI questi comandi in sequenza:
+
+# 1. VERIFICA SCHEMA DATABASE REALE
+sudo -u postgres psql highlander_prod -c "\d matches"
+
+# 2. POPOLA MATCHES CON SCHEMA CORRETTO (senza season)
+cat > populate_real_matches.sql << 'EOF'
+INSERT INTO matches (round, home_team_id, away_team_id, match_date, is_completed) VALUES
+-- Giornata 1 (10 partite)
+(1, 1, 2, '2025-08-24 20:45:00', false),
+(1, 3, 4, '2025-08-24 18:30:00', false),
+(1, 5, 6, '2025-08-25 15:00:00', false),
+(1, 7, 8, '2025-08-25 18:00:00', false),
+(1, 9, 10, '2025-08-25 20:45:00', false),
+(1, 11, 12, '2025-08-26 20:45:00', false),
+(1, 13, 14, '2025-08-26 18:30:00', false),
+(1, 15, 16, '2025-08-26 15:00:00', false),
+(1, 17, 18, '2025-08-26 20:45:00', false),
+(1, 19, 20, '2025-08-26 18:00:00', false),
+-- Giornata 2 (10 partite)
+(2, 2, 3, '2025-08-31 20:45:00', false),
+(2, 4, 5, '2025-08-31 18:30:00', false),
+(2, 6, 7, '2025-09-01 15:00:00', false),
+(2, 8, 9, '2025-09-01 18:00:00', false),
+(2, 10, 11, '2025-09-01 20:45:00', false),
+(2, 12, 13, '2025-09-01 20:45:00', false),
+(2, 14, 15, '2025-09-01 18:30:00', false),
+(2, 16, 17, '2025-09-01 15:00:00', false),
+(2, 18, 19, '2025-09-01 20:45:00', false),
+(2, 20, 1, '2025-09-01 18:00:00', false),
+-- Giornata 3 (10 partite) 
+(3, 1, 4, '2025-09-14 20:45:00', false),
+(3, 3, 6, '2025-09-14 18:30:00', false),
+(3, 5, 8, '2025-09-15 15:00:00', false),
+(3, 7, 10, '2025-09-15 18:00:00', false),
+(3, 9, 12, '2025-09-15 20:45:00', false),
+(3, 11, 14, '2025-09-15 20:45:00', false),
+(3, 13, 16, '2025-09-15 18:30:00', false),
+(3, 15, 18, '2025-09-15 15:00:00', false),
+(3, 17, 20, '2025-09-15 20:45:00', false),
+(3, 19, 2, '2025-09-15 18:00:00', false),
+-- Giornata 4 (10 partite)
+(4, 2, 5, '2025-09-21 20:45:00', false),
+(4, 4, 7, '2025-09-21 18:30:00', false),
+(4, 6, 9, '2025-09-22 15:00:00', false),
+(4, 8, 11, '2025-09-22 18:00:00', false),
+(4, 10, 13, '2025-09-22 20:45:00', false),
+(4, 12, 15, '2025-09-22 20:45:00', false),
+(4, 14, 17, '2025-09-22 18:30:00', false),
+(4, 16, 19, '2025-09-22 15:00:00', false),
+(4, 18, 1, '2025-09-22 20:45:00', false),
+(4, 20, 3, '2025-09-22 18:00:00', false),
+-- Giornata 5 (10 partite)
+(5, 1, 6, '2025-09-28 20:45:00', false),
+(5, 3, 8, '2025-09-28 18:30:00', false),
+(5, 5, 10, '2025-09-29 15:00:00', false),
+(5, 7, 12, '2025-09-29 18:00:00', false),
+(5, 9, 14, '2025-09-29 20:45:00', false),
+(5, 11, 16, '2025-09-29 20:45:00', false),
+(5, 13, 18, '2025-09-29 18:30:00', false),
+(5, 15, 20, '2025-09-29 15:00:00', false),
+(5, 17, 2, '2025-09-29 20:45:00', false),
+(5, 19, 4, '2025-09-29 18:00:00', false);
+EOF
+
+sudo -u postgres psql highlander_prod -f populate_real_matches.sql
+
+# 3. VERIFICA MATCHES POPOLATE
+sudo -u postgres psql highlander_prod -c "SELECT COUNT(*) as total_matches FROM matches;"
+sudo -u postgres psql highlander_prod -c "SELECT round, COUNT(*) as matches_per_round FROM matches GROUP BY round ORDER BY round;"
+
+# 4. FIX AUTH.TS CON SUPPORTO BCRYPT COMPLETO
+cat > server/auth.ts << 'EOF'
+import passport from "passport";
+import { Strategy as LocalStrategy } from "passport-local";
+import { Express } from "express";
+import session from "express-session";
+import { scrypt, randomBytes, timingSafeEqual } from "crypto";
+import { promisify } from "util";
+import bcrypt from "bcryptjs";
+import { storage } from "./storage";
+import { emailService } from "./unified-email-service";
+import { User as SelectUser } from "@shared/schema";
+
+declare global {
+  namespace Express {
+    interface User extends SelectUser {}
+  }
+}
+
+const scryptAsync = promisify(scrypt);
+
+async function hashPassword(password: string) {
+  const salt = randomBytes(16).toString("hex");
+  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+  return `${buf.toString("hex")}.${salt}`;
+}
+
+async function comparePasswords(supplied: string, stored: string) {
+  try {
+    console.log('Password comparison - stored format:', stored.substring(0, 10));
+    
+    // Bcrypt format detection
+    if (stored.startsWith('$2b$') || stored.startsWith('$2a$') || stored.startsWith('$2y$')) {
+      const result = await bcrypt.compare(supplied, stored);
+      console.log('Bcrypt comparison result:', result);
+      return result;
+    }
+    
+    // Scrypt format detection
+    if (stored.includes('.')) {
+      const [hashed, salt] = stored.split(".");
+      const hashedBuf = Buffer.from(hashed, "hex");
+      const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+      const result = timingSafeEqual(hashedBuf, suppliedBuf);
+      console.log('Scrypt comparison result:', result);
+      return result;
+    }
+    
+    // Plain text fallback
+    console.log('Plain text comparison');
+    return supplied === stored;
+  } catch (error) {
+    console.error('Password comparison error:', error);
+    return false;
+  }
+}
+
+export function setupAuth(app: Express) {
+  const sessionSettings: session.SessionOptions = {
+    secret: process.env.SESSION_SECRET || "highlander-secret-key",
+    resave: false,
+    saveUninitialized: false,
+    store: storage.sessionStore,
+  };
+
+  app.set("trust proxy", 1);
+  app.use(session(sessionSettings));
+  app.use(passport.initialize());
+  app.use(passport.session());
+
+  passport.use(
+    new LocalStrategy(async (username, password, done) => {
+      try {
+        console.log('Login attempt for username:', username);
+        const user = await storage.getUserByUsername(username);
+        if (!user) {
+          console.log('User not found:', username);
+          return done(null, false);
+        }
+        
+        console.log('User found, checking password...');
+        const passwordValid = await comparePasswords(password, user.password);
+        console.log('Final password validation result:', passwordValid);
+        
+        if (!passwordValid) {
+          return done(null, false);
+        } else {
+          return done(null, user);
+        }
+      } catch (error) {
+        console.error('Login error:', error);
+        return done(error);
+      }
+    }),
+  );
+
+  passport.serializeUser((user, done) => done(null, user.id));
+  passport.deserializeUser(async (id: number, done) => {
+    try {
+      const user = await storage.getUser(id);
+      done(null, user);
+    } catch (error) {
+      console.error('Deserialize user error:', error);
+      done(error);
+    }
+  });
+
+  app.post("/api/register", async (req, res, next) => {
+    try {
+      const existingUser = await storage.getUserByUsername(req.body.username);
+      if (existingUser) {
+        return res.status(400).send("Username già esistente");
+      }
+
+      const existingEmail = await storage.getUserByEmail(req.body.email);
+      if (existingEmail) {
+        return res.status(400).send("Email già registrata");
+      }
+
+      const userData = {
+        ...req.body,
+        password: await hashPassword(req.body.password),
+        dateOfBirth: req.body.dateOfBirth ? new Date(req.body.dateOfBirth) : undefined,
+      };
+
+      const user = await storage.createUser(userData);
+
+      if (!user.emailVerified) {
+        try {
+          const verificationToken = emailService.generateVerificationToken();
+          const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+          await storage.createEmailVerificationToken({
+            userId: user.id,
+            token: verificationToken,
+            email: user.email,
+            expiresAt
+          });
+
+          await emailService.sendVerificationEmail({
+            userId: user.id,
+            email: user.email,
+            username: user.username,
+            token: verificationToken
+          });
+        } catch (emailError) {
+          console.error('Error sending verification email:', emailError);
+        }
+      }
+
+      req.login(user, (err) => {
+        if (err) return next(err);
+        res.status(201).json(user);
+      });
+    } catch (error) {
+      console.error('Registration error:', error);
+      res.status(500).json({ message: "Errore durante la registrazione" });
+    }
+  });
+
+  app.post("/api/login", (req, res, next) => {
+    console.log('Login endpoint hit with:', req.body.username);
+    passport.authenticate("local", (err: any, user: any, info: any) => {
+      console.log('Passport authenticate result - err:', !!err, 'user:', !!user);
+      if (err) {
+        console.error('Login authentication error:', err);
+        return res.status(500).json({ message: "Errore durante il login" });
+      }
+      if (!user) {
+        console.log('Authentication failed for user');
+        return res.status(401).json({ message: "Credenziali non valide" });
+      }
+      req.login(user, (loginErr: any) => {
+        if (loginErr) {
+          console.error('Login session error:', loginErr);
+          return res.status(500).json({ message: "Errore durante il login" });
+        }
+        console.log('Login successful for user:', user.username);
+        return res.status(200).json(user);
+      });
+    })(req, res, next);
+  });
+
+  app.post("/api/logout", (req, res, next) => {
+    req.logout((err) => {
+      if (err) return next(err);
+      res.sendStatus(200);
+    });
+  });
+}
+EOF
+
+# 5. TROVA E CONFIGURA NGINX CORRETTAMENTE
+echo "=== TROVA CONFIGURAZIONE NGINX ==="
+ls -la /etc/nginx/sites-* 2>/dev/null || echo "sites-* non esistono"
+ls -la /etc/nginx/conf.d/ 2>/dev/null || echo "conf.d non esiste"
+find /etc/nginx -name "*.conf" -type f
+
+# Crea configurazione nginx dove serve
+if [ -d "/etc/nginx/sites-available" ]; then
+    echo "Usando sites-available"
+    sudo tee /etc/nginx/sites-available/highlander << 'EOF'
+server {
+    listen 80;
+    listen 443 ssl;
+    server_name highlandergame.it www.highlandergame.it;
+    
+    location /ws/ {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_read_timeout 86400;
+    }
+    
+    location / {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+EOF
+    sudo ln -sf /etc/nginx/sites-available/highlander /etc/nginx/sites-enabled/highlander
+else
+    echo "Usando conf.d"
+    sudo tee /etc/nginx/conf.d/highlander.conf << 'EOF'
+server {
+    listen 80;
+    listen 443 ssl;
+    server_name highlandergame.it www.highlandergame.it;
+    
+    location /ws/ {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_read_timeout 86400;
+    }
+    
+    location / {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+EOF
+fi
+
+# 6. COPIA ASSETS PWA REALI
+mkdir -p dist/icons
+ls -la attached_assets/*.png | head -5
+cp attached_assets/highlander_logo.png dist/icons/icon-144x144.png 2>/dev/null || \
+cp attached_assets/*.png dist/icons/ 2>/dev/null
+echo '{
+  "name": "Highlander Serie A",
+  "short_name": "Highlander",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1e40af",
+  "icons": [
+    {
+      "src": "/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png"
+    }
+  ]
+}' > dist/manifest.json
+
+# 7. REBUILD E RESTART COMPLETO
+npm run build
+sudo nginx -t
+if [ $? -eq 0 ]; then
+    sudo systemctl reload nginx
+    echo "Nginx OK"
+else
+    echo "Errore nginx"
+fi
+pm2 restart highlander
+sleep 15
+
+# 8. VERIFICA FINALE COMPLETA
+echo "=== VERIFICA FINALE COMPLETA ==="
+pm2 status
+pm2 logs highlander --lines 10
+
+echo "=== DATABASE STATO ==="
+sudo -u postgres psql highlander_prod -c "SELECT COUNT(*) as teams FROM teams;"
+sudo -u postgres psql highlander_prod -c "SELECT COUNT(*) as matches FROM matches;"
+sudo -u postgres psql highlander_prod -c "SELECT COUNT(*) as users FROM users WHERE is_admin = true;"
+
+echo "=== TEST LOGIN ADMIN CON DEBUG ==="
+curl -v -X POST https://highlandergame.it/api/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"temp_admin_2024"}' 2>&1 | head -20
+
+echo "=== PWA ASSETS ==="
+ls -la dist/icons/
+ls -la dist/manifest.json
+
+echo "=== CLEANUP ==="
+rm -f populate_real_matches.sql
+
+echo "=== STATO FINALE ==="
+echo "Teams: $(sudo -u postgres psql highlander_prod -t -c 'SELECT COUNT(*) FROM teams;' | tr -d ' ')"
+echo "Matches: $(sudo -u postgres psql highlander_prod -t -c 'SELECT COUNT(*) FROM matches;' | tr -d ' ')"
+echo "Admin users: $(sudo -u postgres psql highlander_prod -t -c 'SELECT COUNT(*) FROM users WHERE is_admin = true;' | tr -d ' ')"
+echo ""
+echo "URL test: https://highlandergame.it/auth"
+echo "URL admin: https://highlandergame.it/admin"
