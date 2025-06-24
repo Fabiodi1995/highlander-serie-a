@@ -1015,6 +1015,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Download Excel calendar with all Serie A 2025/26 matches
+  app.get("/api/admin/excel-calendar", async (req, res) => {
+    if (!req.isAuthenticated() || !req.user!.isAdmin) return res.sendStatus(403);
+    
+    try {
+      const XLSX = await import('xlsx');
+      const path = await import('path');
+      
+      // Get all teams and matches from database
+      const teams = await storage.getAllTeams();
+      const matches = await storage.getAllMatches();
+      
+      console.log(`Creating Excel with ${teams.length} teams and ${matches.length} matches`);
+      
+      // Create workbook
+      const workbook = XLSX.utils.book_new();
+      
+      // Teams sheet
+      const teamsData = teams.map(team => ({
+        ID: team.id,
+        Nome: team.name,
+        Codice: team.code
+      }));
+      
+      const teamsSheet = XLSX.utils.json_to_sheet(teamsData);
+      XLSX.utils.book_append_sheet(workbook, teamsSheet, 'Squadre');
+      
+      // Matches sheet with complete Serie A calendar
+      const matchesData = matches.map(match => {
+        const homeTeam = teams.find(t => t.id === match.homeTeamId);
+        const awayTeam = teams.find(t => t.id === match.awayTeamId);
+        
+        return {
+          ID: match.id,
+          Giornata: match.round,
+          'Squadra Casa': homeTeam?.name || `Team ${match.homeTeamId}`,
+          'Squadra Ospite': awayTeam?.name || `Team ${match.awayTeamId}`,
+          'Home Team ID': match.homeTeamId,
+          'Away Team ID': match.awayTeamId,
+          Data: match.matchDate.toISOString().split('T')[0],
+          'Gol Casa': match.homeScore || '',
+          'Gol Ospite': match.awayScore || '',
+          Risultato: match.result || '',
+          Completata: match.isCompleted ? 'Sì' : 'No'
+        };
+      });
+      
+      const matchesSheet = XLSX.utils.json_to_sheet(matchesData);
+      XLSX.utils.book_append_sheet(workbook, matchesSheet, 'Calendario');
+      
+      // Summary sheet
+      const summaryData = [
+        { Statistica: 'Stagione', Valore: '2025/2026' },
+        { Statistica: 'Squadre', Valore: teams.length },
+        { Statistica: 'Giornate', Valore: matches.length > 0 ? Math.max(...matches.map(m => m.round)) : 0 },
+        { Statistica: 'Partite Totali', Valore: matches.length },
+        { Statistica: 'Partite per Giornata', Valore: teams.length / 2 },
+        { Statistica: 'Data Creazione', Valore: new Date().toLocaleDateString('it-IT') }
+      ];
+      
+      const summarySheet = XLSX.utils.json_to_sheet(summaryData);
+      XLSX.utils.book_append_sheet(workbook, summarySheet, 'Info');
+      
+      // Generate Excel buffer
+      const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+      
+      // Set headers for download
+      const filename = `Serie_A_2025-26_Calendario_${new Date().toISOString().split('T')[0]}.xlsx`;
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Length', buffer.length);
+      
+      res.send(buffer);
+    } catch (error) {
+      console.error("Error generating Excel calendar:", error);
+      res.status(500).json({ message: "Failed to generate calendar" });
+    }
+  });
+
   // Upload Excel file for Serie A calendar
   const multer = await import('multer');
   const upload = multer.default({ dest: 'uploads/' });
