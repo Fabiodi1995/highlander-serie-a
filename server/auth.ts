@@ -42,11 +42,22 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
+  // Enhanced session settings for Edge compatibility
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "highlander-secret-key",
     resave: false,
     saveUninitialized: false,
     store: storage.sessionStore,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+      httpOnly: true, // Prevent XSS
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      sameSite: process.env.NODE_ENV === 'production' ? 'lax' : 'lax', // Edge compatibility
+    },
+    rolling: true, // Extend session on activity
+    name: 'highlander.sid', // Custom session name
+    rolling: true, // Extend session on activity
+    name: 'highlander.sid', // Custom session name
   };
 
   app.set("trust proxy", 1);

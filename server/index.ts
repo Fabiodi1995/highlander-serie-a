@@ -7,21 +7,44 @@ import { testEmailConfiguration } from "./test-email";
 
 const app = express();
 
-// Security middleware for HTTPS and SSL
+// Edge compatibility and SSL security middleware
 app.use((req, res, next) => {
-  // Force HTTPS in production
+  // Set trust proxy for proper protocol detection
+  app.set('trust proxy', 1);
+  
+  // Edge-specific headers for private browsing compatibility
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  
+  // Force HTTPS in production with multiple detection methods
   if (process.env.NODE_ENV === 'production') {
-    if (req.header('x-forwarded-proto') !== 'https') {
+    const isHttps = req.header('x-forwarded-proto') === 'https' || 
+                    req.header('x-forwarded-ssl') === 'on' ||
+                    req.protocol === 'https' ||
+                    req.secure;
+    
+    if (!isHttps) {
       return res.redirect(301, `https://${req.header('host')}${req.url}`);
     }
     
-    // Add security headers
+    // Enhanced security headers for Edge compatibility
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
     res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN'); // Changed from DENY for Edge compatibility
     res.setHeader('X-XSS-Protection', '1; mode=block');
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-    res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://replit.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:;");
+    
+    // Relaxed CSP for Edge compatibility while maintaining security
+    res.setHeader('Content-Security-Policy', 
+      "default-src 'self'; " +
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://replit.com https://*.replit.com; " +
+      "style-src 'self' 'unsafe-inline' https:; " +
+      "img-src 'self' data: https: blob:; " +
+      "font-src 'self' data: https:; " +
+      "connect-src 'self' https: wss: ws:; " +
+      "frame-src 'self' https:;"
+    );
   }
   
   // Redirect non-www to www

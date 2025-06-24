@@ -120,6 +120,8 @@ Highlander Serie A is a multiplayer elimination game based on Serie A 2025/26 fo
 
 ## Changelog
 
+- June 24, 2025: **COMPLETED** Edge browser compatibility fixes - resolved SSL warnings in private browsing, login failures, and security alerts through enhanced protocol detection, Edge-specific cache headers, relaxed CSP policies, and optimized session cookie configuration. Added health endpoint for debugging and CORS preflight handling.
+- June 24, 2025: **COMPLETED** SSL security and SEO optimization - implemented HTTPS enforcement, comprehensive security headers, Google indexing with sitemap.xml/robots.txt, Open Graph meta tags, and Schema.org structured data. Added Highlander logo as favicon for brand consistency.
 - June 24, 2025: **COMPLETED** Excel calendar download functionality with authentic Serie A 2025/26 data - created new `/api/admin/new-calendar` endpoint with correct 20 teams (Pisa, Cremonese, Sassuolo promoted; excluded Empoli, Venezia, Monza), authentic stadium names, and complete 380-match calendar with proper dates (2025-08-24 to 2026-05-24). Implemented dual bcrypt/scrypt authentication support for production compatibility.
 - June 23, 2025: Initial setup
 

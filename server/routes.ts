@@ -1956,6 +1956,30 @@ Canonical: https://www.highlandergame.it/.well-known/security.txt
 # We take security seriously and will respond to legitimate reports promptly.`);
   });
 
+  // Edge compatibility routes for debugging
+  app.get('/api/health', (req, res) => {
+    res.json({ 
+      status: 'OK', 
+      timestamp: new Date().toISOString(),
+      userAgent: req.get('User-Agent'),
+      protocol: req.protocol,
+      secure: req.secure,
+      headers: {
+        'x-forwarded-proto': req.get('x-forwarded-proto'),
+        'x-forwarded-ssl': req.get('x-forwarded-ssl')
+      }
+    });
+  });
+
+  // CORS preflight for Edge
+  app.options('*', (req, res) => {
+    res.setHeader('Access-Control-Allow-Origin', req.get('Origin') || '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.sendStatus(200);
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
