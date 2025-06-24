@@ -1,0 +1,56 @@
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# sudo -u postgres psql highlander_prod -c "SELECT COUNT(*) as teams FROM teams;"
+sudo -u postgres psql highlander_prod -c "SELECT COUNT(*) as teams_after FROM teams;"
+
+# FIX AUTENTICAZIONE BCRYPT
+echo "=== FIX SISTEMA AUTENTICAZIONE ==="
+cp server/auth.ts server/auth.ts.backup teams
+-------
+    20
+(1 row)
+
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# sudo -u postgres psql highlander_prod -c "SELECT COUNT(*) as matches FROM matches;"
+ matches
+---------
+       0
+(1 row)
+
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# pm2 status
+┌────┬───────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name          │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼───────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ highlander    │ default     │ 1.0.0   │ cluster │ 186493   │ 14h    │ 1    │ online    │ 0%       │ 130.3mb  │ root     │ disabled │
+└────┴───────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+root@ubuntu-4gb-nbg1-1:/home/highlander/app#
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# # POPOLA DATABASE SERIE A
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# echo "=== POPOLAMENTO DATABASE ==="
+=== POPOLAMENTO DATABASE ===
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# node load_all_matches.js
+node:internal/modules/esm/resolve:283
+    throw new ERR_MODULE_NOT_FOUND(
+          ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/home/highlander/app/server/db.js' imported from /home/highlander/app/load_all_matches.js
+    at finalizeResolution (node:internal/modules/esm/resolve:283:11)
+    at moduleResolve (node:internal/modules/esm/resolve:952:10)
+    at defaultResolve (node:internal/modules/esm/resolve:1188:11)
+    at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:642:12)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:591:25)
+    at ModuleLoader.resolve (node:internal/modules/esm/loader:574:38)
+    at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:236:38)
+    at ModuleJob._link (node:internal/modules/esm/module_job:130:49) {
+  code: 'ERR_MODULE_NOT_FOUND',
+  url: 'file:///home/highlander/app/server/db.js'
+}
+
+Node.js v20.19.2
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# sudo -u postgres psql highlander_prod -c "SELECT COUNT(*) as teams_after FROM teams;"
+ teams_after
+-------------
+          20
+(1 row)
+
+root@ubuntu-4gb-nbg1-1:/home/highlander/app#
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# # FIX AUTENTICAZIONE BCRYPT
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# echo "=== FIX SISTEMA AUTENTICAZIONE ==="
+=== FIX SISTEMA AUTENTICAZIONE ===
+root@ubuntu-4gb-nbg1-1:/home/highlander/app# cp server/auth.ts server/auth.ts.backup
